@@ -27,7 +27,7 @@ This is not a chatbot. It is an AI-powered conversation agent that adapts in rea
 - Capture email addresses at scale from thousands of existing Instagram contacts
 - Deliver the ROI Calculator as a lead magnet within a natural DM conversation
 - Qualify leads automatically and route them to Calendly booking or email nurture
-- Generate fully structured lead records in Close CRM and Google Sheets with zero manual data entry
+- Generate fully structured lead records in Supabase and Close CRM with zero manual data entry
 - Build a replicable system that can be launched across all portfolio brands with brand-specific personas and qualification criteria
 
 ### Why Now
@@ -62,20 +62,20 @@ Instagram DMs consistently outperform email for open and response rates. The cha
 
 ## 3 · The Solution Architecture
 
-The solution has four layers: the DM automation layer (Inro), the AI conversation layer (Claude), the data pipeline layer (n8n), and the downstream systems (Google Sheets, Close CRM, Customer.io, Slack).
+The solution has four layers: the DM automation layer (Inro), the AI conversation layer (Claude), the orchestration layer (custom-built in-app), and the downstream systems (Close CRM, Customer.io, Slack).
 
 ### Full Stack
 
-| Layer / Tool        | Role in the System                                                                                                                                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Inro**            | Meta-compliant Instagram DM automation layer. Handles message routing, conversation threading, context persistence, keyword triggers, and webhook firing. Replaces ManyChat for this use case due to native Claude integration capability. |
-| **Claude (Sonnet)** | AI conversation engine. Operates as a named setter persona. Qualifies leads, captures email addresses conversationally, delivers the ROI calculator, handles objections, books calls, and generates structured lead summaries.             |
-| **n8n**             | Automation and orchestration layer. Receives webhooks from Inro on key conversation events (email captured, call booked, conversation ended) and routes data to downstream systems.                                                        |
-| **Google Sheets**   | Primary lead log. Every contact who enters the funnel gets a row: IG handle, name, email, machine count, qualification status, timestamp, call booked Y/N, source.                                                                         |
-| **Close CRM**       | CRM destination for qualified leads. Claude-generated conversation summaries are written as contact notes. Closers receive pre-briefed leads with full context.                                                                            |
-| **Customer.io**     | Email nurture for leads who did not book a call. Triggered by n8n when email is captured but no Calendly booking is made.                                                                                                                  |
-| **Slack**           | Closer alert system. When a call is booked, a structured Slack message fires to the assigned closer with full lead context from the Claude summary.                                                                                        |
-| **Calendly**        | Call booking layer. Claude delivers the link contextually when a lead qualifies. Booking triggers the n8n Slack alert and Close CRM update.                                                                                                |
+| Layer / Tool        | Role in the System                                                                                                                                                                                                                        |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Inro**            | Meta-compliant Instagram DM automation layer. Handles message routing, keyword triggers, and HTTP request actions to our webhook. Has its own built-in AI agent (black box) and an MCP server + private REST API for programmatic access. |
+| **Claude (Sonnet)** | AI conversation engine. Operates as a named setter persona. Qualifies leads, captures email addresses conversationally, delivers the ROI calculator, handles objections, books calls, and generates structured lead summaries.            |
+| **InstaSetter App** | Custom orchestration engine. Receives webhooks from Inro on key conversation events, manages Claude conversation state, and routes data to downstream systems. No external automation tools (n8n, Make, etc.).                            |
+| **Supabase**        | Canonical data store. All contacts, conversations, messages, and leads live here. Single source of truth — external systems (Close CRM, Customer.io) are sync targets.                                                                    |
+| **Close CRM**       | CRM destination for qualified leads. Claude-generated conversation summaries are written as contact notes. Closers receive pre-briefed leads with full context.                                                                           |
+| **Customer.io**     | Email nurture for leads who did not book a call. Triggered by the app when email is captured but no Calendly booking is made.                                                                                                             |
+| **Slack**           | Closer alert system. When a call is booked, a structured Slack message fires to the assigned closer with full lead context from the Claude summary.                                                                                       |
+| **Calendly**        | Call booking layer. Claude delivers the link contextually when a lead qualifies. Booking triggers the Slack alert and Close CRM update via the app's integration layer.                                                                   |
 
 ---
 
@@ -94,9 +94,9 @@ The conversation flow is not a rigid bot script. It is a system prompt architect
 | **Step 5 — Email Capture**             | Immediately after delivering the calculator link, Claude asks for their email address so it can send them the link directly and follow up with additional resources. The ask feels natural because it follows value delivery. Claude validates the format before accepting.                                     |
 | **Step 6 — Qualification Decision**    | Based on qualification answers, Claude categorizes the lead: Hot (strong candidate for a call), Warm (early stage, route to email nurture), or Cold (not a fit at this time). This drives the next step.                                                                                                        |
 | **Step 7A — Hot Lead: Book a Call**    | Claude delivers the Calendly link with context: 'Based on everything you've shared, I think it's worth getting you on a quick 20-minute call with our team. Here's a link to grab a time that works for you.' It confirms the booking and sets expectations.                                                    |
-| **Step 7B — Warm Lead: Email Nurture** | Claude closes the DM conversation warmly, confirms the email has been noted, and lets the contact know they'll hear from the team. n8n routes them into the Customer.io welcome sequence.                                                                                                                       |
-| **Step 8 — Lead Summary Generation**   | At conversation end, Claude generates a structured internal summary: name, IG handle, email, machine count, location type, revenue range, qualification status, key notes, and recommended next action. This fires via webhook to n8n.                                                                          |
-| **Step 9 — Data Distribution**         | n8n writes the lead summary to Google Sheets, creates/updates a contact in Close CRM with Claude's notes, triggers Customer.io for warm leads, and fires a Slack alert to the closer for hot leads with a booked call.                                                                                          |
+| **Step 7B — Warm Lead: Email Nurture** | Claude closes the DM conversation warmly, confirms the email has been noted, and lets the contact know they'll hear from the team. The app routes them into the Customer.io welcome sequence.                                                                                                                   |
+| **Step 8 — Lead Summary Generation**   | At conversation end, Claude generates a structured internal summary: name, IG handle, email, machine count, location type, revenue range, qualification status, key notes, and recommended next action. Stored in Supabase and routed to downstream systems.                                                    |
+| **Step 9 — Data Distribution**         | The app writes the lead summary to Supabase (canonical store), syncs to Close CRM with Claude's notes, triggers Customer.io for warm leads, and fires a Slack alert to the closer for hot leads with a booked call.                                                                                             |
 
 ---
 
@@ -138,7 +138,7 @@ Claude is given explicit routing logic: if qualification score is above the thre
 
 #### 7. Summary Generation Instruction
 
-At conversation close, Claude is instructed to generate a structured JSON-format lead summary and output it in a specific format that n8n can parse and route. Fields include:
+At conversation close, Claude is instructed to generate a structured JSON-format lead summary. The app parses this and routes it to downstream systems. Fields include:
 
 - `name`
 - `instagram_handle`
@@ -168,7 +168,7 @@ The ROI calculator being built by Matt's intern is the lead magnet for Phase 1. 
 - The URL should be clean and brandable — a VendingPreneurs-branded short link is ideal
 - The results page should be personalized based on inputs — 'your route could generate $X/month' output increases shareability and return visits
 - Optionally: gate the full results behind an email capture on the landing page itself, creating a second capture point independent of the DM conversation
-- Track calculator completions via a simple event (Google Analytics or n8n webhook) so we can see conversion from DM link delivery to calculator completion
+- Track calculator completions via a simple event (Google Analytics or app webhook) so we can see conversion from DM link delivery to calculator completion
 
 ### Growth Loop
 
@@ -178,27 +178,11 @@ A calculator that outputs a personalized revenue estimate is inherently shareabl
 
 ## 7 · Data Flow & Systems Integration
 
-Every conversation that passes through the Claude setter generates a structured data record. The n8n orchestration layer ensures that record reaches the right downstream system based on the lead's qualification status and actions taken.
+Every conversation that passes through the Claude setter generates a structured data record. The app's orchestration layer ensures that record reaches the right downstream system based on the lead's qualification status and actions taken.
 
-### Google Sheets Lead Log
+### Supabase (Canonical Store)
 
-The Google Sheet serves as the primary lead register and the source of truth for marketing. Every contact who enters the funnel gets a row, regardless of qualification outcome.
-
-| Column          | Description                                                     |
-| --------------- | --------------------------------------------------------------- |
-| Timestamp       | Date and time the conversation ended                            |
-| IG Handle       | Instagram username                                              |
-| First Name      | If captured during conversation                                 |
-| Email           | Captured email address (blank if not provided)                  |
-| Machine Count   | Self-reported number of machines                                |
-| Location Type   | Office, gym, school, healthcare, etc.                           |
-| Revenue Range   | Self-reported monthly revenue                                   |
-| Qual Status     | Hot / Warm / Cold                                               |
-| Call Booked     | Yes / No                                                        |
-| Calendly Slot   | If booked: date and time of scheduled call                      |
-| Calculator Sent | Yes / No                                                        |
-| Source          | Brand account and trigger type (keyword, broadcast, organic DM) |
-| Notes           | Claude-generated key notes from the conversation                |
+All lead data lives in the `leads` table in Supabase. Every contact who enters the funnel gets a record, regardless of qualification outcome. See `docs/scope-plan.md` § Data Model for full schema.
 
 ### Close CRM
 
@@ -206,7 +190,7 @@ Hot and warm leads are written to Close as new contacts. The Claude-generated co
 
 ### Customer.io Email Nurture
 
-Warm leads (email captured, no call booked) are pushed to Customer.io via n8n and entered into a welcome sequence. The sequence should be brand-specific, value-forward, and timed appropriately — not an immediate hard sell. The goal is to move them from warm to hot over 3–5 touchpoints.
+Warm leads (email captured, no call booked) are pushed to Customer.io via the app and entered into a welcome sequence. The sequence should be brand-specific, value-forward, and timed appropriately — not an immediate hard sell. The goal is to move them from warm to hot over 3–5 touchpoints.
 
 ### Slack Closer Alerts
 
@@ -233,13 +217,13 @@ When a call is booked, a Slack message fires to the designated closer channel wi
 
 ## 9 · Phased Rollout Plan
 
-| Phase       | Timeline  | Deliverables                                                                                                                                                                                                                            | Owner                                   |
-| ----------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| **Phase 1** | Weeks 1–2 | System prompt v1 built and tested in Claude.ai against simulated DMs. Inro account set up and connected to VendingPreneurs Instagram. n8n webhook flows built for Google Sheets and Customer.io. ROI calculator URL confirmed and live. | Wild Ducks / Josh (n8n)                 |
-| **Phase 2** | Week 3    | Soft launch: Claude setter live for new organic DMs only. Human setter monitors conversations in parallel for first 5 days. Prompt iterated based on real conversation quality. Google Sheet populating correctly. Slack alerts tested. | Wild Ducks / Matt's intern (calculator) |
-| **Phase 3** | Week 4    | Close CRM integration live. Broadcast campaign to existing Instagram contacts (within Meta window compliance). Human setter fully replaced for standard DM volume. Closers trained on new lead handoff format.                          | Wild Ducks / Stephen (RevOps)           |
-| **Phase 4** | Month 2   | Performance review: conversion rates, call booking rate, email capture rate, lead quality scores from closers. System prompt v2 based on learnings. Begin replication build for Brand 2 (Modern Amenities or MedPro).                   | Wild Ducks / Ben Brenner (data review)  |
-| **Phase 5** | Month 3+  | Full multi-brand deployment. Brand-specific personas, qualification criteria, and lead magnets per brand. Centralized lead log across all brands with brand source column.                                                              | Wild Ducks / Kody (production)          |
+| Phase       | Timeline  | Deliverables                                                                                                                                                                                                                               | Owner                                   |
+| ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
+| **Phase 1** | Weeks 1–2 | System prompt v1 built and tested in Claude.ai against simulated DMs. Inro account set up and connected to VendingPreneurs Instagram. App webhook + integration layer built for downstream systems. ROI calculator URL confirmed and live. | Wild Ducks                              |
+| **Phase 2** | Week 3    | Soft launch: Claude setter live for new organic DMs only. Human setter monitors conversations in parallel for first 5 days. Prompt iterated based on real conversation quality. Google Sheet populating correctly. Slack alerts tested.    | Wild Ducks / Matt's intern (calculator) |
+| **Phase 3** | Week 4    | Close CRM integration live. Broadcast campaign to existing Instagram contacts (within Meta window compliance). Human setter fully replaced for standard DM volume. Closers trained on new lead handoff format.                             | Wild Ducks / Stephen (RevOps)           |
+| **Phase 4** | Month 2   | Performance review: conversion rates, call booking rate, email capture rate, lead quality scores from closers. System prompt v2 based on learnings. Begin replication build for Brand 2 (Modern Amenities or MedPro).                      | Wild Ducks / Ben Brenner (data review)  |
+| **Phase 5** | Month 3+  | Full multi-brand deployment. Brand-specific personas, qualification criteria, and lead magnets per brand. Centralized lead log across all brands with brand source column.                                                                 | Wild Ducks / Kody (production)          |
 
 ---
 
@@ -260,7 +244,7 @@ When a call is booked, a Slack message fires to the designated closer channel wi
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | ROI Calculator       | Matt's intern must deliver a hosted, live URL before Phase 1 launch. Calculator must output personalized results.                |
 | Inro Account         | Verify plan tier supports webhook events and Claude API integration at required volume.                                          |
-| Close CRM API        | Confirm with Greg / Stephen that the Close API key and contact write permissions are available for n8n.                          |
+| Close CRM API        | Confirm with Greg / Stephen that the Close API key and contact write permissions are available for the app.                      |
 | Ben Brenner Review   | Data architecture review required before any PII (email addresses) is written to external systems. Standard Wild Ducks protocol. |
 | Brand Voice Sign-Off | Persona name and tone must be approved before the system prompt is finalized. Sofia or Jeffrey for brand QA.                     |
 | Comp / Setter Impact | If existing human setters are affected, this needs to be coordinated with George and HR before Phase 3 cutover.                  |
@@ -282,7 +266,7 @@ All DM automation must operate through Meta-approved channels. Inro uses the off
 Email addresses collected through this system constitute PII and must be handled in compliance with applicable regulations. Ben Brenner must review the data flow before any email addresses are written to external systems. Key considerations:
 
 - Customer.io is the email platform — contacts being enrolled must have opted in
-- Google Sheets access must be restricted to authorized team members only
+- Supabase RLS policies restrict data access to authorized team members only
 - Contacts must have a clear opt-out mechanism from any email sequences
 - The DM conversation should make clear — naturally, not legalistically — that the contact is providing their email to receive the calculator and related resources
 
@@ -299,12 +283,12 @@ If a contact directly asks whether they are speaking to a human or a bot, Claude
 3. Lock qualification criteria with the sales team: exact machine count floor, revenue range, location type preferences.
 4. Confirm the ROI calculator is on track for delivery and will have a hosted URL within 2 weeks.
 5. Set up the Inro account and confirm webhook and Claude API integration are available on the current plan.
-6. Route to Ben Brenner for data architecture review of the email capture → Google Sheets → Close → Customer.io pipeline.
+6. Route to Ben Brenner for data architecture review of the email capture → Supabase → Close → Customer.io pipeline.
 7. Begin system prompt v1 build. Run 20+ simulated conversations before connecting to live Inro flow.
-8. Build n8n webhook flows for Google Sheets write, Customer.io trigger, and Slack closer alert.
+8. Build app integration layer for Close CRM write, Customer.io trigger, and Slack closer alert.
 9. Schedule a Wild Ducks review of the prompt and conversation quality before Phase 2 soft launch.
 
-> **Foundation:** This is the first full agentic setter build for the holdco. Once VendingPreneurs is live and performing, the system prompt architecture and n8n flows become reusable templates for every brand. Build it right the first time.
+> **Foundation:** This is the first full agentic setter build for the holdco. Once VendingPreneurs is live and performing, the system prompt architecture and integration layer become reusable templates for every brand. Build it right the first time.
 
 ---
 
