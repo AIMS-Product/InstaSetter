@@ -1,9 +1,15 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import type { QualificationStatus } from '@/types/enums'
+
+// Mock service-role to avoid env var validation at import time
+vi.mock('@/lib/supabase/service-role', () => ({
+  createServiceRoleClient: vi.fn(),
+}))
+
 import {
   determineQualification,
   HOT_MACHINE_THRESHOLD,
 } from '@/lib/services/lead'
-import type { QualificationStatus } from '@/types/enums'
 
 describe('determineQualification', () => {
   it('returns hot when callBooked is true', () => {
