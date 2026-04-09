@@ -50,10 +50,12 @@ describe('storeMessage', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.isDuplicate).toBeFalsy()
-    if (result.success && !result.isDuplicate) {
-      expect(result.data).toBeDefined()
-      expect(result.data.id).toBe('msg-1')
+    if (result.success) {
+      expect(result.isDuplicate).toBe(false)
+      if (!result.isDuplicate) {
+        expect(result.data).toBeDefined()
+        expect(result.data.id).toBe('msg-1')
+      }
     }
   })
 
@@ -70,7 +72,9 @@ describe('storeMessage', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.isDuplicate).toBe(true)
+    if (result.success) {
+      expect(result.isDuplicate).toBe(true)
+    }
   })
 
   it('handles 23505 unique violation as duplicate', async () => {
@@ -87,7 +91,9 @@ describe('storeMessage', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.isDuplicate).toBe(true)
+    if (result.success) {
+      expect(result.isDuplicate).toBe(true)
+    }
   })
 
   it('stores assistant messages without inro_message_id', async () => {
@@ -104,9 +110,11 @@ describe('storeMessage', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.isDuplicate).toBeFalsy()
-    if (result.success && !result.isDuplicate) {
-      expect(result.data.role).toBe('assistant')
+    if (result.success) {
+      expect(result.isDuplicate).toBe(false)
+      if (!result.isDuplicate) {
+        expect(result.data.role).toBe('assistant')
+      }
     }
 
     // Verify insert was called without inro_message_id
