@@ -1,7 +1,9 @@
 import type Anthropic from '@anthropic-ai/sdk'
+import { MESSAGE_LIMIT } from '@/types/enums'
 
 type Tool = Anthropic.Messages.Tool
 type MessageParam = Anthropic.Messages.MessageParam
+type Message = Anthropic.Messages.Message
 
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 const MAX_TOKENS = 1024
@@ -132,4 +134,38 @@ export function buildClaudeRequest(
     max_tokens: MAX_TOKENS,
     tools: TOOLS,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Response parsing
+// ---------------------------------------------------------------------------
+
+export interface ToolCall {
+  id: string
+  name: string
+  input: unknown
+}
+
+export interface ParsedClaudeResponse {
+  text: string
+  toolCalls: ToolCall[]
+}
+
+export function parseClaudeResponse(message: Message): ParsedClaudeResponse {
+  let text = ''
+  const toolCalls: ToolCall[] = []
+
+  for (const block of message.content) {
+    if (block.type === 'text') {
+      text += block.text
+    } else if (block.type === 'tool_use') {
+      toolCalls.push({ id: block.id, name: block.name, input: block.input })
+    }
+  }
+
+  if (text.length > MESSAGE_LIMIT) {
+    text = text.slice(0, MESSAGE_LIMIT)
+  }
+
+  return { text, toolCalls }
 }
