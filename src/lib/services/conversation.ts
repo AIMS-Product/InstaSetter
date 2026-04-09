@@ -56,10 +56,12 @@ export async function closeConversation(
 ): Promise<ServiceResult<Conversation>> {
   const supabase = createServiceRoleClient()
 
+  const now = new Date().toISOString()
   const updatePayload: Database['public']['Tables']['conversations']['Update'] =
     {
       status: 'completed',
-      ended_at: new Date().toISOString(),
+      ended_at: now,
+      updated_at: now,
     }
 
   if (summary !== undefined) {
