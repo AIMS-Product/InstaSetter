@@ -49,3 +49,58 @@ export async function findOrCreateActiveConversation(
 
   return { success: true, data: created }
 }
+
+export async function closeConversation(
+  conversationId: string,
+  summary?: string
+): Promise<ServiceResult<Conversation>> {
+  const supabase = createServiceRoleClient()
+
+  const updatePayload: Database['public']['Tables']['conversations']['Update'] =
+    {
+      status: 'completed',
+      ended_at: new Date().toISOString(),
+    }
+
+  if (summary !== undefined) {
+    updatePayload.summary = summary
+  }
+
+  const { data, error } = await supabase
+    .from('conversations')
+    .update(updatePayload)
+    .eq('id', conversationId)
+    .select()
+    .single()
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data }
+}
+
+export async function loadPriorSummaries(
+  contactId: string,
+  limit: number = 3
+): Promise<ServiceResult<string[]>> {
+  const supabase = createServiceRoleClient()
+
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('summary')
+    .eq('contact_id', contactId)
+    .eq('status', 'completed')
+    .not('summary', 'is', null)
+    .order('ended_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return {
+    success: true,
+    data: data.map((row) => row.summary as string),
+  }
+}
