@@ -1,6 +1,5 @@
 import { z } from 'zod'
-
-export const QUALIFICATION_STATUSES = ['hot', 'warm', 'cold'] as const
+import { QUALIFICATION_STATUSES } from '@/types/enums'
 
 export const leadSummarySchema = z.object({
   instagram_handle: z.string().min(1),
