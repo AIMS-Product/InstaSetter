@@ -7,6 +7,8 @@ const envSchema = z.object({
 
 const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  ANTHROPIC_API_KEY: z.string().min(1),
+  BRAND_NAME: z.string().min(1),
 })
 
 // Client-safe config — validated at import time
@@ -19,5 +21,7 @@ export const config = envSchema.parse({
 export function getServerConfig() {
   return serverEnvSchema.parse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    BRAND_NAME: process.env.BRAND_NAME,
   })
 }
