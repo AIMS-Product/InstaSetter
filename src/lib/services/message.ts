@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
+import type { Database, Json } from '@/types/database'
 import { generateDedupHash } from '@/lib/utils/dedup-hash'
 
 type MessageRow = Database['public']['Tables']['messages']['Row']
@@ -11,7 +11,7 @@ type StoreMessageInput = {
   timestamp: string
   inroMessageId?: string
   tokenCount?: number
-  metadata?: Record<string, unknown>
+  metadata?: Json
 }
 
 type StoreResult =
@@ -86,4 +86,27 @@ export async function storeMessage(
   }
 
   return { success: true, isDuplicate: false, data: inserted }
+}
+
+export type ClaudeMessage = { role: string; content: string }
+
+type BuildResult =
+  | { success: true; data: ClaudeMessage[] }
+  | { success: false; error: string }
+
+export async function buildClaudeMessages(
+  client: SupabaseClient<Database>,
+  conversationId: string
+): Promise<BuildResult> {
+  const { data, error } = await client
+    .from('messages')
+    .select('role, content')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data: data ?? [] }
 }
