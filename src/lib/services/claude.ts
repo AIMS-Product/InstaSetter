@@ -141,31 +141,40 @@ export function buildClaudeRequest(
 // ---------------------------------------------------------------------------
 
 export interface ToolCall {
-  id: string
   name: string
-  input: unknown
+  toolUseId: string
+  input: Record<string, unknown>
 }
 
 export interface ParsedClaudeResponse {
-  text: string
+  replyText: string
   toolCalls: ToolCall[]
+  truncated: boolean
 }
 
 export function parseClaudeResponse(message: Message): ParsedClaudeResponse {
-  let text = ''
+  const textParts: string[] = []
   const toolCalls: ToolCall[] = []
 
   for (const block of message.content) {
     if (block.type === 'text') {
-      text += block.text
+      textParts.push(block.text)
     } else if (block.type === 'tool_use') {
-      toolCalls.push({ id: block.id, name: block.name, input: block.input })
+      toolCalls.push({
+        name: block.name,
+        toolUseId: block.id,
+        input: block.input as Record<string, unknown>,
+      })
     }
   }
 
-  if (text.length > MESSAGE_LIMIT) {
-    text = text.slice(0, MESSAGE_LIMIT)
+  let replyText = textParts.join(' ')
+  let truncated = false
+
+  if (replyText.length > MESSAGE_LIMIT) {
+    replyText = replyText.slice(0, MESSAGE_LIMIT)
+    truncated = true
   }
 
-  return { text, toolCalls }
+  return { replyText, toolCalls, truncated }
 }
