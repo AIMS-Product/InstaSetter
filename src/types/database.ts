@@ -14,6 +14,319 @@ export type Database = {
   }
   public: {
     Tables: {
+      contacts: {
+        Row: {
+          id: string
+          inro_contact_id: string
+          instagram_handle: string
+          name: string | null
+          email: string | null
+          phone: string | null
+          profile_picture_url: string | null
+          source: string
+          opted_out: boolean
+          opted_out_at: string | null
+          first_seen_at: string
+          last_message_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          inro_contact_id: string
+          instagram_handle: string
+          name?: string | null
+          email?: string | null
+          phone?: string | null
+          profile_picture_url?: string | null
+          source?: string
+          opted_out?: boolean
+          opted_out_at?: string | null
+          first_seen_at?: string
+          last_message_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          inro_contact_id?: string
+          instagram_handle?: string
+          name?: string | null
+          email?: string | null
+          phone?: string | null
+          profile_picture_url?: string | null
+          source?: string
+          opted_out?: boolean
+          opted_out_at?: string | null
+          first_seen_at?: string
+          last_message_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'conversations_contact_id_fkey'
+            columns: ['id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['contact_id']
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          id: string
+          contact_id: string
+          status: string
+          prompt_version: string
+          summary: string | null
+          flagged_reason: string | null
+          is_test: boolean
+          started_at: string
+          ended_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id: string
+          status?: string
+          prompt_version: string
+          summary?: string | null
+          flagged_reason?: string | null
+          is_test?: boolean
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          status?: string
+          prompt_version?: string
+          summary?: string | null
+          flagged_reason?: string | null
+          is_test?: boolean
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'conversations_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      integration_events: {
+        Row: {
+          id: string
+          lead_id: string | null
+          contact_id: string | null
+          conversation_id: string | null
+          integration: string
+          action: string
+          status: string
+          payload: Json | null
+          request_payload: Json | null
+          response_payload: Json | null
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id?: string | null
+          contact_id?: string | null
+          conversation_id?: string | null
+          integration: string
+          action: string
+          status?: string
+          payload?: Json | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          error_message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string | null
+          contact_id?: string | null
+          conversation_id?: string | null
+          integration?: string
+          action?: string
+          status?: string
+          payload?: Json | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          error_message?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'integration_events_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'leads'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'integration_events_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'integration_events_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          id: string
+          contact_id: string
+          conversation_id: string
+          instagram_handle: string
+          qualification_status: string
+          machine_count: number | null
+          location_type: string | null
+          revenue_range: string | null
+          call_booked: boolean
+          calendly_slot: string | null
+          calculator_sent: boolean
+          key_notes: string | null
+          recommended_action: string | null
+          call_outcome: string | null
+          call_outcome_notes: string | null
+          call_outcome_at: string | null
+          close_crm_id: string | null
+          customerio_id: string | null
+          name: string | null
+          email: string | null
+          summary_json: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contact_id: string
+          conversation_id: string
+          instagram_handle: string
+          qualification_status?: string
+          machine_count?: number | null
+          location_type?: string | null
+          revenue_range?: string | null
+          call_booked?: boolean
+          calendly_slot?: string | null
+          calculator_sent?: boolean
+          key_notes?: string | null
+          recommended_action?: string | null
+          call_outcome?: string | null
+          call_outcome_notes?: string | null
+          call_outcome_at?: string | null
+          close_crm_id?: string | null
+          customerio_id?: string | null
+          name?: string | null
+          email?: string | null
+          summary_json?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          conversation_id?: string
+          instagram_handle?: string
+          qualification_status?: string
+          machine_count?: number | null
+          location_type?: string | null
+          revenue_range?: string | null
+          call_booked?: boolean
+          calendly_slot?: string | null
+          calculator_sent?: boolean
+          key_notes?: string | null
+          recommended_action?: string | null
+          call_outcome?: string | null
+          call_outcome_notes?: string | null
+          call_outcome_at?: string | null
+          close_crm_id?: string | null
+          customerio_id?: string | null
+          name?: string | null
+          email?: string | null
+          summary_json?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'leads_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'leads_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          role: string
+          content: string
+          inro_message_id: string | null
+          dedup_hash: string | null
+          token_count: number | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          role: string
+          content: string
+          inro_message_id?: string | null
+          dedup_hash?: string | null
+          token_count?: number | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          role?: string
+          content?: string
+          inro_message_id?: string | null
+          dedup_hash?: string | null
+          token_count?: number | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'messages_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       mc_bot_fields: {
         Row: {
           description: string | null
