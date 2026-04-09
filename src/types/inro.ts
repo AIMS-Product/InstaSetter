@@ -1,17 +1,5 @@
 import { z } from 'zod'
-
-/**
- * Contact source values for Inro webhook payloads.
- * Defined inline until @/types/enums is available (Issue 3).
- */
-const CONTACT_SOURCES = [
-  'organic_dm',
-  'keyword',
-  'story_reply',
-  'ad_click',
-  'referral',
-  'manual',
-] as const
+import { CONTACT_SOURCES } from '@/types/enums'
 
 export const inroWebhookSchema = z.object({
   contact_id: z.string(),
