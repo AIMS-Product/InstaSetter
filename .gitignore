@@ -42,3 +42,12 @@ supabase/.temp/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# analysis pipeline output
+scripts/output/
+
+# Instagram data export (PII — never commit)
+docs/instagram-*/
+
+# Generated docs
+docs/pattern-report.docx
