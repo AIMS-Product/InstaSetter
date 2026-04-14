@@ -112,23 +112,12 @@ function selectForDeepAnalysis(
   const qualified = classifications.filter(
     (c) => qualStages.has(c.stageReached) && !selected.has(c.conversationId)
   )
-  // Sort by engagement, take top 200
-  const engagementOrder: Record<string, number> = {
-    high: 3,
-    medium: 2,
-    low: 1,
-    none: 0,
-  }
-  qualified.sort(
-    (a, b) =>
-      (engagementOrder[b.engagementLevel] ?? 0) -
-      (engagementOrder[a.engagementLevel] ?? 0)
-  )
-  for (const c of qualified.slice(0, 200)) {
+  // All high-engagement conversations that reached qualification or beyond — no cap
+  for (const c of qualified) {
     selected.add(c.conversationId)
   }
 
-  // Unresolved objections with substantive content
+  // All unresolved objections with substantive content — no cap
   const objections = classifications.filter(
     (c) =>
       c.outcome === 'objection_unresolved' && !selected.has(c.conversationId)
@@ -136,10 +125,31 @@ function selectForDeepAnalysis(
   const convMap = new Map(conversations.map((c) => [c.meta.id, c]))
   const longObjections = objections.filter((c) => {
     const conv = convMap.get(c.conversationId)
-    return conv && conv.meta.substantiveMessageCount >= 10
+    return conv && conv.meta.substantiveMessageCount >= 6
   })
-  for (const c of longObjections.slice(0, 100)) {
+  for (const c of longObjections) {
     selected.add(c.conversationId)
+  }
+
+  // All qualified_warm
+  for (const c of classifications) {
+    if (c.outcome === 'qualified_warm' && !selected.has(c.conversationId)) {
+      selected.add(c.conversationId)
+    }
+  }
+
+  // All masterclass_delivered with medium+ engagement (learn what stops progression)
+  for (const c of classifications) {
+    if (
+      c.outcome === 'masterclass_delivered' &&
+      (c.engagementLevel === 'medium' || c.engagementLevel === 'high') &&
+      !selected.has(c.conversationId)
+    ) {
+      const conv = convMap.get(c.conversationId)
+      if (conv && conv.meta.substantiveMessageCount >= 6) {
+        selected.add(c.conversationId)
+      }
+    }
   }
 
   return [...selected]
