@@ -5,7 +5,7 @@ import type { Database } from '@/types/database'
 vi.mock('@/lib/services/conversation')
 vi.mock('@/lib/services/message')
 vi.mock('@/lib/services/claude')
-vi.mock('@/lib/prompts/setter-v1')
+vi.mock('@/lib/prompts/setter-v2')
 vi.mock('@/lib/config', () => ({
   config: {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -25,7 +25,7 @@ import {
 } from '@/lib/services/conversation'
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
 import { buildClaudeRequest, parseClaudeResponse } from '@/lib/services/claude'
-import { buildSystemPrompt } from '@/lib/prompts/setter-v1'
+import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
 
 type ConversationRow = Database['public']['Tables']['conversations']['Row']
 type MessageRow = Database['public']['Tables']['messages']['Row']

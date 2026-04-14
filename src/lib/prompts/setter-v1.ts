@@ -1,4 +1,6 @@
-import { PROMPT_VERSION, MESSAGE_LIMIT } from '@/types/enums'
+import { MESSAGE_LIMIT } from '@/types/enums'
+
+const PROMPT_VERSION = 'setter-v1'
 
 interface BuildSystemPromptOptions {
   brandName: string

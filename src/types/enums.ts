@@ -60,6 +60,6 @@ export type CallOutcome = (typeof CALL_OUTCOMES)[number]
 // Instagram / prompt constants
 // ---------------------------------------------------------------------------
 
-export const PROMPT_VERSION = 'setter-v1' as const
+export const PROMPT_VERSION = 'setter-v2' as const
 export const FIRST_MESSAGE_LIMIT = 300 as const
 export const MESSAGE_LIMIT = 2000 as const

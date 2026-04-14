@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v1'
-import { PROMPT_VERSION } from '@/types/enums'
 
 describe('buildSystemPrompt', () => {
   it('includes all 7 sections', () => {
@@ -21,7 +20,7 @@ describe('buildSystemPrompt', () => {
 
   it('includes version tag', () => {
     const prompt = buildSystemPrompt({ brandName: 'VendingPreneurs' })
-    expect(prompt).toContain(PROMPT_VERSION)
+    expect(prompt).toContain('setter-v1')
   })
 
   it('appends returning contact section with summaries', () => {

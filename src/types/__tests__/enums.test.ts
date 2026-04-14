@@ -93,6 +93,6 @@ describe('domain enums', () => {
   it('exports IG message constants', () => {
     expect(FIRST_MESSAGE_LIMIT).toBe(300)
     expect(MESSAGE_LIMIT).toBe(2000)
-    expect(PROMPT_VERSION).toBe('setter-v1')
+    expect(PROMPT_VERSION).toBe('setter-v2')
   })
 })

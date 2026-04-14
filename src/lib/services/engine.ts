@@ -14,7 +14,7 @@ import {
   type ToolCall,
 } from '@/lib/services/claude'
 import { leadSummarySchema } from '@/types/lead'
-import { buildSystemPrompt } from '@/lib/prompts/setter-v1'
+import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
 import { getServerConfig } from '@/lib/config'
 
 type ClaudeCallFn = (
