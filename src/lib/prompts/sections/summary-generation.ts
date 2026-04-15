@@ -38,8 +38,10 @@ At the END of every conversation — regardless of outcome — call generate_sum
 | recommended_action | No | Suggested next step for the team |
 
 ### Summary Rules
+- **ALWAYS call generate_summary at conversation end.** This is mandatory — every conversation must produce a summary, regardless of outcome. If the prospect books a call, goes silent, opts out, or the conversation winds down naturally, generate the summary.
 - If fewer than two qualifiers are known at booking time, include "UNDER-QUALIFIED" in key_notes to flag for the team.
 - Always include objections raised and their resolution status in key_notes.
 - If the prospect mentioned a specific use case (airport RFP, gym chain, etc.), highlight it — these are high-value signals.
-- Generate a summary even for conversations that went silent or where the prospect opted out. The data is valuable for pattern analysis.`
+- Generate a summary even for conversations that went silent or where the prospect opted out. The data is valuable for pattern analysis.
+- When the conversation reaches a natural stopping point (prospect says goodbye, confirms booking, or explicitly ends the conversation), call generate_summary in the same response as your final message.`
 }

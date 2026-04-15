@@ -497,24 +497,33 @@ RULES:
       toolCalls: turnToolCalls.length > 0 ? turnToolCalls : undefined,
     })
 
-    // Add setter response to both histories
-    setterHistory.push({ role: 'assistant', content: setterMessage })
+    // Add setter response to history (guard against empty content)
+    if (setterMessage) {
+      setterHistory.push({ role: 'assistant', content: setterMessage })
+    } else {
+      // Tool-only response — use a placeholder so history stays valid
+      setterHistory.push({
+        role: 'assistant',
+        content: '[system action taken]',
+      })
+    }
 
     // If setter only made tool calls with no text, the conversation might be ending
     if (!setterMessage && summaryGenerated) break
 
     // --- Prospect's turn ---
-    // Build the prospect's view of the conversation
-    prospectHistory.push({ role: 'user', content: setterMessage })
+    // Skip prospect turn if setter had no visible message (tool-only)
+    if (!setterMessage) continue
+
+    const prospectView = buildProspectView(messages)
+    // Guard: ensure we have valid alternating messages
+    if (prospectView.length === 0) break
 
     const prospectResponse = await client.messages.create({
       model: SONNET_MODEL,
       max_tokens: 512,
       system: prospectSystemPrompt,
-      messages: [
-        // Give the prospect the full conversation so far
-        ...buildProspectView(messages),
-      ],
+      messages: prospectView,
     })
 
     let prospectText = ''
