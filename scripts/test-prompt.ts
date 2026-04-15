@@ -88,7 +88,8 @@ const TOOLS: Anthropic.Messages.Tool[] = [
   },
   {
     name: 'generate_summary',
-    description: 'Generate a structured summary of the lead.',
+    description:
+      'MANDATORY: Generate a structured lead summary. You MUST call this when the prospect confirms a booking, says goodbye, opts out, or the conversation ends for any reason. Call in the same response as your final message.',
     input_schema: {
       type: 'object' as const,
       properties: {
@@ -108,7 +109,8 @@ const TOOLS: Anthropic.Messages.Tool[] = [
   },
   {
     name: 'book_call',
-    description: 'Initiate or confirm a call booking.',
+    description:
+      'MANDATORY: You MUST call this tool whenever a prospect confirms they have booked, are booking, or agree to book a call. Call in the same response as your confirmation message.',
     input_schema: {
       type: 'object' as const,
       properties: {

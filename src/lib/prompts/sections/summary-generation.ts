@@ -21,7 +21,13 @@ Before sending the booking link, mirror back what you've learned in 1-2 sentence
 If budget is unknown, omit it and focus on location and goal. This confirms the prospect feels heard and creates a natural transition to the booking link.
 
 ### Trigger 2 — Internal Lead Summary (via generate_summary tool)
-At the END of every conversation — regardless of outcome — call generate_summary with these fields:
+You MUST call generate_summary when ANY of these happen:
+- The prospect confirms they booked a call → call generate_summary in the SAME response
+- The prospect says goodbye, thanks you, or signals the conversation is over → call generate_summary in the SAME response
+- The prospect opts out or says they're not interested → call generate_summary in the SAME response
+- You send a final follow-up and the conversation is winding down → call generate_summary in the SAME response
+
+Call generate_summary with these fields:
 
 | Field | Required | Notes |
 |-------|----------|-------|

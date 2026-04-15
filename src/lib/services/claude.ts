@@ -49,7 +49,7 @@ const TOOLS: Tool[] = [
   {
     name: 'generate_summary',
     description:
-      'Generate a structured summary of the lead after the conversation has gathered enough information for qualification.',
+      'MANDATORY: Generate a structured lead summary. You MUST call this when the prospect confirms a booking, says goodbye, opts out, or the conversation ends for any reason. Call in the same response as your final message.',
     input_schema: {
       type: 'object',
       properties: {
@@ -102,7 +102,7 @@ const TOOLS: Tool[] = [
   {
     name: 'book_call',
     description:
-      'Initiate or confirm a call booking when the lead agrees to schedule a call.',
+      'MANDATORY: You MUST call this tool whenever a prospect confirms they have booked, are booking, or agree to book a call. Call in the same response as your confirmation message.',
     input_schema: {
       type: 'object',
       properties: {
