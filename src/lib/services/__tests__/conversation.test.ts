@@ -11,6 +11,7 @@ const mockEq = vi.fn()
 const mockLimit = vi.fn()
 const mockSingle = vi.fn()
 const mockInsert = vi.fn()
+const mockUpdate = vi.fn()
 const mockNot = vi.fn()
 const mockOrder = vi.fn()
 
@@ -19,6 +20,7 @@ vi.mock('@/lib/supabase/service-role', () => ({
     from: () => ({
       select: mockSelect,
       insert: mockInsert,
+      update: mockUpdate,
     }),
   }),
 }))
@@ -33,13 +35,14 @@ describe('findOrCreateActiveConversation', () => {
     mockLimit.mockReturnValue({ single: mockSingle })
   })
 
-  it('returns existing active conversation when one exists', async () => {
+  it('returns existing active conversation when one exists and is fresh', async () => {
     const existingConvo = {
       id: 'conv-123',
       contact_id: 'contact-456',
       status: 'active',
       prompt_version: PROMPT_VERSION,
       started_at: '2026-04-09T10:00:00Z',
+      updated_at: new Date().toISOString(), // fresh — just updated
     }
 
     mockSingle.mockResolvedValue({ data: existingConvo, error: null })
@@ -49,7 +52,89 @@ describe('findOrCreateActiveConversation', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toEqual(existingConvo)
+      expect(result.data.staleConversationId).toBeUndefined()
     }
+    expect(mockInsert).not.toHaveBeenCalled()
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('closes stale conversation and creates a new one', async () => {
+    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+    const staleConvo = {
+      id: 'conv-stale',
+      contact_id: 'contact-456',
+      status: 'active',
+      prompt_version: PROMPT_VERSION,
+      started_at: '2026-04-09T10:00:00Z',
+      updated_at: fiveHoursAgo,
+    }
+
+    mockSingle.mockResolvedValue({ data: staleConvo, error: null })
+
+    // Mock update chain: update().eq()
+    const mockUpdateEq = vi.fn().mockResolvedValue({ error: null })
+    mockUpdate.mockReturnValue({ eq: mockUpdateEq })
+
+    // Mock insert chain: insert().select().single()
+    const newConvo = {
+      id: 'conv-new',
+      contact_id: 'contact-456',
+      status: 'active',
+      prompt_version: PROMPT_VERSION,
+      updated_at: new Date().toISOString(),
+    }
+    const mockInsertSelect = vi.fn()
+    const mockInsertSingle = vi.fn()
+    mockInsert.mockReturnValue({ select: mockInsertSelect })
+    mockInsertSelect.mockReturnValue({ single: mockInsertSingle })
+    mockInsertSingle.mockResolvedValue({ data: newConvo, error: null })
+
+    const result = await findOrCreateActiveConversation('contact-456')
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.id).toBe('conv-new')
+      expect(result.data.staleConversationId).toBe('conv-stale')
+    }
+
+    // Verify stale conversation was updated to 'stalled'
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'stalled' })
+    )
+    expect(mockUpdateEq).toHaveBeenCalledWith('id', 'conv-stale')
+
+    // Verify new conversation was created
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact_id: 'contact-456',
+        status: 'active',
+      })
+    )
+  })
+
+  it('treats conversation updated 3 hours ago as fresh (under threshold)', async () => {
+    const threeHoursAgo = new Date(
+      Date.now() - 3 * 60 * 60 * 1000
+    ).toISOString()
+    const freshConvo = {
+      id: 'conv-recent',
+      contact_id: 'contact-456',
+      status: 'active',
+      prompt_version: PROMPT_VERSION,
+      started_at: '2026-04-09T10:00:00Z',
+      updated_at: threeHoursAgo,
+    }
+
+    mockSingle.mockResolvedValue({ data: freshConvo, error: null })
+
+    const result = await findOrCreateActiveConversation('contact-456')
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.id).toBe('conv-recent')
+      expect(result.data.staleConversationId).toBeUndefined()
+    }
+    expect(mockUpdate).not.toHaveBeenCalled()
     expect(mockInsert).not.toHaveBeenCalled()
   })
 
