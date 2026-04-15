@@ -47,6 +47,16 @@ export async function processMessage(
   }
   const conversationId = convResult.data.id
 
+  // Step 1b: If a stale conversation was closed, generate its summary async
+  if (convResult.data.staleConversationId) {
+    generateStaleSummary(
+      client,
+      contact.id,
+      convResult.data.staleConversationId,
+      callClaude
+    ).catch(() => {})
+  }
+
   // Step 2: Load prior summaries for context
   const summariesResult = await loadPriorSummaries(contact.id)
   const priorSummaries = summariesResult.success ? summariesResult.data : []
@@ -244,4 +254,66 @@ async function logIntegrationEvent(
     })
     .select()
     .single()
+}
+
+// ---------------------------------------------------------------------------
+// Stale conversation summary generator
+// ---------------------------------------------------------------------------
+
+const SUMMARY_SYSTEM_PROMPT = `You are a conversation analyst. Given an Instagram DM conversation between a vending business setter and a prospect, generate a structured JSON summary.
+
+Return ONLY a JSON object with these fields:
+- instagram_handle (string, required): the prospect's likely handle or "unknown"
+- qualification_status (string, required): "hot", "warm", or "cold"
+- call_booked (boolean, required): whether a call was booked
+- name (string, optional): prospect's first name if mentioned
+- email (string, optional): if captured
+- machine_count (number, optional): machines mentioned
+- location_type (string, optional): city/state or venue types
+- revenue_range (string, optional): budget mentioned
+- key_notes (string, optional): objections, flags, context for the sales team
+- recommended_action (string, optional): suggested next step
+
+Return ONLY valid JSON. No explanation, no markdown.`
+
+async function generateStaleSummary(
+  client: SupabaseClient<Database>,
+  contactId: string,
+  staleConversationId: string,
+  callClaude: ClaudeCallFn
+): Promise<void> {
+  // Load the stale conversation's messages
+  const messagesResult = await buildClaudeMessages(client, staleConversationId)
+  if (!messagesResult.success || messagesResult.data.length === 0) return
+
+  // Format messages as a readable transcript for the summary call
+  const transcript = messagesResult.data
+    .map((m) => `${m.role === 'user' ? 'PROSPECT' : 'MIKE'}: ${m.content}`)
+    .join('\n\n')
+
+  // Make a lightweight Claude call to generate just the summary
+  const request = buildClaudeRequest(SUMMARY_SYSTEM_PROMPT, [
+    { role: 'user', content: `Summarize this conversation:\n\n${transcript}` },
+  ])
+
+  let response: Anthropic.Messages.Message
+  try {
+    response = await callClaude(request)
+  } catch {
+    return
+  }
+
+  // Extract text from response
+  const text = response.content
+    .filter((b): b is Anthropic.Messages.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('')
+
+  // Parse the JSON summary
+  const parsed = leadSummarySchema.safeParse(JSON.parse(text))
+  if (!parsed.success) return
+
+  // Create lead and close the conversation
+  await createLead(contactId, staleConversationId, parsed.data)
+  await closeConversation(staleConversationId, text)
 }

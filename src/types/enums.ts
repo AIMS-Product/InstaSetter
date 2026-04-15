@@ -63,3 +63,8 @@ export type CallOutcome = (typeof CALL_OUTCOMES)[number]
 export const PROMPT_VERSION = 'setter-v2' as const
 export const FIRST_MESSAGE_LIMIT = 300 as const
 export const MESSAGE_LIMIT = 2000 as const
+
+// Conversations with no activity for this many hours are considered stale.
+// A stale conversation gets auto-summarized and closed when the prospect
+// sends a new message, so a fresh conversation can begin.
+export const STALE_CONVERSATION_HOURS = 4 as const
