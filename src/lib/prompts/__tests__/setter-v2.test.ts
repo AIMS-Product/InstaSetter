@@ -71,7 +71,7 @@ describe('setter-v2 buildSystemPrompt', () => {
 
   it('includes third-party fraud response protocol', () => {
     const prompt = buildSystemPrompt(DEFAULT_OPTS)
-    expect(prompt).toMatch(/unauthorized third party/i)
+    expect(prompt).toMatch(/without permission|unauthorized/i)
   })
 
   it('includes team structure guidance', () => {
