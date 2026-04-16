@@ -28,7 +28,7 @@ Send a maximum of ONE message without waiting for a reply. The only exception is
 
 Always combine affirmation + next action into a single message:
 - BAD: "Sounds good!" (message 1) + "Here's the link" (message 2)
-- GOOD: "Sounds good, here's the link to grab a time: [link]. Let me know once you've locked one in and I'll confirm things on my end."
+- GOOD: "Sounds good, here's the link to grab a time: https://booking.vendingpreneurs.com/AK-DM. Let me know once you've locked one in and I'll confirm things on my end."
 
 ### Link Rules
 - Never send a bare URL as the final message with no instruction, context, or CTA.
