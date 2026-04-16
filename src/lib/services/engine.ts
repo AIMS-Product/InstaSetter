@@ -36,7 +36,8 @@ export async function processMessage(
   inroMessageId: string | undefined,
   content: string,
   timestamp: string,
-  callClaude: ClaudeCallFn
+  callClaude: ClaudeCallFn,
+  integration: string = 'inro'
 ): Promise<ServiceResult<ProcessMessageResult>> {
   const { BRAND_NAME } = getServerConfig()
 
@@ -127,9 +128,13 @@ export async function processMessage(
 
   // Step 10: Route lead events (non-blocking)
   if (parsed.toolCalls.length > 0) {
-    routeLeadEvents(client, contact.id, conversationId, parsed.toolCalls).catch(
-      () => {}
-    )
+    routeLeadEvents(
+      client,
+      contact.id,
+      conversationId,
+      parsed.toolCalls,
+      integration
+    ).catch(() => {})
   }
 
   return { success: true, data: { reply: parsed.replyText, conversationId } }
@@ -146,7 +151,8 @@ export async function routeLeadEvents(
   client: SupabaseClient<Database>,
   contactId: string,
   conversationId: string,
-  toolCalls: ToolCall[]
+  toolCalls: ToolCall[],
+  integration: string = 'inro'
 ): Promise<{ success: boolean; eventsProcessed: number }> {
   if (toolCalls.length === 0) {
     return { success: true, eventsProcessed: 0 }
@@ -176,7 +182,7 @@ export async function routeLeadEvents(
             await logIntegrationEvent(client, {
               contactId,
               conversationId,
-              integration: 'inro',
+              integration,
               action: 'generate_summary',
               status: 'failed',
               errorMessage: parsed.error.message,
@@ -205,7 +211,7 @@ export async function routeLeadEvents(
       await logIntegrationEvent(client, {
         contactId,
         conversationId,
-        integration: 'inro',
+        integration,
         action: call.name,
         status: call.name === 'book_call' ? 'pending' : 'success',
         payload: call.input,
@@ -215,7 +221,7 @@ export async function routeLeadEvents(
       await logIntegrationEvent(client, {
         contactId,
         conversationId,
-        integration: 'inro',
+        integration,
         action: call.name,
         status: 'failed',
         errorMessage: 'Unexpected error processing tool call',

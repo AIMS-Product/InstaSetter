@@ -17,7 +17,8 @@ export type Database = {
       contacts: {
         Row: {
           id: string
-          inro_contact_id: string
+          inro_contact_id: string | null
+          sendpulse_contact_id: string | null
           instagram_handle: string
           name: string | null
           email: string | null
@@ -33,7 +34,8 @@ export type Database = {
         }
         Insert: {
           id?: string
-          inro_contact_id: string
+          inro_contact_id?: string | null
+          sendpulse_contact_id?: string | null
           instagram_handle: string
           name?: string | null
           email?: string | null
@@ -49,7 +51,8 @@ export type Database = {
         }
         Update: {
           id?: string
-          inro_contact_id?: string
+          inro_contact_id?: string | null
+          sendpulse_contact_id?: string | null
           instagram_handle?: string
           name?: string | null
           email?: string | null

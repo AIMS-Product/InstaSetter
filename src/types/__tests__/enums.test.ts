@@ -53,6 +53,7 @@ describe('domain enums', () => {
       'slack',
       'calendly',
       'inro',
+      'sendpulse',
     ])
   })
 
@@ -80,7 +81,7 @@ describe('domain enums', () => {
       'keyword' | 'broadcast' | 'organic_dm' | 'comment'
     >()
     expectTypeOf<IntegrationName>().toEqualTypeOf<
-      'close_crm' | 'customerio' | 'slack' | 'calendly' | 'inro'
+      'close_crm' | 'customerio' | 'slack' | 'calendly' | 'inro' | 'sendpulse'
     >()
     expectTypeOf<IntegrationEventStatus>().toEqualTypeOf<
       'pending' | 'success' | 'failed'

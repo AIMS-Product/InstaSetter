@@ -49,6 +49,7 @@ const validPayload = {
 const stubContact = (overrides: Partial<ContactRow> = {}): ContactRow => ({
   id: 'c1',
   inro_contact_id: 'inro_123',
+  sendpulse_contact_id: null,
   instagram_handle: 'testuser',
   name: null,
   email: null,
