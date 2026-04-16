@@ -100,7 +100,11 @@ export async function processMessage(
     messagesResult.data as Anthropic.Messages.MessageParam[]
   )
 
-  // Step 7: Call Claude
+  // Step 7: Call Claude (with tool result loop)
+  const allToolCalls: ToolCall[] = []
+  let replyText = ''
+  const MAX_TOOL_ROUNDS = 3
+
   let claudeResponse: Anthropic.Messages.Message
   try {
     claudeResponse = await callClaude(request)
@@ -109,15 +113,61 @@ export async function processMessage(
     return { success: false, error: message }
   }
 
-  // Step 8: Parse Claude response
-  const parsed = parseClaudeResponse(claudeResponse)
+  let parsed = parseClaudeResponse(claudeResponse)
+  allToolCalls.push(...parsed.toolCalls)
+  replyText = parsed.replyText
 
-  // Step 9: Store assistant reply
-  if (parsed.replyText) {
+  // If Claude returned tool_use without text, send tool results back to get
+  // the actual reply. This happens when Claude calls qualify_lead (or other
+  // tools) before generating its message.
+  let toolRound = 0
+  while (
+    claudeResponse.stop_reason === 'tool_use' &&
+    !replyText &&
+    toolRound < MAX_TOOL_ROUNDS
+  ) {
+    toolRound++
+
+    // Build tool result messages to send back
+    const toolResultMessages: Anthropic.Messages.MessageParam[] = [
+      // The assistant message with tool_use blocks
+      { role: 'assistant' as const, content: claudeResponse.content },
+      // Tool results for each tool_use block
+      {
+        role: 'user' as const,
+        content: parsed.toolCalls.map((tc) => ({
+          type: 'tool_result' as const,
+          tool_use_id: tc.toolUseId,
+          content: JSON.stringify({ success: true }),
+        })),
+      },
+    ]
+
+    const followUpRequest = buildClaudeRequest(request.system, [
+      ...request.messages,
+      ...toolResultMessages,
+    ])
+
+    try {
+      claudeResponse = await callClaude(followUpRequest)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Claude API error'
+      return { success: false, error: message }
+    }
+
+    parsed = parseClaudeResponse(claudeResponse)
+    allToolCalls.push(...parsed.toolCalls)
+    if (parsed.replyText) {
+      replyText = parsed.replyText
+    }
+  }
+
+  // Step 8: Store assistant reply
+  if (replyText) {
     const storeReplyResult = await storeMessage(client, {
       conversationId,
       role: 'assistant',
-      content: parsed.replyText,
+      content: replyText,
       timestamp: new Date().toISOString(),
     })
 
@@ -126,18 +176,18 @@ export async function processMessage(
     }
   }
 
-  // Step 10: Route lead events (non-blocking)
-  if (parsed.toolCalls.length > 0) {
+  // Step 9: Route lead events (non-blocking)
+  if (allToolCalls.length > 0) {
     routeLeadEvents(
       client,
       contact.id,
       conversationId,
-      parsed.toolCalls,
+      allToolCalls,
       integration
     ).catch(() => {})
   }
 
-  return { success: true, data: { reply: parsed.replyText, conversationId } }
+  return { success: true, data: { reply: replyText, conversationId } }
 }
 
 const KNOWN_TOOLS = new Set([
