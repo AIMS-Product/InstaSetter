@@ -35,7 +35,7 @@ vi.mock('@/lib/config', () => ({
 import { routeLeadEvents } from '@/lib/services/engine'
 import { createLead } from '@/lib/services/lead'
 import { closeConversation } from '@/lib/services/conversation'
-import { createMockClient } from '@/test/helpers'
+import { createMockClient, asSupabaseClient } from '@/test/helpers'
 
 describe('routeLeadEvents', () => {
   let client: ReturnType<typeof createMockClient>
@@ -46,7 +46,12 @@ describe('routeLeadEvents', () => {
   })
 
   it('returns immediately for empty tool calls', async () => {
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      []
+    )
     expect(result).toEqual({ success: true, eventsProcessed: 0 })
   })
 
@@ -56,13 +61,18 @@ describe('routeLeadEvents', () => {
     // integration_events insert chain: from().insert().select().single()
     client.single.mockResolvedValueOnce({ data: {}, error: null })
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'capture_email',
-        toolUseId: 'tu1',
-        input: { email: 'a@b.com' },
-      },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'capture_email',
+          toolUseId: 'tu1',
+          input: { email: 'a@b.com' },
+        },
+      ]
+    )
 
     expect(result.eventsProcessed).toBe(1)
     expect(client.update).toHaveBeenCalled()
@@ -80,17 +90,22 @@ describe('routeLeadEvents', () => {
     // integration_events insert
     client.single.mockResolvedValue({ data: {}, error: null })
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'generate_summary',
-        toolUseId: 'tu2',
-        input: {
-          instagram_handle: 'x',
-          qualification_status: 'hot',
-          call_booked: true,
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'generate_summary',
+          toolUseId: 'tu2',
+          input: {
+            instagram_handle: 'x',
+            qualification_status: 'hot',
+            call_booked: true,
+          },
         },
-      },
-    ])
+      ]
+    )
 
     expect(createLead).toHaveBeenCalled()
     expect(closeConversation).toHaveBeenCalledWith('cv1', expect.any(String))
@@ -101,13 +116,18 @@ describe('routeLeadEvents', () => {
     // integration_events insert for error logging
     client.single.mockResolvedValueOnce({ data: {}, error: null })
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'generate_summary',
-        toolUseId: 'tu2',
-        input: { bad: 'data' },
-      },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'generate_summary',
+          toolUseId: 'tu2',
+          input: { bad: 'data' },
+        },
+      ]
+    )
 
     expect(createLead).not.toHaveBeenCalled()
     expect(result.eventsProcessed).toBe(1)
@@ -131,13 +151,18 @@ describe('routeLeadEvents', () => {
 
     const { setContactTags } = await import('@/lib/services/sendpulse')
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'qualify_lead',
-        toolUseId: 'tu3',
-        input: { location_type: 'Adelaide', revenue_range: '$8K' },
-      },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'qualify_lead',
+          toolUseId: 'tu3',
+          input: { location_type: 'Adelaide', revenue_range: '$8K' },
+        },
+      ]
+    )
 
     expect(result.eventsProcessed).toBe(1)
     expect(client.update).toHaveBeenCalled()
@@ -151,13 +176,18 @@ describe('routeLeadEvents', () => {
   it('handles book_call — logs to integration_events', async () => {
     client.single.mockResolvedValueOnce({ data: {}, error: null })
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'book_call',
-        toolUseId: 'tu4',
-        input: { calendly_slot: '2026-04-15T14:00:00Z' },
-      },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'book_call',
+          toolUseId: 'tu4',
+          input: { calendly_slot: '2026-04-15T14:00:00Z' },
+        },
+      ]
+    )
 
     expect(result.eventsProcessed).toBe(1)
   })
@@ -166,13 +196,18 @@ describe('routeLeadEvents', () => {
     // integration_events insert
     client.single.mockResolvedValueOnce({ data: {}, error: null })
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'capture_email',
-        toolUseId: 'tu1',
-        input: {},
-      },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'capture_email',
+          toolUseId: 'tu1',
+          input: {},
+        },
+      ]
+    )
 
     expect(result.eventsProcessed).toBe(1)
     expect(client.update).not.toHaveBeenCalled()
@@ -183,7 +218,7 @@ describe('routeLeadEvents', () => {
     client.single.mockResolvedValueOnce({ data: {}, error: null })
 
     await routeLeadEvents(
-      client as never,
+      asSupabaseClient(client),
       'c1',
       'cv1',
       [{ name: 'book_call', toolUseId: 'tu1', input: {} }],
@@ -196,9 +231,12 @@ describe('routeLeadEvents', () => {
   })
 
   it('ignores unknown tool names', async () => {
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      { name: 'unknown_tool', toolUseId: 'tu5', input: {} },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [{ name: 'unknown_tool', toolUseId: 'tu5', input: {} }]
+    )
 
     expect(result.eventsProcessed).toBe(0)
   })
@@ -212,15 +250,20 @@ describe('routeLeadEvents', () => {
     // book_call succeeds
     client.single.mockResolvedValueOnce({ data: {}, error: null })
 
-    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
-      {
-        name: 'capture_email',
-        toolUseId: 'tu1',
-        input: { email: 'a@b.com' },
-      },
-      { name: 'generate_summary', toolUseId: 'tu2', input: { bad: 'data' } },
-      { name: 'book_call', toolUseId: 'tu3', input: {} },
-    ])
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'capture_email',
+          toolUseId: 'tu1',
+          input: { email: 'a@b.com' },
+        },
+        { name: 'generate_summary', toolUseId: 'tu2', input: { bad: 'data' } },
+        { name: 'book_call', toolUseId: 'tu3', input: {} },
+      ]
+    )
 
     expect(result.eventsProcessed).toBe(3)
   })

@@ -436,7 +436,7 @@ Return ONLY a JSON object with these fields:
 
 Return ONLY valid JSON. No explanation, no markdown.`
 
-async function generateStaleSummary(
+export async function generateStaleSummary(
   client: SupabaseClient<Database>,
   contactId: string,
   staleConversationId: string,

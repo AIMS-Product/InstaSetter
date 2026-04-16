@@ -37,7 +37,7 @@ import {
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
 import { buildClaudeRequest, parseClaudeResponse } from '@/lib/services/claude'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
-import { createMockClient } from '@/test/helpers'
+import { createMockClient, asSupabaseClient } from '@/test/helpers'
 
 type ConversationRow = Database['public']['Tables']['conversations']['Row']
 type MessageRow = Database['public']['Tables']['messages']['Row']
@@ -116,7 +116,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient as never,
+      asSupabaseClient(mockClient),
       mockContact,
       'msg-id',
       'Hi',
@@ -138,7 +138,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient as never,
+      asSupabaseClient(mockClient),
       mockContact,
       'msg-id',
       'Hi',
@@ -186,7 +186,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient as never,
+      asSupabaseClient(mockClient),
       mockContact,
       'msg-id',
       'msg',
@@ -215,7 +215,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient as never,
+      asSupabaseClient(mockClient),
       mockContact,
       'msg-id',
       'Hi',
@@ -228,5 +228,168 @@ describe('processMessage', () => {
       expect(result.data.reply).toBeUndefined()
     }
     expect(mockClaude).not.toHaveBeenCalled()
+  })
+
+  it('returns error when Claude API call throws', async () => {
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: '',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockRejectedValue(new Error('Rate limit exceeded'))
+
+    const result = await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      '2026-04-09T10:00:00Z',
+      mockClaude
+    )
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toBe('Rate limit exceeded')
+    }
+  })
+
+  it('returns error when storing assistant reply fails', async () => {
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    // First call: store user message succeeds
+    // Second call: store assistant reply fails
+    vi.mocked(storeMessage)
+      .mockResolvedValueOnce({
+        success: true,
+        isDuplicate: false,
+        data: stubMessage,
+      })
+      .mockResolvedValueOnce({
+        success: false,
+        error: 'DB write failed',
+      })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: '',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockResolvedValue({
+      content: [{ type: 'text', text: 'Hey!' }],
+    })
+    vi.mocked(parseClaudeResponse).mockReturnValue({
+      replyText: 'Hey!',
+      toolCalls: [],
+      truncated: false,
+    })
+
+    const result = await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      '2026-04-09T10:00:00Z',
+      mockClaude
+    )
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toBe('DB write failed')
+    }
+    expect(storeMessage).toHaveBeenCalledTimes(2)
+  })
+
+  it('passes contactContext to buildSystemPrompt when contact has tags', async () => {
+    const taggedContact = {
+      id: 'contact-1',
+      tags: ['qualified', 'location:Adelaide'],
+      name: 'James',
+      email: 'james@test.com',
+    }
+
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: '',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockResolvedValue({
+      content: [{ type: 'text', text: 'Hey!' }],
+    })
+    vi.mocked(parseClaudeResponse).mockReturnValue({
+      replyText: 'Hey!',
+      toolCalls: [],
+      truncated: false,
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      taggedContact,
+      'msg-id',
+      'Hi',
+      '2026-04-09T10:00:00Z',
+      mockClaude
+    )
+
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contactContext: expect.objectContaining({
+          tags: ['qualified', 'location:Adelaide'],
+          name: 'James',
+          email: 'james@test.com',
+        }),
+      })
+    )
   })
 })
