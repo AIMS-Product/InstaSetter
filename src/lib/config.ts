@@ -5,8 +5,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 })
 
-const serverEnvSchema = z.object({
+const supabaseServiceSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+})
+
+const serverEnvSchema = supabaseServiceSchema.extend({
   ANTHROPIC_API_KEY: z.string().min(1),
   BRAND_NAME: z.string().min(1),
 })
@@ -23,7 +26,14 @@ export const config = envSchema.parse({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 })
 
-// Server-only config — call this in server code only
+// Supabase service role key only — for code that doesn't need Claude/brand config
+export function getSupabaseServiceConfig() {
+  return supabaseServiceSchema.parse({
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  })
+}
+
+// Full server config — includes Claude API key and brand name
 export function getServerConfig() {
   return serverEnvSchema.parse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
