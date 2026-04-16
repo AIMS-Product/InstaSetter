@@ -9,16 +9,30 @@ import { buildMessageConstraints } from './sections/message-constraints'
 
 const PROMPT_VERSION = 'setter-v2'
 
+export interface ContactContext {
+  tags: string[]
+  name?: string
+  email?: string
+  lastQualification?: {
+    status: string
+    location?: string
+    motivation?: string
+    budget?: string
+  }
+}
+
 interface BuildSystemPromptOptions {
   brandName: string
   isReturningContact?: boolean
   priorSummaries?: string[]
+  contactContext?: ContactContext
 }
 
 export function buildSystemPrompt({
   brandName,
   isReturningContact,
   priorSummaries,
+  contactContext,
 }: BuildSystemPromptOptions): string {
   const sections = [
     buildPersona(brandName),
@@ -35,7 +49,46 @@ export function buildSystemPrompt({
     sections.push(buildReturningContactSection(priorSummaries))
   }
 
+  if (contactContext) {
+    sections.push(buildContactContextSection(contactContext))
+  }
+
   return `[${PROMPT_VERSION}]\n\n${sections.join('\n\n')}`
+}
+
+function buildContactContextSection(ctx: ContactContext): string {
+  const lines: string[] = [
+    '## Contact Context (DO NOT re-ask information you already have)',
+  ]
+
+  if (ctx.name) lines.push(`Name: ${ctx.name}`)
+  if (ctx.email) lines.push(`Email: ${ctx.email}`)
+  if (ctx.tags.length > 0) lines.push(`Tags: ${ctx.tags.join(', ')}`)
+
+  const q = ctx.lastQualification
+  if (q) {
+    lines.push('')
+    lines.push('Known qualification data:')
+    if (q.location) lines.push(`- Location: ${q.location}`)
+    if (q.motivation) lines.push(`- Motivation: ${q.motivation}`)
+    if (q.budget) lines.push(`- Budget: ${q.budget}`)
+    lines.push(`- Status: ${q.status}`)
+  }
+
+  // Inject booking directive if both qualifiers are known
+  const hasLocation =
+    ctx.tags.some((t) => t.startsWith('location:')) || q?.location
+  const hasMotivation =
+    ctx.tags.some((t) => t.startsWith('motivation:')) || q?.motivation
+
+  if (hasLocation && hasMotivation) {
+    lines.push('')
+    lines.push(
+      'ACTION: Both location and motivation are known. Your NEXT message MUST include the booking link. Do not ask more qualification questions.'
+    )
+  }
+
+  return lines.join('\n')
 }
 
 function buildReturningContactSection(priorSummaries: string[]): string {

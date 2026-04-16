@@ -16,104 +16,99 @@ export type Database = {
     Tables: {
       contacts: {
         Row: {
+          created_at: string
+          email: string | null
+          first_seen_at: string
           id: string
           inro_contact_id: string | null
-          sendpulse_contact_id: string | null
           instagram_handle: string
+          last_message_at: string
           name: string | null
-          email: string | null
-          phone: string | null
-          profile_picture_url: string | null
-          source: string
           opted_out: boolean
           opted_out_at: string | null
-          first_seen_at: string
-          last_message_at: string
-          created_at: string
+          phone: string | null
+          profile_picture_url: string | null
+          sendpulse_contact_id: string | null
+          source: string
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
+          created_at?: string
+          email?: string | null
+          first_seen_at?: string
           id?: string
           inro_contact_id?: string | null
-          sendpulse_contact_id?: string | null
           instagram_handle: string
+          last_message_at?: string
           name?: string | null
-          email?: string | null
-          phone?: string | null
-          profile_picture_url?: string | null
-          source?: string
           opted_out?: boolean
           opted_out_at?: string | null
-          first_seen_at?: string
-          last_message_at?: string
-          created_at?: string
+          phone?: string | null
+          profile_picture_url?: string | null
+          sendpulse_contact_id?: string | null
+          source?: string
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          email?: string | null
+          first_seen_at?: string
           id?: string
           inro_contact_id?: string | null
-          sendpulse_contact_id?: string | null
           instagram_handle?: string
+          last_message_at?: string
           name?: string | null
-          email?: string | null
-          phone?: string | null
-          profile_picture_url?: string | null
-          source?: string
           opted_out?: boolean
           opted_out_at?: string | null
-          first_seen_at?: string
-          last_message_at?: string
-          created_at?: string
+          phone?: string | null
+          profile_picture_url?: string | null
+          sendpulse_contact_id?: string | null
+          source?: string
+          tags?: string[] | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: 'conversations_contact_id_fkey'
-            columns: ['id']
-            isOneToOne: false
-            referencedRelation: 'conversations'
-            referencedColumns: ['contact_id']
-          },
-        ]
+        Relationships: []
       }
       conversations: {
         Row: {
-          id: string
           contact_id: string
-          status: string
-          prompt_version: string
-          summary: string | null
-          flagged_reason: string | null
-          is_test: boolean
-          started_at: string
-          ended_at: string | null
           created_at: string
+          ended_at: string | null
+          flagged_reason: string | null
+          id: string
+          is_test: boolean
+          prompt_version: string
+          started_at: string
+          status: string
+          summary: string | null
           updated_at: string
         }
         Insert: {
-          id?: string
           contact_id: string
-          status?: string
-          prompt_version: string
-          summary?: string | null
-          flagged_reason?: string | null
-          is_test?: boolean
-          started_at?: string
-          ended_at?: string | null
           created_at?: string
+          ended_at?: string | null
+          flagged_reason?: string | null
+          id?: string
+          is_test?: boolean
+          prompt_version: string
+          started_at?: string
+          status?: string
+          summary?: string | null
           updated_at?: string
         }
         Update: {
-          id?: string
           contact_id?: string
-          status?: string
-          prompt_version?: string
-          summary?: string | null
-          flagged_reason?: string | null
-          is_test?: boolean
-          started_at?: string
-          ended_at?: string | null
           created_at?: string
+          ended_at?: string | null
+          flagged_reason?: string | null
+          id?: string
+          is_test?: boolean
+          prompt_version?: string
+          started_at?: string
+          status?: string
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -128,55 +123,48 @@ export type Database = {
       }
       integration_events: {
         Row: {
-          id: string
-          lead_id: string | null
+          action: string
           contact_id: string | null
           conversation_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
           integration: string
-          action: string
-          status: string
+          lead_id: string | null
           payload: Json | null
           request_payload: Json | null
           response_payload: Json | null
-          error_message: string | null
-          created_at: string
+          status: string
         }
         Insert: {
-          id?: string
-          lead_id?: string | null
+          action: string
           contact_id?: string | null
           conversation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
           integration: string
-          action: string
-          status?: string
+          lead_id?: string | null
           payload?: Json | null
           request_payload?: Json | null
           response_payload?: Json | null
-          error_message?: string | null
-          created_at?: string
+          status?: string
         }
         Update: {
-          id?: string
-          lead_id?: string | null
+          action?: string
           contact_id?: string | null
           conversation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
           integration?: string
-          action?: string
-          status?: string
+          lead_id?: string | null
           payload?: Json | null
           request_payload?: Json | null
           response_payload?: Json | null
-          error_message?: string | null
-          created_at?: string
+          status?: string
         }
         Relationships: [
-          {
-            foreignKeyName: 'integration_events_lead_id_fkey'
-            columns: ['lead_id']
-            isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
-          },
           {
             foreignKeyName: 'integration_events_contact_id_fkey'
             columns: ['contact_id']
@@ -191,82 +179,89 @@ export type Database = {
             referencedRelation: 'conversations'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'integration_events_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'leads'
+            referencedColumns: ['id']
+          },
         ]
       }
       leads: {
         Row: {
-          id: string
+          calculator_sent: boolean
+          calendly_slot: string | null
+          call_booked: boolean
+          call_outcome: string | null
+          call_outcome_at: string | null
+          call_outcome_notes: string | null
+          close_crm_id: string | null
           contact_id: string
           conversation_id: string
-          instagram_handle: string
-          qualification_status: string
-          machine_count: number | null
-          location_type: string | null
-          revenue_range: string | null
-          call_booked: boolean
-          calendly_slot: string | null
-          calculator_sent: boolean
-          key_notes: string | null
-          recommended_action: string | null
-          call_outcome: string | null
-          call_outcome_notes: string | null
-          call_outcome_at: string | null
-          close_crm_id: string | null
-          customerio_id: string | null
-          name: string | null
-          email: string | null
-          summary_json: Json | null
           created_at: string
+          customerio_id: string | null
+          email: string | null
+          id: string
+          instagram_handle: string
+          key_notes: string | null
+          location_type: string | null
+          machine_count: number | null
+          name: string | null
+          qualification_status: string
+          recommended_action: string | null
+          revenue_range: string | null
+          summary_json: Json | null
           updated_at: string
         }
         Insert: {
-          id?: string
+          calculator_sent?: boolean
+          calendly_slot?: string | null
+          call_booked?: boolean
+          call_outcome?: string | null
+          call_outcome_at?: string | null
+          call_outcome_notes?: string | null
+          close_crm_id?: string | null
           contact_id: string
           conversation_id: string
-          instagram_handle: string
-          qualification_status?: string
-          machine_count?: number | null
-          location_type?: string | null
-          revenue_range?: string | null
-          call_booked?: boolean
-          calendly_slot?: string | null
-          calculator_sent?: boolean
-          key_notes?: string | null
-          recommended_action?: string | null
-          call_outcome?: string | null
-          call_outcome_notes?: string | null
-          call_outcome_at?: string | null
-          close_crm_id?: string | null
-          customerio_id?: string | null
-          name?: string | null
-          email?: string | null
-          summary_json?: Json | null
           created_at?: string
+          customerio_id?: string | null
+          email?: string | null
+          id?: string
+          instagram_handle: string
+          key_notes?: string | null
+          location_type?: string | null
+          machine_count?: number | null
+          name?: string | null
+          qualification_status?: string
+          recommended_action?: string | null
+          revenue_range?: string | null
+          summary_json?: Json | null
           updated_at?: string
         }
         Update: {
-          id?: string
+          calculator_sent?: boolean
+          calendly_slot?: string | null
+          call_booked?: boolean
+          call_outcome?: string | null
+          call_outcome_at?: string | null
+          call_outcome_notes?: string | null
+          close_crm_id?: string | null
           contact_id?: string
           conversation_id?: string
-          instagram_handle?: string
-          qualification_status?: string
-          machine_count?: number | null
-          location_type?: string | null
-          revenue_range?: string | null
-          call_booked?: boolean
-          calendly_slot?: string | null
-          calculator_sent?: boolean
-          key_notes?: string | null
-          recommended_action?: string | null
-          call_outcome?: string | null
-          call_outcome_notes?: string | null
-          call_outcome_at?: string | null
-          close_crm_id?: string | null
-          customerio_id?: string | null
-          name?: string | null
-          email?: string | null
-          summary_json?: Json | null
           created_at?: string
+          customerio_id?: string | null
+          email?: string | null
+          id?: string
+          instagram_handle?: string
+          key_notes?: string | null
+          location_type?: string | null
+          machine_count?: number | null
+          name?: string | null
+          qualification_status?: string
+          recommended_action?: string | null
+          revenue_range?: string | null
+          summary_json?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -279,50 +274,6 @@ export type Database = {
           },
           {
             foreignKeyName: 'leads_conversation_id_fkey'
-            columns: ['conversation_id']
-            isOneToOne: false
-            referencedRelation: 'conversations'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          id: string
-          conversation_id: string
-          role: string
-          content: string
-          inro_message_id: string | null
-          dedup_hash: string | null
-          token_count: number | null
-          metadata: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          conversation_id: string
-          role: string
-          content: string
-          inro_message_id?: string | null
-          dedup_hash?: string | null
-          token_count?: number | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          conversation_id?: string
-          role?: string
-          content?: string
-          inro_message_id?: string | null
-          dedup_hash?: string | null
-          token_count?: number | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'messages_conversation_id_fkey'
             columns: ['conversation_id']
             isOneToOne: false
             referencedRelation: 'conversations'
@@ -623,6 +574,50 @@ export type Database = {
           synced_at?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          dedup_hash: string | null
+          id: string
+          inro_message_id: string | null
+          metadata: Json | null
+          role: string
+          token_count: number | null
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          dedup_hash?: string | null
+          id?: string
+          inro_message_id?: string | null
+          metadata?: Json | null
+          role: string
+          token_count?: number | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          dedup_hash?: string | null
+          id?: string
+          inro_message_id?: string | null
+          metadata?: Json | null
+          role?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'messages_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {

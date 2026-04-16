@@ -14,8 +14,9 @@ import {
   type ToolCall,
 } from '@/lib/services/claude'
 import { leadSummarySchema } from '@/types/lead'
-import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
+import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
 import { getServerConfig } from '@/lib/config'
+import { setContactTags } from '@/lib/services/sendpulse'
 
 type ClaudeCallFn = (
   request: ReturnType<typeof buildClaudeRequest>
@@ -30,9 +31,17 @@ type ProcessMessageResult = {
   conversationId: string
 }
 
+type ContactInput = {
+  id: string
+  tags?: string[] | null
+  name?: string | null
+  email?: string | null
+  sendpulse_contact_id?: string | null
+}
+
 export async function processMessage(
   client: SupabaseClient<Database>,
-  contact: { id: string },
+  contact: ContactInput,
   inroMessageId: string | undefined,
   content: string,
   timestamp: string,
@@ -62,6 +71,13 @@ export async function processMessage(
   const summariesResult = await loadPriorSummaries(contact.id)
   const priorSummaries = summariesResult.success ? summariesResult.data : []
 
+  // Step 2b: Load latest lead for qualification context
+  const contactContext = await buildContactContext(
+    client,
+    contact,
+    priorSummaries
+  )
+
   // Step 3: Store the incoming user message (with dedup check)
   const storeResult = await storeMessage(client, {
     conversationId,
@@ -80,12 +96,13 @@ export async function processMessage(
     return { success: true, data: { reply: undefined, conversationId } }
   }
 
-  // Step 4: Build system prompt
+  // Step 4: Build system prompt with contact context
   const isReturningContact = priorSummaries.length > 0
   const systemPrompt = buildSystemPrompt({
     brandName: BRAND_NAME,
     isReturningContact,
     priorSummaries,
+    contactContext,
   })
 
   // Step 5: Assemble message history
@@ -248,7 +265,36 @@ export async function routeLeadEvents(
         }
 
         case 'qualify_lead': {
-          // No-op — logged to integration_events for audit only
+          // Store qualification data as tags on the contact
+          const qualTags: string[] = ['qualified']
+          const loc = call.input.location_type as string | undefined
+          const rev = call.input.revenue_range as string | undefined
+          if (loc) qualTags.push(`location:${loc}`)
+          if (rev) qualTags.push(`budget:${rev}`)
+
+          // Merge with existing tags and update DB
+          const { data: currentContact } = await client
+            .from('contacts')
+            .select('tags, sendpulse_contact_id')
+            .eq('id', contactId)
+            .single()
+
+          if (currentContact) {
+            const existing = currentContact.tags ?? []
+            const merged = [...new Set([...existing, ...qualTags])]
+            await client
+              .from('contacts')
+              .update({ tags: merged, updated_at: new Date().toISOString() })
+              .eq('id', contactId)
+
+            // Sync tags to SendPulse (non-blocking)
+            if (currentContact.sendpulse_contact_id) {
+              setContactTags(
+                currentContact.sendpulse_contact_id,
+                qualTags
+              ).catch(() => {})
+            }
+          }
           break
         }
 
@@ -313,6 +359,64 @@ async function logIntegrationEvent(
 }
 
 // ---------------------------------------------------------------------------
+// Contact context builder — loads tags + last lead for prompt injection
+// ---------------------------------------------------------------------------
+
+async function buildContactContext(
+  client: SupabaseClient<Database>,
+  contact: ContactInput,
+  _priorSummaries: string[]
+): Promise<ContactContext | undefined> {
+  const tags = contact.tags ?? []
+
+  // Load latest lead for this contact (if any)
+  const { data: lastLead } = await client
+    .from('leads')
+    .select('qualification_status, location_type, revenue_range, key_notes')
+    .eq('contact_id', contact.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  // Also extract qualification data from tags (e.g. "location:Adelaide")
+  const locationTag = tags
+    .find((t) => t.startsWith('location:'))
+    ?.replace('location:', '')
+  const budgetTag = tags
+    .find((t) => t.startsWith('budget:'))
+    ?.replace('budget:', '')
+  const motivationTag = tags
+    .find((t) => t.startsWith('motivation:'))
+    ?.replace('motivation:', '')
+
+  const hasQualData =
+    lastLead || locationTag || budgetTag || motivationTag || tags.length > 0
+
+  if (!hasQualData) return undefined
+
+  return {
+    tags,
+    name: contact.name ?? undefined,
+    email: contact.email ?? undefined,
+    lastQualification: lastLead
+      ? {
+          status: lastLead.qualification_status,
+          location: lastLead.location_type ?? locationTag,
+          motivation: motivationTag,
+          budget: lastLead.revenue_range ?? budgetTag,
+        }
+      : locationTag || motivationTag || budgetTag
+        ? {
+            status: 'in-progress',
+            location: locationTag,
+            motivation: motivationTag,
+            budget: budgetTag,
+          }
+        : undefined,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Stale conversation summary generator
 // ---------------------------------------------------------------------------
 
@@ -366,7 +470,13 @@ async function generateStaleSummary(
     .join('')
 
   // Parse the JSON summary
-  const parsed = leadSummarySchema.safeParse(JSON.parse(text))
+  let parsedJson: unknown
+  try {
+    parsedJson = JSON.parse(text)
+  } catch {
+    return
+  }
+  const parsed = leadSummarySchema.safeParse(parsedJson)
   if (!parsed.success) return
 
   // Create lead and close the conversation

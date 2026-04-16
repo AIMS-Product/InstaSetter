@@ -75,7 +75,7 @@ export async function upsertSendPulseContact(
   // Look up by sendpulse_contact_id first, fall back to instagram_handle
   const { data: existing, error: lookupError } = await client
     .from('contacts')
-    .select()
+    .select('id, name, profile_picture_url, tags, sendpulse_contact_id')
     .eq('sendpulse_contact_id', contact.id)
     .maybeSingle()
 
@@ -85,6 +85,11 @@ export async function upsertSendPulseContact(
 
   if (existing) {
     const now = new Date().toISOString()
+    // Merge incoming SendPulse tags with existing DB tags (deduplicated)
+    const incomingTags = contact.tags ?? []
+    const existingTags = existing.tags ?? []
+    const mergedTags = [...new Set([...existingTags, ...incomingTags])]
+
     const { data: updated, error: updateError } = await client
       .from('contacts')
       .update({
@@ -92,6 +97,7 @@ export async function upsertSendPulseContact(
         updated_at: now,
         name: contact.name ?? existing.name,
         profile_picture_url: contact.photo ?? existing.profile_picture_url,
+        tags: mergedTags,
       })
       .eq('id', existing.id)
       .select()
@@ -107,12 +113,16 @@ export async function upsertSendPulseContact(
   // Check if a contact already exists by instagram_handle (e.g. migrated from Inro)
   const { data: byHandle } = await client
     .from('contacts')
-    .select()
+    .select('id, name, profile_picture_url, tags')
     .eq('instagram_handle', handle)
     .maybeSingle()
 
   if (byHandle) {
     const now = new Date().toISOString()
+    const incomingTags = contact.tags ?? []
+    const existingTags = byHandle.tags ?? []
+    const mergedTags = [...new Set([...existingTags, ...incomingTags])]
+
     const { data: updated, error: updateError } = await client
       .from('contacts')
       .update({
@@ -121,6 +131,7 @@ export async function upsertSendPulseContact(
         updated_at: now,
         name: contact.name ?? byHandle.name,
         profile_picture_url: contact.photo ?? byHandle.profile_picture_url,
+        tags: mergedTags,
       })
       .eq('id', byHandle.id)
       .select()
@@ -145,6 +156,7 @@ export async function upsertSendPulseContact(
       phone: contact.phone ?? null,
       profile_picture_url: contact.photo ?? null,
       source: 'organic_dm',
+      tags: contact.tags ?? [],
       first_seen_at: now,
       last_message_at: now,
     })

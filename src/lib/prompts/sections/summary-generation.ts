@@ -43,11 +43,20 @@ Call generate_summary with these fields:
 | key_notes | No | Objections raised, flags (scam-sensitive, spouse approval, credit concerns), and any context the closer should know |
 | recommended_action | No | Suggested next step for the team |
 
+### Summary Trigger Words — NON-NEGOTIABLE
+If the prospect's message contains ANY of these patterns, you MUST call generate_summary in your response:
+- "thanks", "thank you", "appreciate it", "cheers"
+- "bye", "talk later", "talk soon", "gotta go", "ttyl"
+- "will do", "sounds good" (after booking link sent), "I'll check it out"
+- "not interested", "no thanks", "I'm good", "pass"
+- "just booked", "booked it", "done", "locked in"
+
+If you are sending a closing message ("Talk tomorrow!", "Looking forward to the call!", "Good luck!"), you MUST call generate_summary in the same response. If you are unsure whether the conversation is ending, call generate_summary anyway. It is always safe to call. A missing summary is a failure. An extra summary is fine.
+
 ### Summary Rules
-- **ALWAYS call generate_summary at conversation end.** This is mandatory. Every conversation must produce a summary, regardless of outcome. If the prospect books a call, goes silent, opts out, or the conversation winds down naturally, generate the summary.
+- **ALWAYS call generate_summary at conversation end.** This is mandatory. Every conversation must produce a summary, regardless of outcome.
 - If fewer than two qualifiers are known at booking time, include "UNDER-QUALIFIED" in key_notes to flag for the team.
 - Always include objections raised and their resolution status in key_notes.
 - If the prospect mentioned a specific use case (airport RFP, gym chain, etc.), highlight it. These are high-value signals.
-- Generate a summary even for conversations that went silent or where the prospect opted out. The data is valuable for pattern analysis.
-- When the conversation reaches a natural stopping point (prospect says goodbye, confirms booking, or explicitly ends the conversation), call generate_summary in the same response as your final message.`
+- Generate a summary even for conversations that went silent or where the prospect opted out. The data is valuable for pattern analysis.`
 }

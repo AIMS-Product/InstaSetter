@@ -12,7 +12,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk'
-import { getClient, SONNET_MODEL } from './lib/claude-client'
+import { getClient, SONNET_MODEL, HAIKU_MODEL } from './lib/claude-client'
 import { join } from 'node:path'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
@@ -461,8 +461,8 @@ RULES:
   setterHistory.push({ role: 'user', content: persona.opener })
 
   for (let turn = 0; turn < persona.maxTurns; turn++) {
-    // --- Setter's turn ---
-    const setterResponse = await client.messages.create({
+    // --- Setter's turn (with tool result loop) ---
+    let setterResponse = await client.messages.create({
       model: SONNET_MODEL,
       max_tokens: 1024,
       system: setterPrompt,
@@ -473,21 +473,67 @@ RULES:
     const setterText: string[] = []
     const turnToolCalls: { name: string; input: Record<string, unknown> }[] = []
 
-    for (const block of setterResponse.content) {
-      if (block.type === 'text') {
-        setterText.push(block.text)
-      } else if (block.type === 'tool_use') {
-        const tc = {
-          name: block.name,
-          input: block.input as Record<string, unknown>,
-        }
-        turnToolCalls.push(tc)
-        allToolCalls.push(tc)
+    function extractResponse(response: Anthropic.Messages.Message) {
+      for (const block of response.content) {
+        if (block.type === 'text') {
+          setterText.push(block.text)
+        } else if (block.type === 'tool_use') {
+          const tc = {
+            name: block.name,
+            input: block.input as Record<string, unknown>,
+          }
+          turnToolCalls.push(tc)
+          allToolCalls.push(tc)
 
-        if (tc.name === 'capture_email') emailCaptured = true
-        if (tc.name === 'book_call') callBooked = true
-        if (tc.name === 'generate_summary') summaryGenerated = true
+          if (tc.name === 'capture_email') emailCaptured = true
+          if (tc.name === 'book_call') callBooked = true
+          if (tc.name === 'generate_summary') summaryGenerated = true
+        }
       }
+    }
+
+    extractResponse(setterResponse)
+
+    // Tool result loop: if Claude returned tool_use without text, send results
+    // back to get the actual reply (matches production engine behavior)
+    let toolRound = 0
+    while (
+      setterResponse.stop_reason === 'tool_use' &&
+      setterText.length === 0 &&
+      toolRound < 3
+    ) {
+      toolRound++
+      const toolResults: Anthropic.Messages.ToolResultBlockParam[] =
+        turnToolCalls
+          .filter((_, i) => i >= turnToolCalls.length - toolRound) // only latest round
+          .map((tc) => ({
+            type: 'tool_result' as const,
+            tool_use_id:
+              (
+                setterResponse.content.find(
+                  (b) =>
+                    b.type === 'tool_use' &&
+                    b.name === tc.name &&
+                    JSON.stringify(b.input) === JSON.stringify(tc.input)
+                ) as Anthropic.Messages.ToolUseBlock | undefined
+              )?.id ?? 'unknown',
+            content: JSON.stringify({ success: true }),
+          }))
+
+      setterHistory.push(
+        { role: 'assistant', content: setterResponse.content },
+        { role: 'user', content: toolResults }
+      )
+
+      setterResponse = await client.messages.create({
+        model: SONNET_MODEL,
+        max_tokens: 1024,
+        system: setterPrompt,
+        messages: setterHistory,
+        tools: TOOLS,
+      })
+
+      extractResponse(setterResponse)
     }
 
     const setterMessage = setterText.join(' ').trim()
@@ -499,30 +545,27 @@ RULES:
       toolCalls: turnToolCalls.length > 0 ? turnToolCalls : undefined,
     })
 
-    // Add setter response to history (guard against empty content)
+    // Add setter response to history
     if (setterMessage) {
       setterHistory.push({ role: 'assistant', content: setterMessage })
+    } else if (summaryGenerated) {
+      break // Conversation ended via summary with no final text
     } else {
-      // Tool-only response — use a placeholder so history stays valid
       setterHistory.push({
         role: 'assistant',
         content: '[system action taken]',
       })
+      continue // Skip prospect turn if no visible message
     }
 
-    // If setter only made tool calls with no text, the conversation might be ending
-    if (!setterMessage && summaryGenerated) break
-
     // --- Prospect's turn ---
-    // Skip prospect turn if setter had no visible message (tool-only)
-    if (!setterMessage) continue
 
     const prospectView = buildProspectView(messages)
     // Guard: ensure we have valid alternating messages
     if (prospectView.length === 0) break
 
     const prospectResponse = await client.messages.create({
-      model: SONNET_MODEL,
+      model: HAIKU_MODEL,
       max_tokens: 512,
       system: prospectSystemPrompt,
       messages: prospectView,

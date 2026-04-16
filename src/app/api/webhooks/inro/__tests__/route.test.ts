@@ -58,6 +58,7 @@ const stubContact = (overrides: Partial<ContactRow> = {}): ContactRow => ({
   source: 'organic_dm',
   opted_out: false,
   opted_out_at: null,
+  tags: [],
   first_seen_at: '2026-04-09T10:00:00Z',
   last_message_at: '2026-04-09T10:00:00Z',
   created_at: '2026-04-09T10:00:00Z',

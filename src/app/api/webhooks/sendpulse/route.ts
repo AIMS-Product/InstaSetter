@@ -39,7 +39,7 @@ async function handleEvent(
 
   const result = await processMessage(
     client,
-    { id: contactResult.data.id },
+    contactResult.data,
     undefined,
     messageContent,
     timestamp,
