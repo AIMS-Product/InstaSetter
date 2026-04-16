@@ -6,6 +6,12 @@ vi.mock('@/lib/services/conversation')
 vi.mock('@/lib/services/message')
 vi.mock('@/lib/services/claude')
 vi.mock('@/lib/prompts/setter-v2')
+vi.mock('@/lib/services/sendpulse', () => ({
+  setContactTags: vi.fn().mockResolvedValue({ success: true }),
+  removeContactTag: vi.fn().mockResolvedValue({ success: true }),
+  sendInstagramMessage: vi.fn(),
+  pauseAutomation: vi.fn(),
+}))
 vi.mock('@/lib/config', () => ({
   config: {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -15,6 +21,11 @@ vi.mock('@/lib/config', () => ({
     SUPABASE_SERVICE_ROLE_KEY: 'test',
     ANTHROPIC_API_KEY: 'sk-test',
     BRAND_NAME: 'TestBrand',
+  }),
+  getSendPulseConfig: () => ({
+    SENDPULSE_API_KEY: 'test',
+    SENDPULSE_BOT_ID: 'test',
+    SENDPULSE_WEBHOOK_SECRET: 'test',
   }),
 }))
 
@@ -26,6 +37,7 @@ import {
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
 import { buildClaudeRequest, parseClaudeResponse } from '@/lib/services/claude'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
+import { createMockClient } from '@/test/helpers'
 
 type ConversationRow = Database['public']['Tables']['conversations']['Row']
 type MessageRow = Database['public']['Tables']['messages']['Row']
@@ -57,12 +69,15 @@ const stubMessage: MessageRow = {
 }
 
 describe('processMessage', () => {
-  const mockClient = {} as SupabaseClient<Database>
   const mockContact = { id: 'contact-1' }
   const mockClaude = vi.fn()
+  let mockClient: ReturnType<typeof createMockClient>
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockClient = createMockClient()
+    // Default: buildContactContext leads query returns no prior lead
+    mockClient.maybeSingle.mockResolvedValue({ data: null, error: null })
   })
 
   it('executes full pipeline and returns reply', async () => {
@@ -101,7 +116,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient,
+      mockClient as never,
       mockContact,
       'msg-id',
       'Hi',
@@ -123,7 +138,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient,
+      mockClient as never,
       mockContact,
       'msg-id',
       'Hi',
@@ -171,7 +186,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient,
+      mockClient as never,
       mockContact,
       'msg-id',
       'msg',
@@ -200,7 +215,7 @@ describe('processMessage', () => {
     })
 
     const result = await processMessage(
-      mockClient,
+      mockClient as never,
       mockContact,
       'msg-id',
       'Hi',

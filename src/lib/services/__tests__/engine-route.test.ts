@@ -9,6 +9,12 @@ vi.mock('@/lib/services/conversation', () => ({
   findOrCreateActiveConversation: vi.fn(),
   loadPriorSummaries: vi.fn(),
 }))
+vi.mock('@/lib/services/sendpulse', () => ({
+  setContactTags: vi.fn().mockResolvedValue({ success: true }),
+  removeContactTag: vi.fn().mockResolvedValue({ success: true }),
+  sendInstagramMessage: vi.fn(),
+  pauseAutomation: vi.fn(),
+}))
 vi.mock('@/lib/config', () => ({
   config: {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -18,6 +24,11 @@ vi.mock('@/lib/config', () => ({
     SUPABASE_SERVICE_ROLE_KEY: 'test',
     ANTHROPIC_API_KEY: 'sk-test',
     BRAND_NAME: 'TestBrand',
+  }),
+  getSendPulseConfig: () => ({
+    SENDPULSE_API_KEY: 'test',
+    SENDPULSE_BOT_ID: 'test',
+    SENDPULSE_WEBHOOK_SECRET: 'test',
   }),
 }))
 
@@ -102,20 +113,39 @@ describe('routeLeadEvents', () => {
     expect(result.eventsProcessed).toBe(1)
   })
 
-  it('handles qualify_lead as no-op audit log', async () => {
-    // integration_events insert
-    client.single.mockResolvedValueOnce({ data: {}, error: null })
+  it('handles qualify_lead — stores tags on contact and syncs to SendPulse', async () => {
+    // The qualify_lead handler does:
+    // 1. client.from('contacts').select('tags, sendpulse_contact_id').eq('id', contactId).single()
+    // 2. client.from('contacts').update({...}).eq('id', contactId)
+    // 3. client.from('integration_events').insert({...}).select().single()
+    //
+    // Our mock client chains, so single() calls resolve in order:
+    client.single
+      // 1st: contact lookup
+      .mockResolvedValueOnce({
+        data: { tags: ['existing-tag'], sendpulse_contact_id: 'sp_123' },
+        error: null,
+      })
+      // 2nd: integration_events insert
+      .mockResolvedValueOnce({ data: {}, error: null })
+
+    const { setContactTags } = await import('@/lib/services/sendpulse')
 
     const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
       {
         name: 'qualify_lead',
         toolUseId: 'tu3',
-        input: { machine_count: 5 },
+        input: { location_type: 'Adelaide', revenue_range: '$8K' },
       },
     ])
 
     expect(result.eventsProcessed).toBe(1)
-    expect(createLead).not.toHaveBeenCalled()
+    expect(client.update).toHaveBeenCalled()
+    expect(setContactTags).toHaveBeenCalledWith('sp_123', [
+      'qualified',
+      'location:Adelaide',
+      'budget:$8K',
+    ])
   })
 
   it('handles book_call — logs to integration_events', async () => {
@@ -130,6 +160,39 @@ describe('routeLeadEvents', () => {
     ])
 
     expect(result.eventsProcessed).toBe(1)
+  })
+
+  it('handles capture_email with missing email — no update', async () => {
+    // integration_events insert
+    client.single.mockResolvedValueOnce({ data: {}, error: null })
+
+    const result = await routeLeadEvents(client as never, 'c1', 'cv1', [
+      {
+        name: 'capture_email',
+        toolUseId: 'tu1',
+        input: {},
+      },
+    ])
+
+    expect(result.eventsProcessed).toBe(1)
+    expect(client.update).not.toHaveBeenCalled()
+  })
+
+  it('passes integration param through to event logging', async () => {
+    // integration_events insert
+    client.single.mockResolvedValueOnce({ data: {}, error: null })
+
+    await routeLeadEvents(
+      client as never,
+      'c1',
+      'cv1',
+      [{ name: 'book_call', toolUseId: 'tu1', input: {} }],
+      'sendpulse'
+    )
+
+    expect(client.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ integration: 'sendpulse' })
+    )
   })
 
   it('ignores unknown tool names', async () => {
