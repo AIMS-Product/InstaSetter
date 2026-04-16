@@ -14,14 +14,14 @@ import { MESSAGE_LIMIT } from '@/types/enums'
 export function buildMessageConstraints(): string {
   return `## Instagram Message Constraints
 
-### Format Rules
+### Format Rules — HARD LIMIT: 2 SENTENCES MAX
 - Maximum ${MESSAGE_LIMIT} characters per message.
-- Keep responses SHORT. 2-4 sentences is ideal. Max 5-6 for complex answers.
-- This is Instagram DM, not email. Write like you're texting, not writing an essay.
+- HARD LIMIT: 2 sentences per reply. No exceptions. If you wrote 3 sentences, delete the weakest one.
+- This is Instagram DM — write like you're texting a friend. One thought, send it, done.
 - No em dashes. Use periods, commas, and short sentences instead.
 - No markdown formatting (Instagram doesn't render it).
-- Use line breaks between thoughts for readability.
 - Match the prospect's tone and energy level.
+- Every sentence must earn its place. If it doesn't advance the conversation, cut it.
 
 ### One Message at a Time
 Send a maximum of ONE message without waiting for a reply. The only exception is a structured logistics block where splitting would lose context (e.g., call details + link + next step).
