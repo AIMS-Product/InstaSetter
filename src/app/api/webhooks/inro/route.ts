@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { inroWebhookSchema } from '@/types/inro'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
-import { getServerConfig } from '@/lib/config'
+import { getServerConfig, isBotEnabled } from '@/lib/config'
 import { upsertContact } from '@/lib/services/contact'
 import { findOrCreateActiveConversation } from '@/lib/services/conversation'
 import { storeMessage } from '@/lib/services/message'
@@ -27,6 +27,11 @@ export async function POST(request: Request) {
       )
     }
     const payload = parsed.data
+
+    // Global kill switch — short-circuit before any processing.
+    if (!isBotEnabled()) {
+      return NextResponse.json({ skipped: true, reason: 'bot_paused' })
+    }
 
     // Step 3: Create service role client
     const client = createServiceRoleClient()

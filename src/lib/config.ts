@@ -40,3 +40,10 @@ export function getSendPulseConfig() {
     SENDPULSE_WEBHOOK_SECRET: process.env.SENDPULSE_WEBHOOK_SECRET,
   })
 }
+
+// Global kill switch. Set BOT_ENABLED=false on Vercel to silence the bot on all
+// incoming webhooks (SendPulse + Inro) without tearing down the integration.
+// Default: enabled. Any value other than the literal string "false" is treated as enabled.
+export function isBotEnabled(): boolean {
+  return process.env.BOT_ENABLED !== 'false'
+}

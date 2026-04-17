@@ -31,6 +31,7 @@ vi.mock('@/lib/config', () => ({
     ANTHROPIC_API_KEY: 'sk-test',
     BRAND_NAME: 'TestBrand',
   }),
+  isBotEnabled: vi.fn(() => true),
 }))
 
 import { POST } from '@/app/api/webhooks/inro/route'
@@ -38,6 +39,7 @@ import { upsertContact } from '@/lib/services/contact'
 import { findOrCreateActiveConversation } from '@/lib/services/conversation'
 import { storeMessage } from '@/lib/services/message'
 import { processMessage } from '@/lib/services/engine'
+import { isBotEnabled } from '@/lib/config'
 
 const validPayload = {
   contact_id: 'inro_123',
@@ -99,6 +101,23 @@ const stubMessage = (overrides: Partial<MessageRow> = {}): MessageRow => ({
 describe('POST /api/webhooks/inro', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(isBotEnabled).mockReturnValue(true)
+  })
+
+  it('short-circuits when bot is paused', async () => {
+    vi.mocked(isBotEnabled).mockReturnValue(false)
+    const req = new Request('http://localhost/api/webhooks/inro', {
+      method: 'POST',
+      body: JSON.stringify(validPayload),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.skipped).toBe(true)
+    expect(json.reason).toBe('bot_paused')
+    expect(upsertContact).not.toHaveBeenCalled()
+    expect(processMessage).not.toHaveBeenCalled()
   })
 
   it('returns 400 for malformed JSON', async () => {

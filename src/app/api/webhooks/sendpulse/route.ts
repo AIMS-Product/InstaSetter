@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { sendpulseWebhookSchema } from '@/types/sendpulse'
 import type { SendPulseWebhookPayload } from '@/types/sendpulse'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
-import { getServerConfig, getSendPulseConfig } from '@/lib/config'
+import { getServerConfig, getSendPulseConfig, isBotEnabled } from '@/lib/config'
 import { upsertSendPulseContact } from '@/lib/services/contact'
 import { processMessage } from '@/lib/services/engine'
 import { sendInstagramMessage, pauseAutomation } from '@/lib/services/sendpulse'
@@ -101,7 +101,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Step 4: Process each event
+    // Step 4: Global kill switch — short-circuit before any processing.
+    if (!isBotEnabled()) {
+      return NextResponse.json({
+        ok: true,
+        results: parsed.data.map(() => ({ ok: true, skipped: 'bot_paused' })),
+      })
+    }
+
+    // Step 5: Process each event
     const results = []
     for (const event of parsed.data) {
       const result = await handleEvent(event, ANTHROPIC_API_KEY)

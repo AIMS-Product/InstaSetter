@@ -36,12 +36,14 @@ vi.mock('@/lib/config', () => ({
     SENDPULSE_BOT_ID: 'test-bot',
     SENDPULSE_WEBHOOK_SECRET: 'test-secret',
   }),
+  isBotEnabled: vi.fn(() => true),
 }))
 
 import { POST } from '@/app/api/webhooks/sendpulse/route'
 import { upsertSendPulseContact } from '@/lib/services/contact'
 import { processMessage } from '@/lib/services/engine'
 import { sendInstagramMessage, pauseAutomation } from '@/lib/services/sendpulse'
+import { isBotEnabled } from '@/lib/config'
 
 const stubContact = (overrides: Partial<ContactRow> = {}): ContactRow => ({
   id: 'c1',
@@ -90,6 +92,18 @@ describe('POST /api/webhooks/sendpulse', () => {
     vi.clearAllMocks()
     vi.mocked(pauseAutomation).mockResolvedValue({ success: true })
     vi.mocked(sendInstagramMessage).mockResolvedValue({ success: true })
+    vi.mocked(isBotEnabled).mockReturnValue(true)
+  })
+
+  it('short-circuits all events when bot is paused', async () => {
+    vi.mocked(isBotEnabled).mockReturnValue(false)
+    const res = await POST(makeRequest(validPayload))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.results[0].skipped).toBe('bot_paused')
+    expect(upsertSendPulseContact).not.toHaveBeenCalled()
+    expect(processMessage).not.toHaveBeenCalled()
+    expect(sendInstagramMessage).not.toHaveBeenCalled()
   })
 
   it('returns 401 for invalid token', async () => {
