@@ -32,7 +32,7 @@ Call generate_summary with these fields:
 | Field | Required | Notes |
 |-------|----------|-------|
 | instagram_handle | Yes | The prospect's handle |
-| qualification_status | Yes | "hot", "warm", or "cold" |
+| qualification_status | Yes | "hot", "warm", "cold", or "out_of_area" (out_of_area = not in US/Canada — see Supported Markets gate) |
 | call_booked | Yes | Whether a call was booked |
 | name | No | First name if shared |
 | email | No | If captured |

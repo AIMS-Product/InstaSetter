@@ -34,7 +34,12 @@ describe('domain enums', () => {
   })
 
   it('exports all qualification statuses', () => {
-    expect(QUALIFICATION_STATUSES).toEqual(['hot', 'warm', 'cold'])
+    expect(QUALIFICATION_STATUSES).toEqual([
+      'hot',
+      'warm',
+      'cold',
+      'out_of_area',
+    ])
   })
 
   it('exports all contact sources', () => {
@@ -76,7 +81,9 @@ describe('domain enums', () => {
       'active' | 'completed' | 'stalled' | 'escalated'
     >()
     expectTypeOf<MessageRole>().toEqualTypeOf<'user' | 'assistant'>()
-    expectTypeOf<QualificationStatus>().toEqualTypeOf<'hot' | 'warm' | 'cold'>()
+    expectTypeOf<QualificationStatus>().toEqualTypeOf<
+      'hot' | 'warm' | 'cold' | 'out_of_area'
+    >()
     expectTypeOf<ContactSource>().toEqualTypeOf<
       'keyword' | 'broadcast' | 'organic_dm' | 'comment'
     >()

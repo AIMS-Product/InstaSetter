@@ -59,8 +59,9 @@ const TOOLS: Tool[] = [
         },
         qualification_status: {
           type: 'string',
-          enum: ['hot', 'warm', 'cold'],
-          description: 'Lead temperature based on qualification signals',
+          enum: ['hot', 'warm', 'cold', 'out_of_area'],
+          description:
+            'Lead temperature based on qualification signals. Use "out_of_area" for prospects outside the US or Canada (hard disqualification — see Supported Markets section).',
         },
         call_booked: {
           type: 'boolean',

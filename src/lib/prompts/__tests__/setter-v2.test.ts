@@ -13,11 +13,12 @@ describe('setter-v2 buildSystemPrompt', () => {
     expect(prompt).toContain('[setter-v2]')
   })
 
-  it('includes all 8 section headers', () => {
+  it('includes all 9 section headers', () => {
     const prompt = buildSystemPrompt(DEFAULT_OPTS)
     const expectedSections = [
       '## Persona',
       '## Company Context',
+      '## Supported Markets',
       '## Qualification Criteria',
       '## Objection Handling',
       '## Email Capture',
@@ -33,10 +34,57 @@ describe('setter-v2 buildSystemPrompt', () => {
 
   it('interpolates brand name into all relevant sections', () => {
     const prompt = buildSystemPrompt({ brandName: 'MachineKing' })
-    // Persona, Company Context, and Objections all use brandName
+    // Persona, Company Context, Location Gate, and Objections all use brandName
     const matches = prompt.match(/MachineKing/g)
-    expect(matches?.length).toBeGreaterThanOrEqual(3)
+    expect(matches?.length).toBeGreaterThanOrEqual(4)
     expect(prompt).not.toContain('VendingPreneurs')
+  })
+
+  it('places location gate BEFORE qualification and decision routing', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    const marketsIdx = prompt.indexOf('## Supported Markets')
+    const qualIdx = prompt.indexOf('## Qualification Criteria')
+    const routingIdx = prompt.indexOf('## Decision Routing')
+    expect(marketsIdx).toBeGreaterThan(-1)
+    expect(marketsIdx).toBeLessThan(qualIdx)
+    expect(marketsIdx).toBeLessThan(routingIdx)
+  })
+
+  // -------------------------------------------------------------------------
+  // Location Gate section
+  // -------------------------------------------------------------------------
+
+  it('names US and Canada as the only supported markets', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toMatch(/United States.*Canada/i)
+  })
+
+  it('declares the location gate as a hard disqualification', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toMatch(/hard gate|hard disqualification/i)
+  })
+
+  it('includes a warm decline script shape', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toMatch(/appreciate you reaching out/i)
+    expect(prompt).toMatch(/US and Canada/i)
+  })
+
+  it('requires out_of_area status in generate_summary for declined leads', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toContain('out_of_area')
+    expect(prompt).toMatch(/qualification_status:\s*"out_of_area"/)
+  })
+
+  it('forbids sending the booking link to out-of-region prospects', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toMatch(/do not send the booking link/i)
+  })
+
+  it('tells Claude to clarify once on ambiguous city names', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toMatch(/ambiguous/i)
+    expect(prompt).toMatch(/clarif/i)
   })
 
   // -------------------------------------------------------------------------

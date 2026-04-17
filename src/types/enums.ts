@@ -15,8 +15,14 @@ export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number]
 export const MESSAGE_ROLES = ['user', 'assistant'] as const
 export type MessageRole = (typeof MESSAGE_ROLES)[number]
 
-// Lead temperature
-export const QUALIFICATION_STATUSES = ['hot', 'warm', 'cold'] as const
+// Lead temperature. `out_of_area` is a hard disqualification used when the
+// prospect's location is outside our supported markets (US + Canada only).
+export const QUALIFICATION_STATUSES = [
+  'hot',
+  'warm',
+  'cold',
+  'out_of_area',
+] as const
 export type QualificationStatus = (typeof QUALIFICATION_STATUSES)[number]
 
 // How the contact entered the funnel

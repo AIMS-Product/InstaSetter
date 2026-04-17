@@ -1,5 +1,6 @@
 import { buildPersona } from './sections/persona'
 import { buildCompanyContext } from './sections/company-context'
+import { buildLocationGate } from './sections/location-gate'
 import { buildQualificationCriteria } from './sections/qualification'
 import { buildObjectionHandling } from './sections/objections'
 import { buildEmailCapture } from './sections/email-capture'
@@ -37,6 +38,7 @@ export function buildSystemPrompt({
   const sections = [
     buildPersona(brandName),
     buildCompanyContext(brandName),
+    buildLocationGate(brandName),
     buildQualificationCriteria(),
     buildObjectionHandling(brandName),
     buildEmailCapture(),

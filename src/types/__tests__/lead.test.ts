@@ -32,6 +32,18 @@ describe('leadSummarySchema', () => {
     ).toBe(false)
   })
 
+  it('accepts out_of_area as a qualification_status', () => {
+    expect(
+      leadSummarySchema.safeParse({
+        ...validSummary,
+        qualification_status: 'out_of_area',
+        call_booked: false,
+        location_type: 'Sydney, Australia',
+        key_notes: 'Out of supported region (US/Canada only)',
+      }).success
+    ).toBe(true)
+  })
+
   it('rejects negative machine_count', () => {
     expect(
       leadSummarySchema.safeParse({ ...validSummary, machine_count: -3 })
