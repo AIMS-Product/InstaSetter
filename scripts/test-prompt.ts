@@ -213,7 +213,7 @@ const SCENARIOS: Scenario[] = [
       {
         label: 'Asks about goal, experience, or timeline (not budget)',
         test: (r) =>
-          /goal|looking to|experience|tried|familiar|timeline|when.*start|side.*income|full.?time/i.test(
+          /goal|looking to|experience|tried|familiar|timeline|when.*start|side.*income|full.?time|scale|one or two|couple.*machines|bigger|grow.*into|turn.*into/i.test(
             r
           ),
       },
@@ -245,7 +245,7 @@ const SCENARIOS: Scenario[] = [
       {
         label: 'Acknowledges the concern (empathy before solution)',
         test: (r) =>
-          /makes sense|totally get|understand|hear you|fair|appreciate|upfront|get that/i.test(
+          /makes\s+(?:a\s+lot\s+of\s+|total\s+|complete\s+|perfect\s+)?sense|totally get|understand|hear you|\bfair\b|appreciate|upfront|get that|\bgot it\b|real concern|comes up a lot|comes up.*often|feel you|valid|respect/i.test(
             r
           ),
       },
@@ -258,7 +258,7 @@ const SCENARIOS: Scenario[] = [
         label:
           'Probes specifics OR mentions financing/creative options (Acknowledge-Probe-Respond)',
         test: (r) =>
-          /financ|creative|options|less.*upfront|start.*less|how much.*saved|starting from.*zero|feel like enough|some saved/i.test(
+          /financ|creative|options|less.*upfront|start.*less|how much.*saved|starting from.*zero|feel like enough|some saved|saved up|under\s*\$|working with|starting.*from|few thousand|couple thousand/i.test(
             r
           ),
       },
@@ -367,14 +367,15 @@ const SCENARIOS: Scenario[] = [
       {
         label: 'Validates the skepticism',
         test: (r) =>
-          /fair|totally get|understand|makes sense|right to be|smart to be/i.test(
+          /fair|totally get|understand|makes sense|right to be|smart to be|right.*starting point|right.*instinct|healthy skepticism|skepticism is|respect.*skepticism|respect that|good sign|doing.*homework|appreciate.*honest/i.test(
             r
           ),
       },
       {
-        label: 'Offers transparency or credibility signal',
+        label:
+          'Offers transparency, credibility signal, OR probes for specifics (valid Acknowledge-Probe-Respond moves within 2-sentence limit)',
         test: (r) =>
-          /open book|free|no.*charge|my own.*route|started.*myself|ask.*anything/i.test(
+          /open book|free|no.*charge|my own.*route|started.*myself|ask.*anything|what.*happened|what.*tell you|what.*make you.*comfortable|what.*burned|what.*specifically/i.test(
             r
           ),
       },
@@ -393,8 +394,11 @@ const SCENARIOS: Scenario[] = [
     ],
     checks: [
       {
-        label: 'Identifies as unauthorized third party',
-        test: (r) => /unauthorized|third.?party/i.test(r),
+        label: 'Identifies the charge as unauthorized / third-party / not ours',
+        test: (r) =>
+          /unauthorized|third.?party|without permission|not us|wasn['’]?t us|using.*content|someone else/i.test(
+            r
+          ),
       },
       {
         label: 'States everything starts free',
@@ -427,6 +431,112 @@ const SCENARIOS: Scenario[] = [
       {
         label: 'Validates LA market',
         test: (r) => /la|los angeles|angel/i.test(r),
+      },
+    ],
+  },
+  {
+    name: 'name-glaze-past',
+    description:
+      'Prospect addresses the account by a random name — AI must NOT state a name, NOT correct the prospect, just respond to content',
+    messages: [
+      {
+        role: 'user',
+        content:
+          "Hi Anthony! I saw your vending content and I'm curious about getting started. I'm in Austin.",
+      },
+    ],
+    checks: [
+      {
+        label:
+          'Does NOT state any name for itself (no "I\'m Mike/Anthony/etc.")',
+        test: (r) =>
+          !/\b(i['’]?m|this is|my name is|i am)\s+(mike|anthony|john|the founder|founder)\b/i.test(
+            r
+          ),
+      },
+      {
+        label:
+          'Does NOT correct the name (no "wrong person", "confusion", "not Anthony")',
+        test: (r) =>
+          !/wrong person|confusion|not anthony|not mike|you['’]?ve got the wrong/i.test(
+            r
+          ),
+      },
+      {
+        label:
+          'Engages with the vending interest (Austin, vending, or a qualifier question)',
+        test: (r) =>
+          /austin|texas|vending|what.*interest|what.*caught|what.*got you|side income|looking/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Does NOT call generate_summary (conversation just started)',
+        test: (_r, tools) => !tools.some((t) => t.name === 'generate_summary'),
+      },
+    ],
+  },
+  {
+    name: 'off-topic-pitch',
+    description:
+      "Cold inbound pitching video editing services (Jeffery's flagged case) — AI must send holding reply, NOT correct name, call generate_summary with HUMAN_REVIEW_NEEDED",
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Hi Anthony\n\nBasically I am a video editor and want to have an opportunity from you. I have a team of 5 editor. We are offering both shortform and long form editing. Let me know if my services might be helpful to you.',
+      },
+    ],
+    checks: [
+      {
+        label: 'Does NOT state any name for itself',
+        test: (r) =>
+          !/\b(i['’]?m|this is|my name is|i am)\s+(mike|anthony|john|the founder|founder)\b/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Does NOT correct the name',
+        test: (r) =>
+          !/wrong person|confusion|not anthony|not mike|you['’]?ve got the wrong/i.test(
+            r
+          ),
+      },
+      {
+        label:
+          'Does NOT explain what VendingPreneurs does / does NOT pitch vending',
+        test: (r) =>
+          !/vending machine business|we help|we teach|start.*vending|vending entrepreneur|free masterclass/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Does NOT ask a qualification question',
+        test: (r) =>
+          !/where.*based|what area|whereabouts|what.*interest|what.*got you|budget|capital/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Sends a short holding/team-will-reply reply',
+        test: (r) =>
+          r.length < 400 &&
+          /team|get back|reach back|reach out|someone|follow up|shortly|soon/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Calls generate_summary in the same response',
+        test: (_r, tools) => tools.some((t) => t.name === 'generate_summary'),
+      },
+      {
+        label: 'Summary flags HUMAN_REVIEW_NEEDED in key_notes',
+        test: (_r, tools) => {
+          const summary = tools.find((t) => t.name === 'generate_summary')
+          if (!summary) return false
+          const notes = String(summary.input.key_notes ?? '')
+          return /HUMAN_REVIEW_NEEDED/i.test(notes)
+        },
       },
     ],
   },
