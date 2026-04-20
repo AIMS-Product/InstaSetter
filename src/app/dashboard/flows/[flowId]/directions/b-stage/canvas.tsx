@@ -42,26 +42,36 @@ function Node({
   active,
   onSelect,
   onDragStart,
+  onKeyDown,
   dragOverridePx,
+  nodeRef,
 }: {
   node: FlowNode
   selected: boolean
   active: boolean
   onSelect: (id: BlockType) => void
   onDragStart: (id: BlockType, e: ReactPointerEvent) => void
+  onKeyDown: (id: BlockType, e: React.KeyboardEvent) => void
   dragOverridePx?: { x: number; y: number } | null
+  nodeRef?: (el: HTMLDivElement | null) => void
 }) {
   const color = blockColor(node.type, { l: 0.58, c: 0.14 })
   const tint = blockTint(node.type)
   const p = dragOverridePx ?? nodePx(node)
   return (
     <div
+      ref={nodeRef}
+      role="button"
+      tabIndex={0}
+      aria-label={`Block ${node.name}${selected ? ', selected' : ''}. Arrow keys to move, Enter to edit, Delete to remove.`}
+      aria-pressed={selected}
       onPointerDown={(e) => {
-        // only left button
         if (e.button !== 0) return
         onDragStart(node.id, e)
       }}
       onClick={() => onSelect(node.id)}
+      onFocus={() => onSelect(node.id)}
+      onKeyDown={(e) => onKeyDown(node.id, e)}
       style={{
         position: 'absolute',
         left: p.x,
@@ -244,6 +254,7 @@ export default function BCanvas() {
   const state = useFlowState()
   const actions = useFlowActions()
   const containerRef = useRef<HTMLDivElement>(null)
+  const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 })
   const [panning, setPanning] = useState(false)
@@ -392,6 +403,57 @@ export default function BCanvas() {
   const dragOverrides: Record<string, { x: number; y: number }> = {}
   if (nodeDrag) dragOverrides[nodeDrag.id] = nodeDrag.currentPx
 
+  // Keyboard node editing (WCAG 2.1.1) — arrow keys nudge, Delete removes,
+  // Tab/Shift+Tab moves between nodes via native focus order, Escape blurs.
+  // Step size matches one grid-snap (0.5 of a column/row) so repeated keys
+  // line up with the grid. Shift multiplies for faster moves.
+  const onNodeKeyDown = (id: BlockType, e: React.KeyboardEvent) => {
+    const n = state.flow.nodes.find((x) => x.id === id)
+    if (!n) return
+    const step = e.shiftKey ? 1 : 0.5
+    let dx = 0
+    let dy = 0
+    switch (e.key) {
+      case 'ArrowLeft':
+        dx = -step
+        break
+      case 'ArrowRight':
+        dx = step
+        break
+      case 'ArrowUp':
+        dy = -step
+        break
+      case 'ArrowDown':
+        dy = step
+        break
+      case 'Delete':
+      case 'Backspace':
+        e.preventDefault()
+        actions.deleteNode(id)
+        return
+      case 'Escape':
+        e.preventDefault()
+        ;(e.currentTarget as HTMLElement).blur()
+        actions.select(null)
+        return
+      case 'Enter':
+      case ' ':
+        // Open inspector (already selected via onFocus). Prevent page scroll.
+        e.preventDefault()
+        actions.select(id)
+        return
+      default:
+        return
+    }
+    e.preventDefault()
+    const nextPos = {
+      x: Math.max(0, n.pos.x + dx),
+      y: Math.max(0, n.pos.y + dy),
+    }
+    actions.moveNode(id, nextPos)
+    // Refocus — the re-render keeps the same ref, so focus survives naturally.
+  }
+
   // Drop from palette
   const onDropFromPalette = (e: ReactDragEvent<HTMLDivElement>) => {
     const type = e.dataTransfer.getData('application/x-block-type') as BlockType
@@ -491,6 +553,10 @@ export default function BCanvas() {
                 active={state.simActiveBlock === n.id}
                 onSelect={actions.select}
                 onDragStart={onNodeDragStart}
+                onKeyDown={onNodeKeyDown}
+                nodeRef={(el) => {
+                  nodeRefs.current[n.id] = el
+                }}
                 dragOverridePx={
                   nodeDrag?.id === n.id ? nodeDrag.currentPx : null
                 }
@@ -574,7 +640,9 @@ export default function BCanvas() {
         <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>Space</kbd> to
         pan ·{' '}
         <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>⌘/Ctrl</kbd>
-        +wheel to zoom
+        +wheel to zoom · focus a node then{' '}
+        <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>↑↓←→</kbd> to
+        move
       </div>
 
       {/* minimap */}
