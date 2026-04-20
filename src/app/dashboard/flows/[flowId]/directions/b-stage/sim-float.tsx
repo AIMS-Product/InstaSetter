@@ -1,66 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
+import { ToolBadge } from '@/components/tool-badge'
 import { useFlowActions, useFlowState } from '../../store'
-import type { BlockType, Turn } from '../../types'
+import type { Turn } from '../../types'
 import { B } from './palette'
-
-const PROSPECT_PATTERNS: Record<string, RegExp> = {
-  location:
-    /\b(dallas|austin|houston|chicago|new york|la|nyc|sydney|small town|oklahoma|city)\b/i,
-  money: /\b\d+[kK]?\b|\$/,
-  objection:
-    /(scam|mlm|expensive|too much|can't|cant|not sure|hesitant|concern|worried)/i,
-  ready:
-    /(ready|let's go|go for it|sounds good|sign me up|when can we|book me)/i,
-  silence: /.{0,3}$/,
-}
-
-function pickNextBlock(
-  current: BlockType,
-  prospectMessage: string,
-  nodes: { id: BlockType; branches: { target: BlockType; when: string }[] }[]
-): BlockType {
-  const node = nodes.find((n) => n.id === current)
-  if (!node || node.branches.length === 0) return current
-  // Heuristic: if prospect sounds like an objection, prefer branch with 'objection' in when
-  if (PROSPECT_PATTERNS.objection.test(prospectMessage)) {
-    const objBranch = node.branches.find((b) => /objection/i.test(b.when))
-    if (objBranch) return objBranch.target
-  }
-  // If message contains a location keyword and we're in opening, move to qualifier
-  if (
-    current === 'opening' &&
-    PROSPECT_PATTERNS.location.test(prospectMessage)
-  ) {
-    const locBranch = node.branches.find((b) => /location/i.test(b.when))
-    if (locBranch) return locBranch.target
-  }
-  // If we're in qualifier and they've given us motivation-like words, go to booking
-  if (current === 'qualifier') {
-    const bookBranch = node.branches.find((b) =>
-      /motivation|qualified/i.test(b.when)
-    )
-    if (bookBranch) return bookBranch.target
-  }
-  // Default: first branch
-  return node.branches[0]!.target
-}
-
-function generateBotReply(
-  block: { examples: string[]; goal: string; type: BlockType } | undefined,
-  prospectMessage: string
-): string {
-  if (!block) return 'Got it.'
-  if (block.examples.length > 0) {
-    const idx = Math.floor(
-      (prospectMessage.length + Date.now()) % block.examples.length
-    )
-    return block.examples[idx]!
-  }
-  return block.goal || 'Got it.'
-}
+import { simulateReplyAction } from './simulator-actions'
 
 export default function BSimFloat({
   open,
@@ -84,29 +29,47 @@ export default function BSimFloat({
 
   if (!open) return null
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = input.trim()
     if (!text || pending) return
     actions.simSend(text)
     setInput('')
     setPending(true)
-    setTimeout(() => {
-      const nextBlockId = pickNextBlock(
-        state.simActiveBlock ?? 'opening',
-        text,
-        state.flow.nodes
-      )
-      const nextBlock = state.flow.nodes.find((n) => n.id === nextBlockId)
-      const reply = generateBotReply(nextBlock, text)
+
+    const history = [
+      ...state.conversation.map((t) => ({
+        role:
+          t.role === 'prospect' ? ('user' as const) : ('assistant' as const),
+        content: t.text,
+      })),
+      { role: 'user' as const, content: text },
+    ]
+
+    const result = await simulateReplyAction({
+      brand: state.flow.brand,
+      messages: history,
+    })
+
+    if (result.success) {
       const turn: Turn = {
         role: 'bot',
-        text: reply,
-        block: nextBlockId,
+        text: result.data.replyText || '(no reply text)',
         t: 'now',
+        toolCalls: result.data.toolCalls.map((c) => ({
+          name: c.name,
+          input: c.input,
+        })),
       }
       actions.simReceive(turn)
-      setPending(false)
-    }, 500)
+    } else {
+      actions.simReceive({
+        role: 'system',
+        text: result.error,
+        t: 'now',
+        error: true,
+      })
+    }
+    setPending(false)
   }
 
   return (
@@ -116,7 +79,7 @@ export default function BSimFloat({
         right: 20,
         bottom: 20,
         width: 340,
-        height: 440,
+        height: 460,
         background: B.panel,
         borderRadius: 14,
         boxShadow:
@@ -146,7 +109,7 @@ export default function BSimFloat({
           }}
         />
         <span style={{ fontSize: 12, fontWeight: 500 }}>
-          Simulator · {state.simMode === 'fast' ? 'Fast mode' : state.simMode}
+          Simulator · Live (matches production)
         </span>
         <span style={{ flex: 1 }} />
         <span
@@ -182,61 +145,95 @@ export default function BSimFloat({
           background: B.lineSoft,
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
+          gap: 10,
         }}
       >
-        {state.conversation.map((m, i) => (
+        {state.conversation.length === 0 && !pending && (
           <div
-            key={i}
             style={{
-              display: 'flex',
-              flexDirection: m.role === 'prospect' ? 'row-reverse' : 'row',
+              color: B.ink3,
+              fontSize: 11.5,
+              textAlign: 'center',
+              padding: '24px 12px',
+              lineHeight: 1.5,
             }}
           >
+            Type a message as the prospect.
+            <br />
+            Replies come from the real system prompt via Claude.
+          </div>
+        )}
+        {state.conversation.map((m, i) => {
+          if (m.role === 'system') {
+            return (
+              <div
+                key={i}
+                style={{
+                  alignSelf: 'center',
+                  fontSize: 11,
+                  color: m.error ? '#8E2A2A' : B.ink3,
+                  background: m.error ? '#FBEFEF' : B.panel,
+                  padding: '5px 10px',
+                  borderRadius: 999,
+                  border: `1px solid ${m.error ? '#F5D9D9' : B.line}`,
+                }}
+              >
+                {m.error ? 'Error: ' : ''}
+                {m.text}
+              </div>
+            )
+          }
+          return (
             <div
+              key={i}
               style={{
-                maxWidth: '82%',
-                padding: '7px 10px',
-                borderRadius: 12,
-                background: m.role === 'prospect' ? B.accent : B.panel,
-                color: m.role === 'prospect' ? B.panel : B.ink,
-                fontSize: 12.5,
-                lineHeight: 1.45,
-                position: 'relative',
+                display: 'flex',
+                flexDirection: m.role === 'prospect' ? 'row-reverse' : 'row',
               }}
             >
-              {m.text}
-              {m.role === 'bot' && m.block && (
+              <div
+                style={{
+                  maxWidth: '82%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  alignItems: m.role === 'prospect' ? 'flex-end' : 'flex-start',
+                }}
+              >
                 <div
                   style={{
-                    position: 'absolute',
-                    top: -8,
-                    left: 8,
-                    fontSize: 9,
-                    padding: '1px 6px',
-                    borderRadius: 999,
-                    background: B.panel,
-                    color: B.ink3,
-                    border: `1px solid ${B.line}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
+                    padding: '7px 10px',
+                    borderRadius: 12,
+                    background: m.role === 'prospect' ? B.accent : B.panel,
+                    color: m.role === 'prospect' ? B.panel : B.ink,
+                    fontSize: 12.5,
+                    lineHeight: 1.45,
                   }}
                 >
-                  <span
-                    style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: '50%',
-                      background: blockColor(m.block),
-                    }}
-                  />
-                  {BLOCK_BY_TYPE[m.block]?.label}
+                  {m.text}
                 </div>
-              )}
+                {m.role === 'bot' && m.toolCalls && m.toolCalls.length > 0 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 3,
+                    }}
+                  >
+                    {m.toolCalls.map((tc, j) => (
+                      <ToolBadge
+                        key={j}
+                        call={tc}
+                        bg={B.accentSoft}
+                        ink={B.accentInk}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {pending && (
           <div style={{ display: 'flex' }}>
             <div
@@ -249,7 +246,7 @@ export default function BSimFloat({
                 fontStyle: 'italic',
               }}
             >
-              Mike is typing…
+              thinking…
             </div>
           </div>
         )}
@@ -268,10 +265,11 @@ export default function BSimFloat({
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
-              handleSend()
+              void handleSend()
             }
           }}
           placeholder="Type as prospect…"
+          disabled={pending}
           style={{
             flex: 1,
             padding: '7px 10px',
@@ -285,7 +283,7 @@ export default function BSimFloat({
         />
         <button
           type="button"
-          onClick={handleSend}
+          onClick={() => void handleSend()}
           disabled={!input.trim() || pending}
           style={{
             padding: '0 12px',

@@ -57,11 +57,18 @@ export interface Variable {
   kind: 'text' | 'url' | 'email' | 'number'
 }
 
+export interface SimToolCall {
+  name: string
+  input: Record<string, unknown>
+}
+
 export interface Turn {
-  role: 'prospect' | 'bot'
+  role: 'prospect' | 'bot' | 'system'
   text: string
   block?: BlockType
   t: string
+  toolCalls?: SimToolCall[]
+  error?: boolean
 }
 
 export type DirectionId = 'a' | 'b' | 'c'
