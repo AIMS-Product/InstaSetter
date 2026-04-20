@@ -1,0 +1,107 @@
+'use client'
+
+import { useState } from 'react'
+import PageNav from '../../page-nav'
+import PageBot from '../../related-pages/page-bot'
+import PageRuns from '../../related-pages/page-runs'
+import PageVariables from '../../related-pages/page-variables'
+import PageVersions from '../../related-pages/page-versions'
+import { FlowStoreProvider, useFlowActions, useFlowState } from '../../store'
+import type { PageId } from '../../types'
+import BHeader from './header'
+import BCanvas from './canvas'
+import BInspector from './inspector'
+import BSimFloat from './sim-float'
+import PaletteDrawer from './palette-drawer'
+import { B } from './palette'
+
+function Shell() {
+  const state = useFlowState()
+  const actions = useFlowActions()
+  const [page, setPage] = useState<PageId>('flow')
+  const [simOpen, setSimOpen] = useState(true)
+
+  return (
+    <div
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        background: B.bg,
+        color: B.ink,
+      }}
+    >
+      <BHeader simOpen={simOpen} onToggleSim={() => setSimOpen((s) => !s)} />
+      <div
+        style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}
+      >
+        <PageNav p={B} page={page} onChange={setPage} />
+        {page === 'flow' && (
+          <>
+            <BCanvas />
+            <PaletteDrawer />
+            <BInspector onClose={() => actions.select(null)} />
+            <BSimFloat open={simOpen} onClose={() => setSimOpen(false)} />
+          </>
+        )}
+        {page === 'runs' && (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <PageRuns p={B} />
+          </div>
+        )}
+        {page === 'variables' && (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <PageVariables p={B} />
+          </div>
+        )}
+        {page === 'versions' && (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <PageVersions p={B} />
+          </div>
+        )}
+        {page === 'bot' && (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <PageBot p={B} />
+          </div>
+        )}
+      </div>
+      {state.toast && (
+        <Toast msg={state.toast} onDone={() => actions.toast(null)} />
+      )}
+    </div>
+  )
+}
+
+function Toast({ msg, onDone }: { msg: string; onDone: () => void }) {
+  if (typeof window !== 'undefined') {
+    window.setTimeout(onDone, 2400)
+  }
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 20,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        padding: '10px 16px',
+        borderRadius: 10,
+        background: B.ink,
+        color: B.panel,
+        fontSize: 12.5,
+        fontWeight: 500,
+        boxShadow: '0 10px 28px rgba(22,21,40,0.22)',
+        zIndex: 200,
+      }}
+    >
+      {msg}
+    </div>
+  )
+}
+
+export default function DirectionB() {
+  return (
+    <FlowStoreProvider>
+      <Shell />
+    </FlowStoreProvider>
+  )
+}
