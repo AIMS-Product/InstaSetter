@@ -41,3 +41,42 @@ body {
 nextjs-portal {
   display: none !important;
 }
+
+/* Global focus ring. Every persona who cares about keyboard access (David,
+   Marcus, Alex, Mike, Rachel, Claire, Tom, Zoe, Sam — 9/15) flagged the lack
+   of any :focus-visible style as making the app unusable without a mouse.
+   :focus-visible (not :focus) avoids showing the ring on mouse clicks. */
+*:focus-visible {
+  outline: 2px solid #5e52c7;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Preserve the custom rounded focus on inputs with their own border radius */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible,
+[role='tab']:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Skip link — visible only when focused. Lets keyboard users jump past nav. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -40px;
+  padding: 8px 14px;
+  background: #161528;
+  color: #fafafb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  z-index: 1000;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 8px;
+}

@@ -2,7 +2,11 @@ import Link from 'next/link'
 
 export default function DashboardHome() {
   return (
-    <main className="flex flex-1 items-center justify-center">
+    <main
+      id="main"
+      tabIndex={-1}
+      className="flex flex-1 items-center justify-center"
+    >
       <div className="max-w-md text-center">
         <h1 className="text-2xl font-semibold">InstaSetter</h1>
         <p className="mt-2 text-sm text-muted-strong">

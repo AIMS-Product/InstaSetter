@@ -23,7 +23,9 @@ export default function FlowBuilder() {
 
 function MobileGate() {
   return (
-    <div
+    <main
+      id="main"
+      tabIndex={-1}
       style={{
         flex: 1,
         display: 'flex',
@@ -104,6 +106,6 @@ function MobileGate() {
       >
         Open conversations →
       </Link>
-    </div>
+    </main>
   )
 }

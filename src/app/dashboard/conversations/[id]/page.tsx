@@ -91,6 +91,8 @@ export default async function ConversationDetailPage({ params }: Params) {
 
   return (
     <main
+      id="main"
+      tabIndex={-1}
       style={{
         flex: 1,
         overflow: 'auto',

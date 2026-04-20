@@ -19,7 +19,10 @@ export default function PaletteDrawer() {
     <div
       style={{
         position: 'absolute',
-        left: 76,
+        // 12px from the tabpanel's left edge. The tabpanel already excludes
+        // PageNav (they're flex siblings), so the collapsed drawer no longer
+        // overlaps the nav — the original layout bug from pass 1 stays fixed.
+        left: 12,
         top: 12,
         bottom: 12,
         width: state.paletteOpen ? 230 : 44,

@@ -755,6 +755,32 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
       </div>
 
       <div
+        role="tablist"
+        aria-label="Block configuration sections"
+        onKeyDown={(e) => {
+          const i = tabs.findIndex((x) => x.key === state.activeTab)
+          if (i < 0) return
+          const move = (delta: number) => {
+            e.preventDefault()
+            const next = (i + delta + tabs.length) % tabs.length
+            const key = tabs[next]!.key
+            actions.setTab(key)
+            const el = document.getElementById(`inspector-tab-${key}`)
+            el?.focus()
+          }
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') move(1)
+          else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') move(-1)
+          else if (e.key === 'Home') {
+            e.preventDefault()
+            actions.setTab(tabs[0]!.key)
+            document.getElementById(`inspector-tab-${tabs[0]!.key}`)?.focus()
+          } else if (e.key === 'End') {
+            e.preventDefault()
+            const last = tabs[tabs.length - 1]!.key
+            actions.setTab(last)
+            document.getElementById(`inspector-tab-${last}`)?.focus()
+          }
+        }}
         style={{
           padding: '6px 4px 0',
           borderBottom: `1px solid ${B.line}`,
@@ -768,6 +794,11 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
             <button
               key={t.key}
               type="button"
+              role="tab"
+              id={`inspector-tab-${t.key}`}
+              aria-controls={`inspector-panel-${t.key}`}
+              aria-selected={isActive}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => actions.setTab(t.key)}
               style={{
                 padding: '10px 12px',
@@ -787,7 +818,12 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
         })}
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: '16px 18px' }}>
+      <div
+        role="tabpanel"
+        id={`inspector-panel-${state.activeTab}`}
+        aria-labelledby={`inspector-tab-${state.activeTab}`}
+        style={{ flex: 1, overflow: 'auto', padding: '16px 18px' }}
+      >
         {state.activeTab === 'design' && (
           <DesignTab
             block={block}

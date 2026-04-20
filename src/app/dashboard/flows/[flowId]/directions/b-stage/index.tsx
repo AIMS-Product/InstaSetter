@@ -22,7 +22,10 @@ function Shell() {
   const [simOpen, setSimOpen] = useState(true)
 
   return (
-    <div
+    <main
+      id="main"
+      tabIndex={-1}
+      aria-label="Flow builder"
       style={{
         height: '100%',
         display: 'flex',
@@ -37,30 +40,60 @@ function Shell() {
       >
         <PageNav p={B} page={page} onChange={setPage} />
         {page === 'flow' && (
-          <>
+          <div
+            role="tabpanel"
+            id="flow-builder-panel-flow"
+            aria-labelledby="flow-builder-tab-flow"
+            style={{
+              flex: 1,
+              display: 'flex',
+              minWidth: 0,
+              position: 'relative',
+            }}
+          >
             <BCanvas />
             <PaletteDrawer />
             <BInspector onClose={() => actions.select(null)} />
             <BSimFloat open={simOpen} onClose={() => setSimOpen(false)} />
-          </>
+          </div>
         )}
         {page === 'runs' && (
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            role="tabpanel"
+            id="flow-builder-panel-runs"
+            aria-labelledby="flow-builder-tab-runs"
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <PageRuns p={B} />
           </div>
         )}
         {page === 'variables' && (
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            role="tabpanel"
+            id="flow-builder-panel-variables"
+            aria-labelledby="flow-builder-tab-variables"
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <PageVariables p={B} />
           </div>
         )}
         {page === 'versions' && (
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            role="tabpanel"
+            id="flow-builder-panel-versions"
+            aria-labelledby="flow-builder-tab-versions"
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <PageVersions p={B} />
           </div>
         )}
         {page === 'bot' && (
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            role="tabpanel"
+            id="flow-builder-panel-bot"
+            aria-labelledby="flow-builder-tab-bot"
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <PageBot p={B} />
           </div>
         )}
@@ -68,7 +101,7 @@ function Shell() {
       {state.toast && (
         <Toast msg={state.toast} onDone={() => actions.toast(null)} />
       )}
-    </div>
+    </main>
   )
 }
 

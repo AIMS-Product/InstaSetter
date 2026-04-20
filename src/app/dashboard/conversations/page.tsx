@@ -28,6 +28,8 @@ export default async function ConversationsPage() {
 
   return (
     <main
+      id="main"
+      tabIndex={-1}
       style={{
         flex: 1,
         overflow: 'auto',
