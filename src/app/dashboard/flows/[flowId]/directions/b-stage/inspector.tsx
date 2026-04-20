@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
 import type { FlowNode } from '../../types'
 import { B } from './palette'
+import { PromptReader } from './prompt-reader'
 
 function Field({
   label,
@@ -86,7 +88,13 @@ const smallInputStyle: React.CSSProperties = {
   fontSize: 12.5,
 }
 
-function DesignTab({ block }: { block: FlowNode }) {
+function DesignTab({
+  block,
+  onOpenPrompt,
+}: {
+  block: FlowNode
+  onOpenPrompt: (target?: string) => void
+}) {
   const actions = useFlowActions()
   return (
     <>
@@ -102,7 +110,9 @@ function DesignTab({ block }: { block: FlowNode }) {
       </Field>
       <Field
         label="How it should sound"
-        hint="Inherits tone from Mike · override for this step"
+        action="↗ View Persona"
+        onAction={() => onOpenPrompt('persona')}
+        hint="Inherits tone from the Persona section · override for this step"
       >
         <textarea
           value={block.guidance}
@@ -642,6 +652,7 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
     ? (state.flow.nodes.find((n) => n.id === state.selectedId) ?? null)
     : null
   const actions = useFlowActions()
+  const [reader, setReader] = useState<{ target?: string } | null>(null)
   if (!block) return null
   const color = blockColor(block.type, { l: 0.58, c: 0.14 })
   const tabs: Array<{ key: typeof state.activeTab; label: string }> = [
@@ -712,6 +723,37 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
         </div>
         <button
           type="button"
+          onClick={() => setReader({})}
+          title="View the live system prompt for this block"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            height: 28,
+            padding: '0 10px',
+            borderRadius: 7,
+            border: `1px solid ${B.line}`,
+            background: B.panel,
+            color: B.ink2,
+            cursor: 'pointer',
+            fontSize: 11.5,
+            fontWeight: 500,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 14,
+              height: 14,
+              borderRadius: 3,
+              background: color,
+              opacity: 0.85,
+            }}
+          />
+          View prompt
+        </button>
+        <button
+          type="button"
           onClick={onClose}
           style={{
             width: 28,
@@ -761,11 +803,24 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: '16px 18px' }}>
-        {state.activeTab === 'design' && <DesignTab block={block} />}
+        {state.activeTab === 'design' && (
+          <DesignTab
+            block={block}
+            onOpenPrompt={(target) => setReader({ target })}
+          />
+        )}
         {state.activeTab === 'routing' && <RoutingTab block={block} />}
         {state.activeTab === 'triggers' && <TriggersTab block={block} />}
         {state.activeTab === 'data' && <DataTab block={block} />}
       </div>
+      {reader && (
+        <PromptReader
+          block={block}
+          brand={state.flow.brand}
+          initialTarget={reader.target}
+          onClose={() => setReader(null)}
+        />
+      )}
     </div>
   )
 }
