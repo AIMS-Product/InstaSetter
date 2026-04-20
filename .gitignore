@@ -51,3 +51,6 @@ docs/instagram-*/
 
 # Generated docs
 docs/pattern-report.docx
+
+# UX persona-review screenshots (large, regenerated per run — keep markdown only)
+reports/ux-persona-review/screenshots/
