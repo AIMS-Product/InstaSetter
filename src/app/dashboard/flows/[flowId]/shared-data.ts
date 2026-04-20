@@ -81,7 +81,7 @@ export const blockInk = (type: BlockType): string =>
 export const FLOW: Flow = {
   id: 'ig-organic-dm',
   brand: 'VendingPreneurs',
-  name: 'IG Organic DM',
+  name: 'Instagram DM Flow',
   channel: 'Instagram — Organic DM',
   draft: 13,
   published: 12,

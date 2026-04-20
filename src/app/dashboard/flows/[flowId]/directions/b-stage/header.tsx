@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useFlowActions, useFlowState } from '../../store'
 import { B } from './palette'
 
@@ -12,6 +13,7 @@ export default function BHeader({
 }) {
   const state = useFlowState()
   const actions = useFlowActions()
+  const [confirmOpen, setConfirmOpen] = useState(false)
   return (
     <div
       style={{
@@ -64,7 +66,7 @@ export default function BHeader({
           fontWeight: 500,
         }}
       >
-        Draft v{state.draftVersion}
+        Draft version {state.draftVersion}
       </div>
       <div style={{ flex: 1 }} />
       <div
@@ -84,7 +86,7 @@ export default function BHeader({
             background: '#3FB37F',
           }}
         />
-        Live on v{state.publishedVersion} · 42 convos today
+        Live on version {state.publishedVersion} · 42 conversations today
       </div>
       <button
         type="button"
@@ -115,7 +117,7 @@ export default function BHeader({
       </button>
       <button
         type="button"
-        onClick={() => actions.publish()}
+        onClick={() => setConfirmOpen(true)}
         style={{
           padding: '6px 14px',
           borderRadius: 8,
@@ -127,8 +129,118 @@ export default function BHeader({
           fontWeight: 500,
         }}
       >
-        Publish v{state.draftVersion}
+        Publish version {state.draftVersion}
       </button>
+      {confirmOpen && (
+        <PublishConfirm
+          draftVersion={state.draftVersion}
+          publishedVersion={state.publishedVersion}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => {
+            actions.publish()
+            setConfirmOpen(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function PublishConfirm({
+  draftVersion,
+  publishedVersion,
+  onCancel,
+  onConfirm,
+}: {
+  draftVersion: number
+  publishedVersion: number
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="publish-confirm-title"
+      onClick={onCancel}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(22,21,40,0.35)',
+        display: 'grid',
+        placeItems: 'center',
+        zIndex: 300,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(440px, calc(100vw - 32px))',
+          background: B.panel,
+          borderRadius: 14,
+          padding: '20px 22px 16px',
+          boxShadow: '0 24px 60px rgba(22,21,40,0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
+        <div
+          id="publish-confirm-title"
+          style={{ fontSize: 15, fontWeight: 600, color: B.ink }}
+        >
+          Publish version {draftVersion} to the live bot?
+        </div>
+        <div style={{ fontSize: 13, color: B.ink2, lineHeight: 1.5 }}>
+          Version {publishedVersion} is currently serving live prospects.
+          Publishing will make version {draftVersion} the new live version
+          immediately. Active conversations will continue under version{' '}
+          {publishedVersion} until their next message, then switch to version{' '}
+          {draftVersion}.
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 8,
+            marginTop: 4,
+          }}
+        >
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              padding: '7px 14px',
+              borderRadius: 8,
+              border: `1px solid ${B.line}`,
+              background: B.panel,
+              color: B.ink2,
+              fontSize: 12.5,
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            autoFocus
+            style={{
+              padding: '7px 14px',
+              borderRadius: 8,
+              border: 'none',
+              background: B.accent,
+              color: B.panel,
+              fontSize: 12.5,
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            Publish version {draftVersion}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

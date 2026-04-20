@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
-import { config, getServerConfig } from '@/lib/config'
+import { config, getSupabaseServerConfig } from '@/lib/config'
 
 export function createServiceRoleClient() {
-  const serverConfig = getServerConfig()
+  const { SUPABASE_SERVICE_ROLE_KEY } = getSupabaseServerConfig()
   return createClient<Database>(
     config.NEXT_PUBLIC_SUPABASE_URL,
-    serverConfig.SUPABASE_SERVICE_ROLE_KEY
+    SUPABASE_SERVICE_ROLE_KEY
   )
 }

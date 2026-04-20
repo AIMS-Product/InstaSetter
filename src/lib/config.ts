@@ -5,9 +5,20 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 })
 
-const serverEnvSchema = z.object({
+// Split server env into independent slices so a missing var in one slice does
+// not break routes that don't need it. Before: listConversations() transitively
+// called getServerConfig() via the service-role client and threw on a missing
+// ANTHROPIC_API_KEY — a read that never touches Anthropic. Each getter below
+// validates only what its callers actually require.
+const supabaseServerEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+})
+
+const anthropicEnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1),
+})
+
+const brandEnvSchema = z.object({
   BRAND_NAME: z.string().min(1),
 })
 
@@ -23,13 +34,33 @@ export const config = envSchema.parse({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 })
 
-// Server-only config — call this in server code only
-export function getServerConfig() {
-  return serverEnvSchema.parse({
+export function getSupabaseServerConfig() {
+  return supabaseServerEnvSchema.parse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  })
+}
+
+export function getAnthropicConfig() {
+  return anthropicEnvSchema.parse({
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  })
+}
+
+export function getBrandConfig() {
+  return brandEnvSchema.parse({
     BRAND_NAME: process.env.BRAND_NAME,
   })
+}
+
+// Aggregate for callers (webhooks, engine) that genuinely need all three.
+// Internally composes the slices so failure messages still name the specific
+// missing var.
+export function getServerConfig() {
+  return {
+    ...getSupabaseServerConfig(),
+    ...getAnthropicConfig(),
+    ...getBrandConfig(),
+  }
 }
 
 // SendPulse config — validated separately so non-SendPulse code doesn't require these vars

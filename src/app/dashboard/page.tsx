@@ -13,7 +13,7 @@ export default function DashboardHome() {
           href="/dashboard/flows/ig-organic-dm"
           className="mt-6 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
         >
-          Open IG Organic DM →
+          Open Instagram DM Flow →
         </Link>
       </div>
     </main>

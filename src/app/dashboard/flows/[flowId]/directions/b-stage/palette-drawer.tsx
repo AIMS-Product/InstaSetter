@@ -18,7 +18,7 @@ export default function PaletteDrawer() {
     <div
       style={{
         position: 'absolute',
-        left: 12,
+        left: 76,
         top: 12,
         bottom: 12,
         width: state.paletteOpen ? 230 : 44,

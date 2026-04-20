@@ -129,7 +129,7 @@ export default function PageRuns({ p }: { p: Palette }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <RPHeader
         p={p}
-        eyebrow="IG Organic DM"
+        eyebrow="Instagram DM Flow"
         title="Conversations"
         right={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

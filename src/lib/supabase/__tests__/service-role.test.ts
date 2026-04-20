@@ -18,4 +18,17 @@ describe('createServiceRoleClient', () => {
     expect(client).toBeDefined()
     expect(typeof client.from).toBe('function')
   })
+
+  it('works when ANTHROPIC_API_KEY and BRAND_NAME are missing', async () => {
+    // Regression guard: the Supabase service-role client is used by pure
+    // read paths (e.g. listConversations) that have nothing to do with
+    // Anthropic. Those routes must not fail env validation for unrelated vars.
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test-service-role-key')
+    // ANTHROPIC_API_KEY and BRAND_NAME intentionally not set
+    const { createServiceRoleClient } =
+      await import('@/lib/supabase/service-role')
+    expect(() => createServiceRoleClient()).not.toThrow()
+  })
 })
