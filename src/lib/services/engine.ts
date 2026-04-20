@@ -8,6 +8,7 @@ import {
 } from '@/lib/services/conversation'
 import { createLead } from '@/lib/services/lead'
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
+import { persistLeadEvents } from '@/lib/services/lead-event'
 import {
   buildClaudeRequest,
   parseClaudeResponse,
@@ -180,6 +181,7 @@ export async function processMessage(
   }
 
   // Step 8: Store assistant reply
+  let storedMessageId: string | null = null
   if (replyText) {
     const storeReplyResult = await storeMessage(client, {
       conversationId,
@@ -191,9 +193,24 @@ export async function processMessage(
     if (!storeReplyResult.success) {
       return { success: false, error: storeReplyResult.error }
     }
+
+    if (!storeReplyResult.isDuplicate) {
+      storedMessageId = storeReplyResult.data.id
+    }
   }
 
-  // Step 9: Route lead events (non-blocking)
+  // Step 9: Persist lead_events timeline (idempotent via tool_use_id unique)
+  if (allToolCalls.length > 0) {
+    await persistLeadEvents(client, {
+      conversationId,
+      contactId: contact.id,
+      messageId: storedMessageId,
+      integration,
+      toolCalls: allToolCalls,
+    })
+  }
+
+  // Step 10: Route lead events side-effects (non-blocking)
   if (allToolCalls.length > 0) {
     routeLeadEvents(
       client,

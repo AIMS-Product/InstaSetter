@@ -188,6 +188,64 @@ export type Database = {
           },
         ]
       }
+      lead_events: {
+        Row: {
+          contact_id: string
+          conversation_id: string
+          created_at: string
+          id: string
+          integration: string
+          message_id: string | null
+          tool_input: Json
+          tool_name: string
+          tool_use_id: string | null
+        }
+        Insert: {
+          contact_id: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          integration?: string
+          message_id?: string | null
+          tool_input?: Json
+          tool_name: string
+          tool_use_id?: string | null
+        }
+        Update: {
+          contact_id?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          integration?: string
+          message_id?: string | null
+          tool_input?: Json
+          tool_name?: string
+          tool_use_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'lead_events_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'lead_events_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'lead_events_message_id_fkey'
+            columns: ['message_id']
+            isOneToOne: false
+            referencedRelation: 'messages'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       leads: {
         Row: {
           calculator_sent: boolean
