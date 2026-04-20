@@ -8,6 +8,8 @@ import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent,
 } from 'react'
+import { Maximize2, Minus, Plus } from 'lucide-react'
+import { IconButton } from '@/components/icon-button'
 import {
   BLOCK_BY_TYPE,
   blockColor,
@@ -514,14 +516,14 @@ export default function BCanvas() {
           zIndex: 5,
         }}
       >
-        <button
-          type="button"
+        <IconButton
+          icon={Minus}
+          label="Zoom out"
           onClick={zoomOut}
-          title="Zoom out"
-          style={ctrlStyle}
-        >
-          −
-        </button>
+          size={28}
+          iconSize={14}
+          style={{ color: B.ink2 }}
+        />
         <span
           style={{
             padding: '6px 10px',
@@ -533,22 +535,22 @@ export default function BCanvas() {
         >
           {zoomPct}%
         </span>
-        <button
-          type="button"
+        <IconButton
+          icon={Plus}
+          label="Zoom in"
           onClick={zoomIn}
-          title="Zoom in"
-          style={ctrlStyle}
-        >
-          +
-        </button>
-        <button
-          type="button"
+          size={28}
+          iconSize={14}
+          style={{ color: B.ink2 }}
+        />
+        <IconButton
+          icon={Maximize2}
+          label="Fit view"
           onClick={fitView}
-          title="Fit view"
-          style={ctrlStyle}
-        >
-          ⤢
-        </button>
+          size={28}
+          iconSize={13}
+          style={{ color: B.ink2 }}
+        />
       </div>
 
       {/* hint */}
@@ -622,14 +624,4 @@ export default function BCanvas() {
       </div>
     </div>
   )
-}
-
-const ctrlStyle: React.CSSProperties = {
-  padding: '6px 10px',
-  border: 'none',
-  background: 'transparent',
-  color: B.ink2,
-  fontSize: 13,
-  cursor: 'pointer',
-  borderRadius: 6,
 }

@@ -68,6 +68,34 @@ export default function BHeader({
       >
         Draft version {state.draftVersion}
       </div>
+      {state.dirtySincePublish && (
+        <div
+          role="status"
+          aria-label="Draft has unpublished changes"
+          style={{
+            fontSize: 11,
+            padding: '2px 8px',
+            borderRadius: 999,
+            background: '#FBE7D9',
+            color: '#8B4316',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              background: '#E08040',
+            }}
+          />
+          Unsaved changes
+        </div>
+      )}
       <div style={{ flex: 1 }} />
       <div
         style={{

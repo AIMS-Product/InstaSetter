@@ -1,5 +1,6 @@
 'use client'
 
+import { LayoutGrid, PanelLeftClose } from 'lucide-react'
 import { BLOCK_CATALOG, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import type { BlockType } from '../../types'
@@ -51,8 +52,14 @@ export default function PaletteDrawer() {
           fontWeight: 500,
         }}
         title={state.paletteOpen ? 'Hide palette' : 'Show palette'}
+        aria-label={state.paletteOpen ? 'Hide palette' : 'Show palette'}
+        aria-expanded={state.paletteOpen}
       >
-        <span style={{ fontSize: 14 }}>{state.paletteOpen ? '←' : '⊞'}</span>
+        {state.paletteOpen ? (
+          <PanelLeftClose aria-hidden size={14} strokeWidth={1.75} />
+        ) : (
+          <LayoutGrid aria-hidden size={14} strokeWidth={1.75} />
+        )}
         {state.paletteOpen && <span>Blocks</span>}
       </button>
       {state.paletteOpen && (

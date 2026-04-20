@@ -1,12 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
+import { X } from 'lucide-react'
+import { IconButton } from '@/components/icon-button'
 import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
 import type { FlowNode } from '../../types'
 import { B } from './palette'
 import { PromptReader } from './prompt-reader'
 
+// Field renders its label with a stable id and exposes it to children via
+// render-prop. Children that own the primary editable element (textarea/input)
+// can use that id as `aria-labelledby` so the label is announced to screen
+// readers — P0.10 fix. Non-accessible children (multi-item rows that have
+// their own inline labelling) can still pass a plain ReactNode.
 function Field({
   label,
   children,
@@ -15,11 +22,12 @@ function Field({
   onAction,
 }: {
   label: string
-  children: React.ReactNode
+  children: ReactNode | ((labelId: string) => ReactNode)
   action?: string
   hint?: string
   onAction?: () => void
 }) {
+  const labelId = useId()
   return (
     <div style={{ marginBottom: 18 }}>
       <div
@@ -31,6 +39,7 @@ function Field({
         }}
       >
         <div
+          id={labelId}
           style={{
             fontSize: 11,
             fontWeight: 600,
@@ -63,7 +72,7 @@ function Field({
           {hint}
         </div>
       )}
-      {children}
+      {typeof children === 'function' ? children(labelId) : children}
     </div>
   )
 }
@@ -99,14 +108,17 @@ function DesignTab({
   return (
     <>
       <Field label="Goal">
-        <textarea
-          value={block.goal}
-          rows={2}
-          style={inputStyle}
-          onChange={(e) =>
-            actions.updateBlock(block.id, 'goal', e.target.value)
-          }
-        />
+        {(labelId) => (
+          <textarea
+            aria-labelledby={labelId}
+            value={block.goal}
+            rows={2}
+            style={inputStyle}
+            onChange={(e) =>
+              actions.updateBlock(block.id, 'goal', e.target.value)
+            }
+          />
+        )}
       </Field>
       <Field
         label="How it should sound"
@@ -114,14 +126,17 @@ function DesignTab({
         onAction={() => onOpenPrompt('persona')}
         hint="Inherits tone from the Persona section · override for this step"
       >
-        <textarea
-          value={block.guidance}
-          rows={3}
-          style={inputStyle}
-          onChange={(e) =>
-            actions.updateBlock(block.id, 'guidance', e.target.value)
-          }
-        />
+        {(labelId) => (
+          <textarea
+            aria-labelledby={labelId}
+            value={block.guidance}
+            rows={3}
+            style={inputStyle}
+            onChange={(e) =>
+              actions.updateBlock(block.id, 'guidance', e.target.value)
+            }
+          />
+        )}
       </Field>
       <Field
         label="Good examples"
@@ -142,6 +157,7 @@ function DesignTab({
             }}
           >
             <textarea
+              aria-label={`Example ${i + 1}`}
               value={ex}
               rows={2}
               onChange={(e) => actions.editExample(block.id, i, e.target.value)}
@@ -152,26 +168,19 @@ function DesignTab({
                 fontSize: 12.5,
               }}
             />
-            <button
-              type="button"
+            <IconButton
+              icon={X}
+              label="Delete example"
               onClick={() => actions.deleteExample(block.id, i)}
-              title="Delete"
+              size={22}
+              iconSize={13}
               style={{
                 position: 'absolute',
                 right: 6,
                 top: 6,
-                width: 22,
-                height: 22,
-                border: 'none',
-                background: 'transparent',
                 color: B.ink3,
-                cursor: 'pointer',
-                fontSize: 14,
-                borderRadius: 6,
               }}
-            >
-              ×
-            </button>
+            />
           </div>
         ))}
       </Field>
@@ -217,22 +226,14 @@ function DesignTab({
             >
               {c.variable}
             </code>
-            <button
-              type="button"
+            <IconButton
+              icon={X}
+              label="Delete capture"
               onClick={() => actions.deleteCapture(block.id, c.variable)}
-              title="Delete"
-              style={{
-                width: 20,
-                height: 20,
-                border: 'none',
-                background: 'transparent',
-                color: B.ink3,
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
-            >
-              ×
-            </button>
+              size={20}
+              iconSize={12}
+              style={{ color: B.ink3 }}
+            />
           </div>
         ))}
       </Field>
@@ -292,6 +293,7 @@ function RoutingTab({ block }: { block: FlowNode }) {
               }}
             >
               <input
+                aria-label="Route label"
                 value={br.label}
                 onChange={(e) =>
                   actions.editBranch(block.id, br.id, { label: e.target.value })
@@ -303,28 +305,20 @@ function RoutingTab({ block }: { block: FlowNode }) {
                 }}
                 placeholder="Label"
               />
-              <button
-                type="button"
+              <IconButton
+                icon={X}
+                label="Delete route"
                 onClick={() => actions.deleteBranch(block.id, br.id)}
-                title="Delete"
-                style={{
-                  width: 24,
-                  height: 24,
-                  border: 'none',
-                  background: 'transparent',
-                  color: B.ink3,
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  borderRadius: 6,
-                }}
-              >
-                ×
-              </button>
+                size={24}
+                iconSize={13}
+                style={{ color: B.ink3 }}
+              />
             </div>
             <div style={{ fontSize: 11.5, color: B.ink3, marginBottom: 4 }}>
               When
             </div>
             <textarea
+              aria-label="Route condition"
               value={br.when}
               rows={1}
               onChange={(e) =>
@@ -344,6 +338,7 @@ function RoutingTab({ block }: { block: FlowNode }) {
             >
               <span style={{ color: B.ink3 }}>→</span>
               <select
+                aria-label="Route target block"
                 value={br.target}
                 onChange={(e) =>
                   actions.editBranch(block.id, br.id, {
@@ -430,28 +425,21 @@ function TriggersTab({ block }: { block: FlowNode }) {
             }}
           >
             <input
+              aria-label="Trigger name"
               value={t.name}
               onChange={(e) =>
                 actions.editTrigger(t.id, { name: e.target.value })
               }
               style={{ ...smallInputStyle, flex: 1, fontWeight: 500 }}
             />
-            <button
-              type="button"
+            <IconButton
+              icon={X}
+              label="Delete trigger"
               onClick={() => actions.deleteTrigger(t.id)}
-              style={{
-                width: 24,
-                height: 24,
-                border: 'none',
-                background: 'transparent',
-                color: B.ink3,
-                cursor: 'pointer',
-                fontSize: 14,
-                borderRadius: 6,
-              }}
-            >
-              ×
-            </button>
+              size={24}
+              iconSize={13}
+              style={{ color: B.ink3 }}
+            />
           </div>
           <div
             style={{
@@ -463,6 +451,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
           >
             <span style={{ fontSize: 12, color: B.ink3 }}>After</span>
             <input
+              aria-label="Trigger delay in minutes"
               type="number"
               min={1}
               value={t.afterMinutes}
@@ -504,6 +493,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
           >
             <span style={{ fontSize: 12, color: B.ink3, width: 44 }}>Mode</span>
             <select
+              aria-label="Trigger delivery mode"
               value={t.mode}
               onChange={(e) =>
                 actions.editTrigger(t.id, {
@@ -520,6 +510,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 12, color: B.ink3, width: 44 }}>Then</span>
             <select
+              aria-label="Trigger target block"
               value={t.target}
               onChange={(e) =>
                 actions.editTrigger(t.id, {
@@ -704,6 +695,7 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
             {BLOCK_BY_TYPE[block.type]?.label}
           </div>
           <input
+            aria-label="Block name"
             value={block.name}
             onChange={(e) =>
               actions.updateBlock(block.id, 'name', e.target.value)
@@ -752,21 +744,14 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
           />
           View prompt
         </button>
-        <button
-          type="button"
+        <IconButton
+          icon={X}
+          label="Close inspector"
           onClick={onClose}
-          style={{
-            width: 28,
-            height: 28,
-            border: 'none',
-            background: 'transparent',
-            color: B.ink3,
-            cursor: 'pointer',
-            fontSize: 16,
-          }}
-        >
-          ×
-        </button>
+          size={28}
+          iconSize={15}
+          style={{ color: B.ink3 }}
+        />
       </div>
 
       <div

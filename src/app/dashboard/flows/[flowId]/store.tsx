@@ -58,6 +58,10 @@ export interface FlowState {
   selectedId: BlockType | null
   activeTab: 'design' | 'routing' | 'triggers' | 'data'
   paletteOpen: boolean
+  // True when the draft has been edited since the last publish. Used to drive
+  // the "Unsaved changes" pill in the header (P1.3). Reset on publish and on
+  // rollback, since both align the draft with a known-good version.
+  dirtySincePublish: boolean
 }
 
 type Action =
@@ -156,7 +160,31 @@ export const INITIAL_STATE: FlowState = {
   selectedId: 'qualifier',
   activeTab: 'design',
   paletteOpen: false,
+  dirtySincePublish: false,
 }
+
+// Actions that mutate user-authored content. The reducer wrapper flips
+// dirtySincePublish to true whenever one of these fires; publish / rollback
+// reset it. Non-content actions (select, tab switch, palette toggle, sim,
+// toast, hydrate) do not touch the dirty flag.
+const CONTENT_EDIT_ACTIONS: ReadonlySet<Action['type']> = new Set([
+  'update_block_field',
+  'add_example',
+  'edit_example',
+  'delete_example',
+  'add_capture',
+  'delete_capture',
+  'add_branch',
+  'edit_branch',
+  'delete_branch',
+  'move_node',
+  'add_node',
+  'delete_node',
+  'add_trigger',
+  'edit_trigger',
+  'delete_trigger',
+  'update_bot',
+])
 
 function replaceNode(
   state: FlowState,
@@ -298,6 +326,7 @@ export function reducer(state: FlowState, action: Action): FlowState {
             ),
         ],
         toast: `Published v${state.draftVersion}`,
+        dirtySincePublish: false,
       }
     }
     case 'rollback':
@@ -314,6 +343,7 @@ export function reducer(state: FlowState, action: Action): FlowState {
                 : x.status,
         })),
         toast: `Rolled back to v${action.v}`,
+        dirtySincePublish: false,
       }
     case 'toast':
       return { ...state, toast: action.msg }
@@ -359,6 +389,7 @@ const PERSISTED_KEYS: Array<keyof FlowState> = [
   'publishedVersion',
   'draftVersion',
   'variables',
+  'dirtySincePublish',
 ]
 
 function loadPersisted(): Partial<FlowState> | null {
@@ -387,8 +418,21 @@ function savePersisted(state: FlowState): void {
   }
 }
 
+// Same shape as `reducer` but flips dirtySincePublish true on any content
+// edit. publish/rollback reset it in the base reducer. Kept as a thin wrapper
+// so tests can continue to exercise `reducer` directly without having to
+// reason about the dirty flag.
+function dirtyTrackingReducer(state: FlowState, action: Action): FlowState {
+  const next = reducer(state, action)
+  if (next === state) return next
+  if (CONTENT_EDIT_ACTIONS.has(action.type) && !next.dirtySincePublish) {
+    return { ...next, dirtySincePublish: true }
+  }
+  return next
+}
+
 export function FlowStoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
+  const [state, dispatch] = useReducer(dirtyTrackingReducer, INITIAL_STATE)
 
   // Hydrate from localStorage on mount (client-only)
   useEffect(() => {

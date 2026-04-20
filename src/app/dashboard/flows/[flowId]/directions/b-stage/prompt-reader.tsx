@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { X } from 'lucide-react'
+import { IconButton } from '@/components/icon-button'
 import { BLOCK_BY_TYPE, blockColor, SERIF_FAMILY } from '../../shared-data'
 import type { FlowNode } from '../../types'
 import {
@@ -538,23 +540,14 @@ export function PromptReader({
             Read-only
           </span>
           <CopyButton text={combinedText} label="Copy all" />
-          <button
-            type="button"
+          <IconButton
+            icon={X}
+            label="Close prompt reader"
             onClick={onClose}
-            aria-label="Close"
-            style={{
-              width: 32,
-              height: 32,
-              border: 'none',
-              background: 'transparent',
-              color: B.ink2,
-              cursor: 'pointer',
-              fontSize: 18,
-              borderRadius: 8,
-            }}
-          >
-            ×
-          </button>
+            size={32}
+            iconSize={16}
+            style={{ color: B.ink2, borderRadius: 8 }}
+          />
         </header>
 
         <div

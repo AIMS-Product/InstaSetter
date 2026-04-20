@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { RotateCcw, X } from 'lucide-react'
+import { IconButton } from '@/components/icon-button'
 import { ToolBadge } from '@/components/tool-badge'
 import { useFlowActions, useFlowState } from '../../store'
 import type { Turn } from '../../types'
@@ -112,29 +114,22 @@ export default function BSimFloat({
           Simulator · Live (matches production)
         </span>
         <span style={{ flex: 1 }} />
-        <span
+        <IconButton
+          icon={RotateCcw}
+          label="Reset conversation"
           onClick={() => actions.simReset()}
-          title="Reset conversation"
-          style={{
-            fontSize: 11,
-            opacity: 0.6,
-            cursor: 'pointer',
-            padding: '0 4px',
-          }}
-        >
-          ↻
-        </span>
-        <span
+          size={22}
+          iconSize={12}
+          style={{ color: B.panel, opacity: 0.6 }}
+        />
+        <IconButton
+          icon={X}
+          label="Close simulator"
           onClick={onClose}
-          style={{
-            fontSize: 14,
-            cursor: 'pointer',
-            padding: '0 4px',
-            opacity: 0.7,
-          }}
-        >
-          ×
-        </span>
+          size={22}
+          iconSize={14}
+          style={{ color: B.panel, opacity: 0.7 }}
+        />
       </div>
       <div
         ref={scrollRef}
