@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+const { createSpy } = vi.hoisted(() => ({
+  createSpy: vi.fn().mockResolvedValue({
+    content: [{ type: 'text', text: 'ok' }],
+    stop_reason: 'end_turn',
+  }),
+}))
+
 vi.mock('@anthropic-ai/sdk', () => ({
   default: class MockAnthropic {
-    messages = {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: 'text', text: 'ok' }],
-        stop_reason: 'end_turn',
-      }),
-    }
+    messages = { create: createSpy }
   },
 }))
 
@@ -177,5 +179,60 @@ describe('simulateReplyAction — compile flag routing', () => {
     expect(result.success).toBe(true)
     expect(buildSpy).toHaveBeenCalled()
     expect(compileSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('end-to-end — edited goal reaches Claude', () => {
+  const originalKey = process.env.ANTHROPIC_API_KEY
+  const originalFlag = process.env.NEXT_PUBLIC_FLOW_COMPILE
+  const EDITED_GOAL = 'Greet warmly and ask for their city.'
+
+  async function runWithFlag(flag: 'true' | 'false'): Promise<string> {
+    process.env.NEXT_PUBLIC_FLOW_COMPILE = flag
+    const result = await simulateReplyAction({
+      brand: 'VendingPreneurs',
+      messages: [{ role: 'user', content: 'hi' }],
+      overrides: { activeBlockType: 'opening', goal: EDITED_GOAL },
+    })
+    expect(result.success).toBe(true)
+    return createSpy.mock.calls.at(-1)?.[0].system as string
+  }
+
+  beforeEach(() => {
+    createSpy.mockClear()
+    process.env.ANTHROPIC_API_KEY = 'test-key'
+  })
+
+  afterEach(() => {
+    if (originalKey === undefined) {
+      delete process.env.ANTHROPIC_API_KEY
+    } else {
+      process.env.ANTHROPIC_API_KEY = originalKey
+    }
+    if (originalFlag === undefined) {
+      delete process.env.NEXT_PUBLIC_FLOW_COMPILE
+    } else {
+      process.env.NEXT_PUBLIC_FLOW_COMPILE = originalFlag
+    }
+  })
+
+  it('flag on: edited goal appears in Claude system prompt', async () => {
+    const system = await runWithFlag('true')
+    expect(system).toContain(EDITED_GOAL)
+  })
+
+  it('flag on: Active Block Directive heading appears in Claude system prompt', async () => {
+    const system = await runWithFlag('true')
+    expect(system).toContain('## Active Block Directive')
+  })
+
+  it('flag off: edited goal does NOT appear in Claude system prompt', async () => {
+    const system = await runWithFlag('false')
+    expect(system).not.toContain(EDITED_GOAL)
+  })
+
+  it('flag off: Active Block Directive heading does NOT appear in Claude system prompt', async () => {
+    const system = await runWithFlag('false')
+    expect(system).not.toContain('## Active Block Directive')
   })
 })
