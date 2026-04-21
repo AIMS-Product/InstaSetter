@@ -246,3 +246,49 @@ All 9 simulator-action tests pass and the full suite reports 311/311 passing (5 
 ### Preserved behaviors
 
 - Default-off environments (production, staging, any dev shell without the flag) see zero change to the system prompt, the simulator reply, or the DM pipeline. The `compileBlock` path is dormant until a developer explicitly opts in via the env flag. The byte-identity contract from Issue 2 (now locked by Issue 8) guarantees that even when the flag flips, the no-overrides case produces output identical to the legacy path — so the switch itself is not a behavioural change, only enabling the new overrides pipe is.
+
+---
+
+## Issue 7: Simulator panel threads active block overrides into the action
+
+**Commit**: `5452b34` | **Type**: feature | **Status**: Visible behaviour when paired with `NEXT_PUBLIC_FLOW_COMPILE=true` from Issue 6
+
+### Summary
+
+Wired the `SimFloat` simulator panel to the block inspector's current selection. The parent (`Shell` in `b-stage/index.tsx`) reads `selectedBlock` from the flow store, shapes it into the server-payload form (`{ activeBlockType, goal?, guidance? }`) — omitting `goal`/`guidance` when they are empty strings so Issue 4's default-fallback kicks in — then passes that object down as `overrides`. `SimFloat` forwards the value into `simulateReplyAction`. When no block is selected, `overrides` is `null` and the action is called without the key at all, preserving the pre-Issue-5 input shape. Paired with Issue 6's flag flip, this is the first user-observable link between block-inspector edits and the simulator's Claude reply.
+
+### Steps to test
+
+1. Set `NEXT_PUBLIC_FLOW_COMPILE=true`, restart the dev server (`npm run dev`).
+2. Navigate to `/dashboard/flows/[any flow]` and click the **Opening** block on the canvas.
+3. In the inspector's **Design** tab, change the **Goal** field to `Greet warmly and ask for their city.`
+4. Open the Simulator (floating button on the flow canvas — usually bottom-right).
+5. In the simulator, type a prospect message like `hey, interested in vending` and press Send.
+6. **Expected**: the bot reply references the word "city" (it should ask for the prospect's city), reflecting the edited Goal.
+7. Close the simulator, clear the Goal field back to empty (the default will kick back in), and send the same prospect message again.
+8. **Expected**: the reply reverts to the default opening behaviour — asking about their "area" (default opening goal language), not "city".
+
+A developer can also verify with one command:
+
+1. From the project root, run: `npx vitest run sim-float`
+2. Observe that **4 tests pass** under the `BSimFloat — overrides pass-through` describe block:
+   - `passes edited goal through as overrides.goal`
+   - `passes edited guidance through as overrides.guidance`
+   - `passes activeBlockType only when no edits are present`
+   - `omits overrides entirely when no block is active`
+
+### Expected result
+
+All 4 component tests pass and the full suite reports 315/315 passing (4 new component tests on top of the 311 before Issue 7).
+
+### Edge cases
+
+- Block selected with edited Goal only → action receives `overrides: { activeBlockType, goal }` (no `guidance` key).
+- Block selected with edited Guidance only → action receives `overrides: { activeBlockType, guidance }` (no `goal` key).
+- Block selected but both Goal and Guidance left at their defaults / empty → action receives `overrides: { activeBlockType }` alone; Issue 4's fallback then substitutes the defaults server-side.
+- No block selected (user clicks empty canvas) → action receives no `overrides` key at all. The request shape is backwards-compatible with pre-Issue-5 callers.
+- Flag off (`NEXT_PUBLIC_FLOW_COMPILE` unset or any value other than `'true'`) → the `overrides` key is still attached to the request but the action ignores it and calls `buildSystemPrompt` byte-for-byte as before (Issue 6 contract).
+
+### Preserved behaviors
+
+- With the flag off (default in prod/staging), the simulator behaves identically to before this commit — the new `overrides` payload lands in the action's input schema (validated since Issue 5) but the legacy path never reads it. The DM pipeline is untouched. No existing tests changed.
