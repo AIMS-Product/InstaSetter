@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { RotateCcw, X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import { ToolBadge } from '@/components/tool-badge'
+import type { BlockOverrides } from '@/lib/prompts/compile-block/schemas'
 import { useFlowActions, useFlowState } from '../../store'
 import type { Turn } from '../../types'
 import { B } from './palette'
@@ -12,9 +13,11 @@ import { simulateReplyAction } from './simulator-actions'
 export default function BSimFloat({
   open,
   onClose,
+  overrides,
 }: {
   open: boolean
   onClose: () => void
+  overrides: BlockOverrides | null
 }) {
   const state = useFlowState()
   const actions = useFlowActions()
@@ -50,6 +53,7 @@ export default function BSimFloat({
     const result = await simulateReplyAction({
       brand: state.flow.brand,
       messages: history,
+      ...(overrides ? { overrides } : {}),
     })
 
     if (result.success) {

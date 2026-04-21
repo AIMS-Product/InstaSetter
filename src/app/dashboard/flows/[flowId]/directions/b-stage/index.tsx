@@ -6,7 +6,12 @@ import PageBot from '../../related-pages/page-bot'
 import PageRuns from '../../related-pages/page-runs'
 import PageVariables from '../../related-pages/page-variables'
 import PageVersions from '../../related-pages/page-versions'
-import { FlowStoreProvider, useFlowActions, useFlowState } from '../../store'
+import {
+  FlowStoreProvider,
+  useFlowActions,
+  useFlowState,
+  useFlowStore,
+} from '../../store'
 import type { PageId } from '../../types'
 import BHeader from './header'
 import BCanvas from './canvas'
@@ -18,8 +23,17 @@ import { B } from './palette'
 function Shell() {
   const state = useFlowState()
   const actions = useFlowActions()
+  const { selectedBlock } = useFlowStore()
   const [page, setPage] = useState<PageId>('flow')
   const [simOpen, setSimOpen] = useState(true)
+
+  const overrides = selectedBlock
+    ? {
+        activeBlockType: selectedBlock.type,
+        ...(selectedBlock.goal ? { goal: selectedBlock.goal } : {}),
+        ...(selectedBlock.guidance ? { guidance: selectedBlock.guidance } : {}),
+      }
+    : null
 
   return (
     <main
@@ -54,7 +68,11 @@ function Shell() {
             <BCanvas />
             <PaletteDrawer />
             <BInspector onClose={() => actions.select(null)} />
-            <BSimFloat open={simOpen} onClose={() => setSimOpen(false)} />
+            <BSimFloat
+              open={simOpen}
+              onClose={() => setSimOpen(false)}
+              overrides={overrides}
+            />
           </div>
         )}
         {page === 'runs' && (
