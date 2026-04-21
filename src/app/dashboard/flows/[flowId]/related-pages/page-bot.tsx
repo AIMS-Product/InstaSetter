@@ -252,9 +252,9 @@ export default function PageBot({ p }: { p: Palette }) {
             >
               src/lib/prompts/setter-v2.ts
             </code>{' '}
-            from nine modular sections. Edits in this UI save locally —
-            production-bound writes arrive once the persistence backend is
-            wired.
+            from nine modular sections. Edits in this UI now save to the shared
+            Supabase draft for this flow. Runtime still follows the compiled
+            prompt until publish wiring lands.
           </div>
         </SettingsSection>
       </div>

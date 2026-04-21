@@ -188,6 +188,39 @@ export type Database = {
           },
         ]
       }
+      ins_flow_drafts: {
+        Row: {
+          booking_url: string | null
+          brand: string
+          created_at: string
+          flow_id: string
+          id: string
+          schema_version: number
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          booking_url?: string | null
+          brand: string
+          created_at?: string
+          flow_id: string
+          id?: string
+          schema_version?: number
+          state: Json
+          updated_at?: string
+        }
+        Update: {
+          booking_url?: string | null
+          brand?: string
+          created_at?: string
+          flow_id?: string
+          id?: string
+          schema_version?: number
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lead_events: {
         Row: {
           contact_id: string

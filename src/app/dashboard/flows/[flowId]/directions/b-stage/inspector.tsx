@@ -194,7 +194,7 @@ function DesignTab({
 }) {
   const actions = useFlowActions()
   const examplePairCount = block.examplePairs?.length ?? 0
-  const localExampleCount = block.examples.length
+  const draftExampleCount = block.examples.length
   const captureCount = block.captures.length
   const guardrailCount = block.guardrails?.length ?? 0
   const rationaleCount = block.rationale?.length ?? 0
@@ -205,8 +205,8 @@ function DesignTab({
     : `${rationaleCount} supporting insight${rationaleCount === 1 ? '' : 's'}`
   const exampleSummary = [
     `${examplePairCount} parsed pair${examplePairCount === 1 ? '' : 's'}`,
-    localExampleCount > 0
-      ? `${localExampleCount} local override${localExampleCount === 1 ? '' : 's'}`
+    draftExampleCount > 0
+      ? `${draftExampleCount} draft override${draftExampleCount === 1 ? '' : 's'}`
       : null,
   ]
     .filter(Boolean)
@@ -239,7 +239,7 @@ function DesignTab({
         label="Guidance"
         action="↗ View Persona"
         onAction={() => onOpenPrompt('persona')}
-        hint="Inherits voice from the Persona section. Override locally for this block."
+        hint="Inherits voice from the Persona section. Override it for this draft block."
       >
         {(labelId) => (
           <textarea
@@ -269,12 +269,12 @@ function DesignTab({
         <Field
           label="Marketer examples"
           action="+ add"
-          hint="Local overrides. Saved to this browser only."
+          hint="Draft overrides for this block. Persisted in Supabase."
           onAction={() => actions.addExample(block.id, 'New example — edit me')}
         >
           {block.examples.length === 0 && (
             <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-              No local overrides. Pairs above come from the compiled prompt.
+              No draft overrides yet. Pairs above come from the compiled prompt.
             </div>
           )}
           {block.examples.map((ex, i) => (

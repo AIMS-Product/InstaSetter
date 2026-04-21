@@ -98,8 +98,8 @@ export default function PageVariables({ p }: { p: Palette }) {
             marginBottom: 26,
           }}
         >
-          Values populate at runtime from each conversation. Brand defaults are
-          editable once writes are wired to Supabase.
+          Values populate at runtime from each conversation. Brand defaults in
+          this editor now persist in the shared Supabase draft.
         </div>
         {SCOPES.map((sc) => (
           <div key={sc.key} style={{ marginBottom: 26 }}>

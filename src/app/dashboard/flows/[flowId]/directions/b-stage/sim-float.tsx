@@ -140,7 +140,7 @@ export default function BSimFloat({
           style={{ fontSize: 12, fontWeight: 500 }}
           title={
             compileEnabled
-              ? "Flow Compile is on — the selected block's local goal, guidance, routes, captures, and triggers are appended to the system prompt as an Active Block Directive."
+              ? "Flow Compile is on — the selected block's draft goal, guidance, routes, captures, and triggers are appended to the system prompt as an Active Block Directive."
               : "Runs the real system prompt from src/lib/prompts/setter-v2.ts. Flow-builder edits don't affect it."
           }
         >

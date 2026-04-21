@@ -4,7 +4,6 @@ import {
   buildInitialFlow,
   dirtyTrackingReducer,
   reducer,
-  storageKeyFor,
 } from '../store'
 import type { FlowNode } from '../types'
 
@@ -26,12 +25,6 @@ function getNode(
 describe('store route scoping', () => {
   it('builds the flow with the route flow id', () => {
     expect(buildInitialFlow(BRAND, BOOKING_URL, FLOW_ID).id).toBe(FLOW_ID)
-  })
-
-  it('scopes the local persistence key by brand and flow', () => {
-    expect(storageKeyFor(BRAND, FLOW_ID)).toBe(
-      'instasetter.flow-builder.v3.VendingPreneurs.lg-organic-dm'
-    )
   })
 })
 
@@ -167,5 +160,40 @@ describe('store reducer integrity', () => {
     expect(rolledBack.versions.find((version) => version.v === 1)?.status).toBe(
       'live'
     )
+  })
+
+  it('strips bot-level guardrails when hydrating persisted drafts', () => {
+    const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
+    const next = reducer(state, {
+      type: 'hydrate',
+      state: {
+        flow: {
+          ...state.flow,
+          nodes: state.flow.nodes.map((node) =>
+            node.id === 'opening'
+              ? {
+                  ...node,
+                  guardrails: [
+                    ...(node.guardrails ?? []),
+                    {
+                      id: 'persona-global',
+                      text: 'Keep it concise',
+                      why: 'Persona rule',
+                      source: 'src/lib/prompts/sections/persona.ts',
+                    },
+                  ],
+                }
+              : node
+          ),
+        },
+      },
+    })
+
+    expect(
+      getNode(next, 'opening').guardrails?.some(
+        (guardrail) =>
+          guardrail.source === 'src/lib/prompts/sections/persona.ts'
+      )
+    ).toBe(false)
   })
 })

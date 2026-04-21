@@ -6,6 +6,7 @@ import PageBot from '../../related-pages/page-bot'
 import PageRuns from '../../related-pages/page-runs'
 import PageVariables from '../../related-pages/page-variables'
 import PageVersions from '../../related-pages/page-versions'
+import FlowDraftSync from '../../flow-draft-sync'
 import {
   FlowStoreProvider,
   useFlowActions,
@@ -175,6 +176,7 @@ export default function DirectionB({
       brand={brand}
       bookingUrl={bookingUrl}
     >
+      <FlowDraftSync flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
       <Shell brand={brand} bookingUrl={bookingUrl} />
     </FlowStoreProvider>
   )

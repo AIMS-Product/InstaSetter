@@ -192,7 +192,6 @@ export interface FlowNode {
   blockConfig?: BlockConfig
   primarySectionIds?: string[]
   globalSectionIds?: string[]
-  editable?: 'locked' | 'local-only'
 }
 
 export interface Flow {

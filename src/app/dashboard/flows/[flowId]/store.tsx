@@ -3,17 +3,20 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useReducer,
   type ReactNode,
 } from 'react'
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
+import { deriveBlock } from './directions/b-stage/block-sections'
 import {
-  deriveBlock,
-  isGlobalGuardrailSource,
-} from './directions/b-stage/block-sections'
+  normalizePersistedFlowDraft,
+  type BotSettings,
+  type PersistedFlowDraft,
+  type VersionEntry,
+  type VersionSnapshot,
+} from './draft-persistence'
 import { BLOCK_TYPES } from './types'
 import type {
   AmbientTrigger,
@@ -25,28 +28,6 @@ import type {
   Turn,
   Variable,
 } from './types'
-
-export interface VersionEntry {
-  v: number
-  at: string
-  note?: string
-  status: 'draft' | 'live' | 'archived'
-  snapshot: VersionSnapshot
-}
-
-export interface BotSettings {
-  name: string
-  persona: string
-  messageConstraints: string
-  forbiddenPhrases: string[]
-}
-
-export interface VersionSnapshot {
-  flow: Flow
-  triggers: AmbientTrigger[]
-  bot: BotSettings
-  variables: Variable[]
-}
 
 export interface FlowState {
   flow: Flow
@@ -154,7 +135,6 @@ export function buildInitialFlow(
       blockConfig: d.blockConfig,
       primarySectionIds: d.primarySectionIds,
       globalSectionIds: d.globalSectionIds,
-      editable: 'local-only' as const,
     }
   })
   return {
@@ -360,45 +340,6 @@ function withFlow(state: FlowState, flow: Flow): FlowState {
     flow,
     variables: reconcileVariables(state, flow),
   }
-}
-
-function stripBotLevelGuardrails(flow: Flow): Flow {
-  return {
-    ...flow,
-    nodes: flow.nodes.map((node) => {
-      if (!node.guardrails) return node
-
-      const guardrails = node.guardrails.filter(
-        (guardrail) => !isGlobalGuardrailSource(guardrail.source)
-      )
-
-      return guardrails.length === node.guardrails.length
-        ? node
-        : { ...node, guardrails }
-    }),
-  }
-}
-
-function normalizePersistedState(
-  state: Partial<FlowState>
-): Partial<FlowState> {
-  const next: Partial<FlowState> = { ...state }
-
-  if (state.flow) {
-    next.flow = stripBotLevelGuardrails(state.flow)
-  }
-
-  if (state.versions) {
-    next.versions = state.versions.map((version) => ({
-      ...version,
-      snapshot: {
-        ...version.snapshot,
-        flow: stripBotLevelGuardrails(version.snapshot.flow),
-      },
-    }))
-  }
-
-  return next
 }
 
 function withDraftSnapshot(state: FlowState): FlowState {
@@ -629,7 +570,12 @@ export function reducer(state: FlowState, action: Action): FlowState {
     case 'toggle_palette':
       return { ...state, paletteOpen: !state.paletteOpen }
     case 'hydrate':
-      return { ...state, ...action.state }
+      return {
+        ...state,
+        ...normalizePersistedFlowDraft(
+          action.state as Partial<PersistedFlowDraft>
+        ),
+      }
     default:
       return state
   }
@@ -642,142 +588,6 @@ interface Ctx {
 }
 
 const FlowStore = createContext<Ctx | null>(null)
-
-// Bump this when the shape of the persisted payload changes in a way that's
-// incompatible with older stores (e.g. new FlowNode fields, different Variable
-// scope). Stored blobs without a matching __schema are dropped and reseeded.
-const STORAGE_SCHEMA = 4
-
-// Key includes brand and flow id so each route keeps its own editor state.
-export function storageKeyFor(brand: string, flowId: string): string {
-  return `instasetter.flow-builder.v3.${brand}.${flowId}`
-}
-
-// Best-effort cleanup of the pre-v2 global key on first hit. Safe to leave
-// running forever — the key won't exist after the first successful clear.
-const LEGACY_STORAGE_KEY = 'instasetter.flow-builder.v1'
-
-const PERSISTED_KEYS: Array<keyof FlowState> = [
-  'flow',
-  'triggers',
-  'bot',
-  'versions',
-  'publishedVersion',
-  'draftVersion',
-  'variables',
-  'dirtySincePublish',
-]
-
-type PersistedPayload = Partial<FlowState> & {
-  __schema?: number
-  __brand?: string
-  __flowId?: string
-  __bookingUrl?: string | null
-}
-
-// Defensive checks for payloads written before the store got brand-scoped:
-// even if an older blob made it through the key rename, drop it if it
-// references Mike/Dallas/7K or doesn't match the current brand.
-function isStalePayload(
-  parsed: PersistedPayload,
-  {
-    brand,
-    flowId,
-    bookingUrl,
-  }: { brand: string; flowId: string; bookingUrl?: string }
-): boolean {
-  if (parsed.__schema !== STORAGE_SCHEMA) return true
-  if (parsed.__brand && parsed.__brand !== brand) return true
-  if (parsed.__flowId && parsed.__flowId !== flowId) return true
-  if ((parsed.__bookingUrl ?? null) !== (bookingUrl ?? null)) return true
-  if (parsed.bot?.name === 'Mike') return true
-  if (Array.isArray(parsed.variables)) {
-    const sus = parsed.variables.some(
-      (v) =>
-        (v.scope === 'contact' && v.value === 'Dallas') ||
-        (v.scope === 'contact' && v.value === 7000)
-    )
-    if (sus) return true
-  }
-  if (parsed.flow?.brand && parsed.flow.brand !== brand) return true
-  if (parsed.flow?.nodes?.some((n) => n.guidance?.includes('Dallas'))) {
-    return true
-  }
-  return false
-}
-
-function loadPersisted({
-  brand,
-  flowId,
-  bookingUrl,
-}: {
-  brand: string
-  flowId: string
-  bookingUrl?: string
-}): Partial<FlowState> | null {
-  if (typeof window === 'undefined') return null
-  try {
-    // Remove the legacy global key if it's still hanging around — its
-    // content may belong to any brand and can't be safely reused.
-    window.localStorage.removeItem(LEGACY_STORAGE_KEY)
-  } catch {
-    /* noop */
-  }
-  try {
-    const key = storageKeyFor(brand, flowId)
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as PersistedPayload
-    if (isStalePayload(parsed, { brand, flowId, bookingUrl })) {
-      window.localStorage.removeItem(key)
-      return null
-    }
-    // Strip the metadata before returning — the reducer doesn't need it.
-    const {
-      __schema: _s,
-      __brand: _b,
-      __flowId: _f,
-      __bookingUrl: _u,
-      ...rest
-    } = parsed
-    void _s
-    void _b
-    void _f
-    void _u
-    return normalizePersistedState(rest as Partial<FlowState>)
-  } catch {
-    return null
-  }
-}
-
-function savePersisted(
-  state: FlowState,
-  {
-    brand,
-    flowId,
-    bookingUrl,
-  }: { brand: string; flowId: string; bookingUrl?: string }
-): void {
-  if (typeof window === 'undefined') return
-  try {
-    const subset: PersistedPayload = {
-      __schema: STORAGE_SCHEMA,
-      __brand: brand,
-      __flowId: flowId,
-      __bookingUrl: bookingUrl ?? null,
-    }
-    for (const k of PERSISTED_KEYS) {
-      // @ts-expect-error index by union type
-      subset[k] = state[k]
-    }
-    window.localStorage.setItem(
-      storageKeyFor(brand, flowId),
-      JSON.stringify(subset)
-    )
-  } catch {
-    /* noop */
-  }
-}
 
 export function dirtyTrackingReducer(
   state: FlowState,
@@ -809,19 +619,6 @@ export function FlowStoreProvider({
     [brand, bookingUrl, flowId]
   )
   const [state, dispatch] = useReducer(dirtyTrackingReducer, initial)
-
-  useEffect(() => {
-    const persisted = loadPersisted({ brand, flowId, bookingUrl })
-    if (persisted) dispatch({ type: 'hydrate', state: persisted })
-  }, [brand, bookingUrl, flowId])
-
-  useEffect(() => {
-    const t = window.setTimeout(
-      () => savePersisted(state, { brand, flowId, bookingUrl }),
-      400
-    )
-    return () => window.clearTimeout(t)
-  }, [state, brand, flowId, bookingUrl])
 
   const selectedBlock = useMemo(
     () =>
