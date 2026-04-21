@@ -32,7 +32,13 @@ export default function PageBot({ p }: { p: Palette }) {
 
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>
-      <RPHeader p={p} eyebrow="Bot" title="Appointment Setter" right={null} />
+      <RPHeader
+        p={p}
+        eyebrow="Bot"
+        title="Appointment Setter"
+        description="These bot-level rules apply across every block. Use this page when marketing needs to understand the overall voice, constraints, and channel wiring."
+        right={null}
+      />
       <div
         style={{ padding: '28px 32px 60px', maxWidth: 820, margin: '0 auto' }}
       >

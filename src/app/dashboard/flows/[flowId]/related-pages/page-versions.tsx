@@ -29,6 +29,7 @@ export default function PageVersions({ p }: { p: Palette }) {
         p={p}
         eyebrow={state.flow.name}
         title="Release status"
+        description="A marketer-facing reality check: what is saved in the shared draft, what still powers live replies, and what this screen can help you confirm today."
         right={
           <StatusBadge
             p={p}
@@ -113,6 +114,27 @@ export default function PageVersions({ p }: { p: Palette }) {
               </CardMeta>
             </StatusCard>
           </div>
+
+          <InfoSection p={p} title="Recommended workflow today">
+            <ol
+              style={{
+                margin: 0,
+                paddingLeft: 18,
+                color: p.ink2,
+                fontSize: 13.5,
+                lineHeight: 1.75,
+              }}
+            >
+              <li>Edit the draft in Flow Builder.</li>
+              <li>Preview likely prospect replies in the simulator.</li>
+              <li>
+                Open Prompt Reader when you need the compiled live wording.
+              </li>
+              <li>
+                Use this page as the final truth check before sharing changes.
+              </li>
+            </ol>
+          </InfoSection>
 
           <InfoSection p={p} title="What marketing can do today">
             <ul

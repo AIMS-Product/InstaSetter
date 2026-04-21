@@ -11,12 +11,37 @@ import {
 } from 'lucide-react'
 import type { PageId, Palette } from './types'
 
-const ITEMS: Array<{ id: PageId; label: string; Icon: LucideIcon }> = [
-  { id: 'flow', label: 'Flow', Icon: Workflow },
-  { id: 'runs', label: 'Inbox', Icon: Activity },
-  { id: 'variables', label: 'Variables', Icon: Braces },
-  { id: 'versions', label: 'Release', Icon: History },
-  { id: 'bot', label: 'Bot', Icon: BotIcon },
+const ITEMS: Array<{
+  id: PageId
+  label: string
+  description: string
+  Icon: LucideIcon
+}> = [
+  { id: 'flow', label: 'Flow', description: 'Edit the draft', Icon: Workflow },
+  {
+    id: 'runs',
+    label: 'Inbox',
+    description: 'Review real chats',
+    Icon: Activity,
+  },
+  {
+    id: 'variables',
+    label: 'Variables',
+    description: 'Check memory',
+    Icon: Braces,
+  },
+  {
+    id: 'versions',
+    label: 'Release',
+    description: "What's live",
+    Icon: History,
+  },
+  {
+    id: 'bot',
+    label: 'Bot',
+    description: 'Global rules',
+    Icon: BotIcon,
+  },
 ]
 
 export default function PageNav({
@@ -70,16 +95,28 @@ export default function PageNav({
       aria-label="Flow builder sections"
       onKeyDown={onKeyDown}
       style={{
-        width: 64,
+        width: 132,
         flexShrink: 0,
         background: p.panel,
         borderRight: `1px solid ${p.line}`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        padding: '12px 0',
+        padding: '14px 10px 12px',
+        gap: 10,
       }}
     >
+      <div
+        style={{
+          fontSize: 10,
+          color: p.ink3,
+          textTransform: 'uppercase',
+          letterSpacing: 0.8,
+          fontWeight: 700,
+          padding: '0 8px',
+        }}
+      >
+        Workspace
+      </div>
       {ITEMS.map((it) => {
         const active = page === it.id
         const Icon = it.Icon
@@ -99,26 +136,70 @@ export default function PageNav({
             title={it.label}
             aria-label={it.label}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 10,
-              border: 'none',
+              width: '100%',
+              minHeight: 58,
+              padding: '10px 12px',
+              borderRadius: 14,
+              border: `1px solid ${active ? p.line : 'transparent'}`,
               background: active ? p.sel : 'transparent',
-              color: active ? p.ink : p.ink3,
+              color: active ? p.ink : p.ink2,
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 2,
-              marginBottom: 3,
+              justifyContent: 'flex-start',
+              gap: 10,
               cursor: 'pointer',
+              textAlign: 'left',
+              fontFamily: 'inherit',
+              boxShadow: active ? '0 8px 18px rgba(22,21,40,0.05)' : 'none',
             }}
           >
-            <Icon aria-hidden size={15} strokeWidth={1.75} />
-            <span style={{ fontSize: 9, fontWeight: 500 }}>{it.label}</span>
+            <span
+              aria-hidden
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 10,
+                display: 'grid',
+                placeItems: 'center',
+                background: active ? p.accentSoft : p.lineSoft,
+                color: active ? p.accentInk : p.ink3,
+                flexShrink: 0,
+              }}
+            >
+              <Icon aria-hidden size={14} strokeWidth={1.8} />
+            </span>
+            <span
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                minWidth: 0,
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{it.label}</span>
+              <span
+                style={{
+                  fontSize: 10.5,
+                  color: active ? p.ink2 : p.ink3,
+                  lineHeight: 1.35,
+                }}
+              >
+                {it.description}
+              </span>
+            </span>
           </button>
         )
       })}
+      <div
+        style={{
+          marginTop: 'auto',
+          padding: '10px 10px 0',
+          fontSize: 10.5,
+          lineHeight: 1.45,
+          color: p.ink3,
+        }}
+      >
+        Use arrow keys to move between sections.
+      </div>
     </div>
   )
 }

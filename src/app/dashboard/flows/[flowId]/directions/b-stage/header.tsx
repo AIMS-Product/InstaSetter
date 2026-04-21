@@ -1,5 +1,6 @@
 'use client'
 
+import { MessageSquareText } from 'lucide-react'
 import { useFlowState } from '../../store'
 import {
   StatusBadge,
@@ -8,6 +9,14 @@ import {
 } from '../../surface-status'
 import type { PageId } from '../../types'
 import { B } from './palette'
+
+const PAGE_SUMMARY: Record<PageId, string> = {
+  flow: 'Edit the shared draft and sanity-check tone before anything ships.',
+  runs: 'Review brand-wide conversations and booking signals.',
+  variables: 'Check what the bot remembers and where each value comes from.',
+  versions: 'See what is saved in draft versus what powers live replies.',
+  bot: 'Inspect the global persona and guardrails behind every reply.',
+}
 
 export default function BHeader({
   page,
@@ -25,27 +34,28 @@ export default function BHeader({
   return (
     <div
       style={{
-        height: 56,
+        minHeight: 72,
         flexShrink: 0,
         background: B.panel,
         borderBottom: `1px solid ${B.line}`,
         display: 'flex',
         alignItems: 'center',
-        padding: '0 16px',
-        gap: 12,
+        padding: '12px 18px',
+        gap: 16,
       }}
     >
       <div
         style={{
-          width: 26,
-          height: 26,
-          borderRadius: 7,
+          width: 34,
+          height: 34,
+          borderRadius: 10,
           background: `linear-gradient(135deg, ${B.accent}, #7B6FE6)`,
           display: 'grid',
           placeItems: 'center',
           color: B.panel,
-          fontSize: 13,
+          fontSize: 16,
           fontWeight: 600,
+          flexShrink: 0,
         }}
       >
         i
@@ -55,7 +65,7 @@ export default function BHeader({
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
-          gap: 1,
+          gap: 2,
         }}
       >
         <div
@@ -63,7 +73,7 @@ export default function BHeader({
             fontSize: 10,
             color: B.ink3,
             textTransform: 'uppercase',
-            letterSpacing: 0.6,
+            letterSpacing: 0.8,
             fontWeight: 700,
           }}
         >
@@ -71,16 +81,27 @@ export default function BHeader({
         </div>
         <div
           style={{
-            fontSize: 14,
+            fontSize: 18,
             color: B.ink,
-            fontWeight: 600,
-            lineHeight: 1.2,
+            fontWeight: 650,
+            lineHeight: 1.15,
+          }}
+        >
+          {state.flow.name}
+        </div>
+        <div
+          style={{
+            fontSize: 12.5,
+            color: B.ink2,
+            lineHeight: 1.4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
           }}
         >
-          {state.flow.name}
+          {page === 'flow'
+            ? `${state.flow.channel} · ${PAGE_SUMMARY.flow}`
+            : PAGE_SUMMARY[page]}
         </div>
       </div>
       <div
@@ -88,7 +109,8 @@ export default function BHeader({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          marginLeft: 4,
+          marginLeft: 8,
+          flexWrap: 'wrap',
         }}
       >
         <StatusBadge
@@ -104,27 +126,21 @@ export default function BHeader({
           type="button"
           onClick={onToggleSim}
           style={{
-            padding: '7px 12px',
-            borderRadius: 8,
+            padding: '10px 14px',
+            borderRadius: 12,
             border: `1px solid ${simOpen ? B.accentSoft : B.line}`,
             background: simOpen ? B.accentSoft : B.lineSoft,
-            color: simOpen ? B.accentInk : B.ink2,
-            fontSize: 12,
+            color: simOpen ? B.accentInk : B.ink,
+            fontSize: 12.5,
             cursor: 'pointer',
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 8,
+            boxShadow: simOpen ? '0 10px 24px rgba(79,70,186,0.10)' : 'none',
           }}
         >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: simOpen ? B.accent : B.ink3,
-            }}
-          />
+          <MessageSquareText size={15} strokeWidth={1.9} aria-hidden />
           {simOpen ? 'Hide preview' : 'Preview replies'}
         </button>
       )}

@@ -5,6 +5,7 @@ import { RotateCcw, X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import { ToolBadge } from '@/components/tool-badge'
 import type { BlockOverrides } from '@/lib/prompts/compile-block/schemas'
+import { BLOCK_BY_TYPE } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import { getSimulatorStatus } from '../../surface-status'
 import type { Turn } from '../../types'
@@ -13,6 +14,20 @@ import { isFlowCompileEnabled } from './simulator-overrides'
 import { simulateReplyAction } from './simulator-actions'
 
 const ACTION_REJECTION_ERROR = 'Simulator request failed. Please try again.'
+const STARTER_PROMPTS = [
+  {
+    label: 'Side income',
+    text: "Hey, I'm in Dallas and looking for side income. How does this work?",
+  },
+  {
+    label: 'Price concern',
+    text: "What's the usual investment to get started with a machine?",
+  },
+  {
+    label: 'Ready to book',
+    text: 'This sounds interesting. Can you send me the booking link?',
+  },
+] as const
 
 export default function BSimFloat({
   open,
@@ -30,6 +45,9 @@ export default function BSimFloat({
   const scrollRef = useRef<HTMLDivElement>(null)
   const compileEnabled = isFlowCompileEnabled()
   const simulatorStatus = getSimulatorStatus(compileEnabled)
+  const activeBlock = state.selectedId
+    ? (state.flow.nodes.find((node) => node.id === state.selectedId) ?? null)
+    : null
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -40,8 +58,8 @@ export default function BSimFloat({
 
   if (!open) return null
 
-  const handleSend = async () => {
-    const text = input.trim()
+  const sendMessage = async (rawText: string) => {
+    const text = rawText.trim()
     if (!text || pending) return
     actions.simSend(text)
     setInput('')
@@ -102,6 +120,8 @@ export default function BSimFloat({
     }
   }
 
+  const handleSend = async () => sendMessage(input)
+
   return (
     <div
       style={{
@@ -146,6 +166,20 @@ export default function BSimFloat({
             ? 'Simulator · Draft preview'
             : 'Simulator · Live prompt'}
         </span>
+        <span
+          style={{
+            padding: '3px 8px',
+            borderRadius: 999,
+            background: 'rgba(255,255,255,0.12)',
+            color: B.panel,
+            fontSize: 10.5,
+            fontWeight: 600,
+          }}
+        >
+          {activeBlock
+            ? `${BLOCK_BY_TYPE[activeBlock.type]?.label ?? activeBlock.name} selected`
+            : 'Flow-wide draft'}
+        </span>
         <span style={{ flex: 1 }} />
         <IconButton
           icon={RotateCcw}
@@ -179,16 +213,95 @@ export default function BSimFloat({
         {state.conversation.length === 0 && !pending && (
           <div
             style={{
-              color: B.ink3,
-              fontSize: 11.5,
-              textAlign: 'center',
-              padding: '24px 12px',
-              lineHeight: 1.5,
+              padding: 2,
             }}
           >
-            Type a message as the prospect.
-            <br />
-            {simulatorStatus.detail}
+            <div
+              style={{
+                background: B.panel,
+                border: `1px solid ${B.line}`,
+                borderRadius: 14,
+                padding: '16px 16px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    letterSpacing: 0.8,
+                    textTransform: 'uppercase',
+                    color: B.ink3,
+                    marginBottom: 4,
+                  }}
+                >
+                  Quick start
+                </div>
+                <div
+                  style={{
+                    color: B.ink,
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    marginBottom: 4,
+                  }}
+                >
+                  Try a real prospect opener
+                </div>
+                <div
+                  style={{
+                    color: B.ink2,
+                    fontSize: 12,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {simulatorStatus.detail}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                }}
+              >
+                {STARTER_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt.label}
+                    type="button"
+                    onClick={() => void sendMessage(prompt.text)}
+                    disabled={pending}
+                    style={{
+                      padding: '7px 10px',
+                      borderRadius: 999,
+                      border: `1px solid ${B.line}`,
+                      background: B.lineSoft,
+                      color: B.ink,
+                      fontSize: 11.5,
+                      fontWeight: 500,
+                      cursor: pending ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {prompt.label}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 11.5,
+                  color: B.ink3,
+                  lineHeight: 1.5,
+                }}
+              >
+                {activeBlock
+                  ? `You are currently editing ${activeBlock.name}. Keep an eye on how the conversation enters and exits that block.`
+                  : 'No block is selected. Use these starters to sanity-check the overall tone before drilling into a single block.'}
+              </div>
+            </div>
           </div>
         )}
         {state.conversation.map((m, i) => {
@@ -296,7 +409,7 @@ export default function BSimFloat({
               void handleSend()
             }
           }}
-          placeholder="Type as prospect…"
+          placeholder="Write a prospect DM…"
           disabled={pending}
           style={{
             flex: 1,

@@ -626,26 +626,28 @@ export default function BCanvas() {
       <div
         style={{
           position: 'absolute',
-          left: 16,
+          left: 72,
           top: 16,
-          padding: '5px 10px',
-          background: 'rgba(255,255,255,0.6)',
+          padding: '8px 12px',
+          background: 'rgba(255,255,255,0.78)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
-          borderRadius: 8,
-          fontSize: 10.5,
-          color: B.ink3,
+          borderRadius: 12,
+          fontSize: 11,
+          color: B.ink2,
           border: `1px solid ${B.line}`,
           zIndex: 5,
+          lineHeight: 1.45,
+          boxShadow: '0 8px 24px rgba(22,21,40,0.06)',
         }}
       >
-        drag nodes · hold{' '}
+        Drag blocks to reshape the flow. Hold{' '}
         <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>Space</kbd> to
-        pan ·{' '}
+        pan, use{' '}
         <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>⌘/Ctrl</kbd>
-        +wheel to zoom · focus a node then{' '}
+        +wheel to zoom, and focus a block then{' '}
         <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>↑↓←→</kbd> to
-        move
+        nudge it.
       </div>
 
       {/* minimap */}

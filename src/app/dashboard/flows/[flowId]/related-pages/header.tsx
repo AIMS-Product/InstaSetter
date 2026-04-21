@@ -7,11 +7,13 @@ export default function RPHeader({
   p,
   title,
   eyebrow,
+  description,
   right,
 }: {
   p: Palette
   title: string
   eyebrow: string
+  description?: React.ReactNode
   right?: React.ReactNode
 }) {
   return (
@@ -21,7 +23,7 @@ export default function RPHeader({
         borderBottom: `1px solid ${p.line}`,
         background: p.panel,
         display: 'flex',
-        alignItems: 'flex-end',
+        alignItems: 'flex-start',
         gap: 24,
       }}
     >
@@ -50,6 +52,19 @@ export default function RPHeader({
         >
           {title}
         </h1>
+        {description && (
+          <div
+            style={{
+              marginTop: 8,
+              maxWidth: 720,
+              fontSize: 13.5,
+              color: p.ink2,
+              lineHeight: 1.6,
+            }}
+          >
+            {description}
+          </div>
+        )}
       </div>
       {right}
     </div>

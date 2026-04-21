@@ -62,6 +62,7 @@ export default function PageVariables({ p }: { p: Palette }) {
         p={p}
         eyebrow="Reference"
         title="Variables"
+        description="A plain-English map of what the bot remembers, where those values are captured, and which details persist across conversations."
         right={
           <StatusBadge
             p={p}
@@ -82,6 +83,25 @@ export default function PageVariables({ p }: { p: Palette }) {
           What the bot remembers. <b>Brand</b> stays put forever, <b>Contact</b>{' '}
           follows a person across every conversation, and <b>Conversation</b> is
           scoped to a single thread.
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 12,
+            marginBottom: 18,
+          }}
+        >
+          {SCOPES.map((sc) => (
+            <ScopeCard
+              key={sc.key}
+              p={p}
+              label={sc.label}
+              description={sc.sub}
+              count={grouped[sc.key].length}
+              sample={grouped[sc.key][0]}
+            />
+          ))}
         </div>
         <div style={{ marginBottom: 26 }}>
           <StatusNote
@@ -230,6 +250,88 @@ export default function PageVariables({ p }: { p: Palette }) {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function ScopeCard({
+  p,
+  label,
+  description,
+  count,
+  sample,
+}: {
+  p: Palette
+  label: string
+  description: string
+  count: number
+  sample?: Variable
+}) {
+  return (
+    <div
+      style={{
+        padding: '16px 16px 14px',
+        background: p.panel,
+        border: `1px solid ${p.line}`,
+        borderRadius: 12,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 600,
+            color: p.ink,
+            fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
+          }}
+        >
+          {label}
+        </div>
+        <span style={{ fontSize: 11.5, color: p.ink3 }}>{count} total</span>
+      </div>
+      <div
+        style={{
+          fontSize: 12.5,
+          color: p.ink2,
+          lineHeight: 1.55,
+          minHeight: 58,
+        }}
+      >
+        {description}
+      </div>
+      <div
+        style={{
+          fontSize: 11.5,
+          color: p.ink3,
+          lineHeight: 1.45,
+        }}
+      >
+        {sample ? (
+          <>
+            Example:{' '}
+            <code
+              style={{
+                fontFamily: MONO_FAMILY,
+                fontSize: 11,
+                color: p.ink,
+              }}
+            >
+              {sample.scope}.{sample.key}
+            </code>
+          </>
+        ) : (
+          'No variables in this scope yet.'
+        )}
       </div>
     </div>
   )
