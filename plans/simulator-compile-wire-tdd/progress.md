@@ -26,7 +26,7 @@ Wave 7: Issue 9 (blocked by 6, 7, 8)
 
 ## Verification
 
-- [ ] Untracked dependency check
-- [ ] Full test suite (`npm run test`)
-- [ ] Type check (`npm run type-check`)
-- [ ] Build check (`npm run build`)
+- [x] Untracked dependency check — only `plans/simulator-compile-wire-tdd/plan.md` untracked (artifact, not imported)
+- [x] Full test suite — 319/319 passing across 35 files
+- [x] Type check — one pre-existing error in `setter-v2.test.ts:221` (commit 8832ee34, predates this plan)
+- [x] Build check — `npm run build` completes cleanly
