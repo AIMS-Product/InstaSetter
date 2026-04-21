@@ -211,7 +211,7 @@ All 22 contract tests pass and the full suite still reports 311/311 passing (10 
 
 ## Issue 6: simulateReplyAction routes via NEXT_PUBLIC_FLOW_COMPILE flag
 
-**Commit**: `0218deb` | **Type**: feature | **Status**: Runtime impact — behind feature flag, opt-in only
+**Commit**: `9d74a29` | **Type**: feature | **Status**: Runtime impact — behind feature flag, opt-in only
 
 ### Summary
 
