@@ -1,210 +1,206 @@
 'use client'
 
-import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { SANS_FAMILY, SERIF_FAMILY } from '../shared-data'
-import { useFlowActions, useFlowState } from '../store'
+import { useFlowState } from '../store'
+import {
+  RELEASE_STATUS_INTRO,
+  StatusBadge,
+  StatusCard,
+  StatusNote,
+  getDraftWorkspaceStatus,
+  getLiveRuntimeStatus,
+  getSimulatorStatus,
+} from '../surface-status'
 import type { Palette } from '../types'
+import { isFlowCompileEnabled } from '../directions/b-stage/simulator-overrides'
 import RPHeader from './header'
 
 export default function PageVersions({ p }: { p: Palette }) {
   const state = useFlowState()
-  const actions = useFlowActions()
-  const versions = state.versions
-  const [sel, setSel] = useState<number>(state.publishedVersion)
-  const tones = {
-    draft: { bg: p.accentSoft, fg: p.accentInk, label: 'Draft' },
-    live: { bg: '#E6EFE1', fg: '#3A5A32', label: 'Live' },
-    archived: { bg: p.lineSoft, fg: p.ink3, label: 'Archived' },
-  }
-  const cur = versions.find((v) => v.v === sel) ?? versions[0]!
+  const draftStatus = getDraftWorkspaceStatus(state.dirtySincePublish)
+  const runtimeStatus = getLiveRuntimeStatus()
+  const compileEnabled = isFlowCompileEnabled()
+  const simulatorStatus = getSimulatorStatus(compileEnabled)
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <RPHeader
         p={p}
         eyebrow={state.flow.name}
-        title="Version history"
-        right={null}
+        title="Release status"
+        right={
+          <StatusBadge
+            p={p}
+            label={draftStatus.label}
+            tone={state.dirtySincePublish ? 'warning' : 'neutral'}
+          />
+        }
       />
-      <div
+      <StatusNote
+        p={p}
+        label={RELEASE_STATUS_INTRO.label}
+        detail={RELEASE_STATUS_INTRO.detail}
+        tone="info"
         role="status"
+      />
+
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+        <div
+          style={{
+            maxWidth: 960,
+            margin: '0 auto',
+            padding: '24px 32px 56px',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: 14,
+              marginBottom: 24,
+            }}
+          >
+            <StatusCard
+              p={p}
+              eyebrow="Draft workspace"
+              title={draftStatus.label}
+              detail={draftStatus.detail}
+              tone={state.dirtySincePublish ? 'warning' : 'neutral'}
+            >
+              <CardMeta p={p}>
+                Flow draft v{state.draftVersion} stored in the shared Supabase
+                draft.
+              </CardMeta>
+            </StatusCard>
+
+            <StatusCard
+              p={p}
+              eyebrow="Live runtime"
+              title={runtimeStatus.label}
+              detail={runtimeStatus.detail}
+              tone="success"
+            >
+              <CardMeta p={p}>
+                New conversations read the compiled source, not this saved
+                draft.
+              </CardMeta>
+            </StatusCard>
+
+            <StatusCard
+              p={p}
+              eyebrow="Prompt source"
+              title="Compiled from src/lib/prompts/sections/*.ts"
+              detail="Prompt Reader shows the live source sections that feed setter-v2 today."
+              tone="info"
+            >
+              <CardMeta p={p}>
+                {state.flow.id} · {state.flow.channel}
+              </CardMeta>
+            </StatusCard>
+
+            <StatusCard
+              p={p}
+              eyebrow="Simulator"
+              title={simulatorStatus.label}
+              detail={simulatorStatus.detail}
+              tone="info"
+            >
+              <CardMeta p={p}>
+                {compileEnabled
+                  ? 'Selected block overrides can be previewed here.'
+                  : 'Draft overrides are ignored in this environment.'}
+              </CardMeta>
+            </StatusCard>
+          </div>
+
+          <InfoSection p={p} title="What marketing can do today">
+            <ul
+              style={{
+                margin: 0,
+                paddingLeft: 18,
+                color: p.ink2,
+                fontSize: 13.5,
+                lineHeight: 1.7,
+              }}
+            >
+              <li>
+                Edit block goals, guidance, examples, routes, and captures.
+              </li>
+              <li>Inspect the compiled live prompt in Prompt Reader.</li>
+              <li>
+                Preview replies with the simulator and review the brand inbox.
+              </li>
+            </ul>
+          </InfoSection>
+
+          <InfoSection p={p} title="Not wired yet">
+            <ul
+              style={{
+                margin: 0,
+                paddingLeft: 18,
+                color: p.ink2,
+                fontSize: 13.5,
+                lineHeight: 1.7,
+              }}
+            >
+              <li>Publishing draft changes from this screen.</li>
+              <li>Marketer-facing release history tied to the live runtime.</li>
+              <li>Per-flow reporting in the inbox tab.</li>
+            </ul>
+          </InfoSection>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InfoSection({
+  p,
+  title,
+  children,
+}: {
+  p: Palette
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <section
+      style={{
+        padding: '20px 22px',
+        background: p.panel,
+        border: `1px solid ${p.line}`,
+        borderRadius: 12,
+        marginBottom: 16,
+      }}
+    >
+      <h2
         style={{
-          padding: '10px 32px',
-          background: p.lineSoft,
-          borderBottom: `1px solid ${p.line}`,
-          fontSize: 12,
-          color: p.ink2,
+          margin: '0 0 10px',
+          fontSize: 20,
+          fontWeight: 500,
+          color: p.ink,
+          fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
+          letterSpacing: -0.25,
         }}
       >
-        Version history begins once edits are persisted to the backend.
-        Currently serving the compiled <code>setter-v2</code> prompt.
-      </div>
-      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-        <div
-          style={{
-            width: 380,
-            borderRight: `1px solid ${p.line}`,
-            overflow: 'auto',
-            background: p.panel,
-          }}
-        >
-          {versions.map((v) => {
-            const t = tones[v.status]
-            const active = sel === v.v
-            return (
-              <div
-                key={v.v}
-                onClick={() => setSel(v.v)}
-                style={{
-                  padding: '14px 18px',
-                  borderBottom: `1px solid ${p.lineSoft}`,
-                  background: active ? p.sel : 'transparent',
-                  borderLeft: active
-                    ? `3px solid ${p.accent}`
-                    : '3px solid transparent',
-                  cursor: 'pointer',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 8,
-                    marginBottom: 5,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 500,
-                      color: p.ink,
-                      fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
-                    }}
-                  >
-                    v{v.v}
-                  </span>
-                  <span
-                    style={{
-                      padding: '2px 8px',
-                      borderRadius: 999,
-                      fontSize: 10,
-                      fontWeight: 500,
-                      background: t.bg,
-                      color: t.fg,
-                    }}
-                  >
-                    {t.label}
-                  </span>
-                  <span style={{ flex: 1 }} />
-                  <span style={{ fontSize: 11, color: p.ink3 }}>{v.at}</span>
-                </div>
-                <div
-                  style={{
-                    fontSize: 12.5,
-                    color: p.ink2,
-                    marginBottom: 4,
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {v.note ?? '—'}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <div
-          style={{
-            flex: 1,
-            background: p.bg,
-            overflow: 'auto',
-            padding: '24px 32px',
-          }}
-        >
-          <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                marginBottom: 18,
-              }}
-            >
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 24,
-                  fontWeight: 500,
-                  color: p.ink,
-                  fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
-                  letterSpacing: -0.3,
-                }}
-              >
-                Version {cur.v}
-              </h2>
-              <span
-                style={{
-                  padding: '3px 10px',
-                  borderRadius: 999,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  background: tones[cur.status].bg,
-                  color: tones[cur.status].fg,
-                }}
-              >
-                {tones[cur.status].label}
-              </span>
-              <span style={{ flex: 1 }} />
-              {cur.status === 'archived' && (
-                <button
-                  onClick={() => actions.rollback(cur.v)}
-                  style={{
-                    padding: '7px 14px',
-                    borderRadius: 8,
-                    border: `1px solid ${p.line}`,
-                    background: p.panel,
-                    fontSize: 12,
-                    color: p.ink2,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ↻ Roll back to v{cur.v}
-                </button>
-              )}
-            </div>
+        {title}
+      </h2>
+      {children}
+    </section>
+  )
+}
 
-            <div
-              style={{
-                fontSize: 13.5,
-                color: p.ink2,
-                marginBottom: 22,
-                lineHeight: 1.5,
-              }}
-            >
-              &ldquo;{cur.note ?? '—'}&rdquo; · {cur.at}.
-            </div>
-
-            {cur.status === 'live' && (
-              <div
-                style={{
-                  marginTop: 0,
-                  padding: '14px 16px',
-                  borderRadius: 10,
-                  background: '#E6EFE1',
-                  fontSize: 12.5,
-                  color: '#3A5A32',
-                  display: 'flex',
-                  gap: 10,
-                  alignItems: 'center',
-                }}
-              >
-                <span style={{ fontSize: 16 }}>●</span>
-                Serving all new conversations. In-flight conversations stay on
-                their started version.
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+function CardMeta({ p, children }: { p: Palette; children: ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: 11.5,
+        color: p.ink3,
+        lineHeight: 1.5,
+      }}
+    >
+      {children}
     </div>
   )
 }

@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import { BLOCK_BY_TYPE, blockColor, SERIF_FAMILY } from '../../shared-data'
+import {
+  PROMPT_READER_STATUS,
+  StatusBadge,
+  StatusNote,
+  getLiveRuntimeStatus,
+} from '../../surface-status'
 import type { FlowNode } from '../../types'
 import {
   countLines,
@@ -447,6 +453,7 @@ export function PromptReader({
 
   const color = blockColor(block.type, { l: 0.58, c: 0.14 })
   const label = BLOCK_BY_TYPE[block.type]?.label ?? block.type
+  const runtimeStatus = getLiveRuntimeStatus()
 
   return (
     <div
@@ -514,31 +521,7 @@ export function PromptReader({
               {block.name}
             </div>
           </div>
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 600,
-              letterSpacing: 0.7,
-              textTransform: 'uppercase',
-              color: B.ink3,
-              background: B.lineSoft,
-              padding: '5px 9px',
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: B.ink3,
-              }}
-            />
-            Read-only
-          </span>
+          <StatusBadge p={B} label="Reference only" tone="neutral" />
           <CopyButton text={combinedText} label="Copy all" />
           <IconButton
             icon={X}
@@ -550,37 +533,30 @@ export function PromptReader({
           />
         </header>
 
-        <div
-          style={{
-            padding: '10px 24px',
-            background: B.panel,
-            borderBottom: `1px solid ${B.line}`,
-            fontSize: 12,
-            color: B.ink3,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            flexShrink: 0,
-          }}
-        >
-          <span>Compiled live from</span>
-          <code
-            style={{
-              fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
-              fontSize: 11.5,
-              color: B.ink2,
-              background: B.lineSoft,
-              padding: '2px 7px',
-              borderRadius: 5,
-            }}
-          >
-            src/lib/prompts/sections/*.ts
-          </code>
-          <span style={{ color: B.ink3 }}>·</span>
-          <span>
-            Edit there today. Flow Builder editing ships in Week&nbsp;7.
-          </span>
-        </div>
+        <StatusNote
+          p={B}
+          label={PROMPT_READER_STATUS.label}
+          tone="neutral"
+          detail={
+            <>
+              Compiled live from{' '}
+              <code
+                style={{
+                  fontFamily:
+                    'var(--font-jetbrains-mono), ui-monospace, monospace',
+                  fontSize: 11.5,
+                  color: B.ink2,
+                  background: B.lineSoft,
+                  padding: '2px 7px',
+                  borderRadius: 5,
+                }}
+              >
+                src/lib/prompts/sections/*.ts
+              </code>
+              . {PROMPT_READER_STATUS.detail} {runtimeStatus.detail}
+            </>
+          }
+        />
 
         <div
           style={{

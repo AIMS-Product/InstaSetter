@@ -13,9 +13,9 @@ import type { PageId, Palette } from './types'
 
 const ITEMS: Array<{ id: PageId; label: string; Icon: LucideIcon }> = [
   { id: 'flow', label: 'Flow', Icon: Workflow },
-  { id: 'runs', label: 'Runs', Icon: Activity },
+  { id: 'runs', label: 'Inbox', Icon: Activity },
   { id: 'variables', label: 'Variables', Icon: Braces },
-  { id: 'versions', label: 'Versions', Icon: History },
+  { id: 'versions', label: 'Release', Icon: History },
   { id: 'bot', label: 'Bot', Icon: BotIcon },
 ]
 

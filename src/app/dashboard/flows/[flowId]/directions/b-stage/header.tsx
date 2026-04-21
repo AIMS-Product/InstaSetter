@@ -1,6 +1,11 @@
 'use client'
 
 import { useFlowState } from '../../store'
+import {
+  StatusBadge,
+  getDraftWorkspaceStatus,
+  getLiveRuntimeStatus,
+} from '../../surface-status'
 import type { PageId } from '../../types'
 import { B } from './palette'
 
@@ -14,6 +19,8 @@ export default function BHeader({
   onToggleSim: () => void
 }) {
   const state = useFlowState()
+  const draftStatus = getDraftWorkspaceStatus(state.dirtySincePublish)
+  const liveStatus = getLiveRuntimeStatus()
 
   return (
     <div
@@ -76,34 +83,21 @@ export default function BHeader({
           {state.flow.name}
         </div>
       </div>
-      {state.dirtySincePublish && (
-        <div
-          role="status"
-          aria-label="Draft has unpublished changes"
-          style={{
-            fontSize: 11,
-            padding: '4px 8px',
-            borderRadius: 999,
-            background: '#FBE7D9',
-            color: '#8B4316',
-            fontWeight: 500,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-          }}
-        >
-          <span
-            aria-hidden
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: '50%',
-              background: '#E08040',
-            }}
-          />
-          Draft changes
-        </div>
-      )}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginLeft: 4,
+        }}
+      >
+        <StatusBadge
+          p={B}
+          label={draftStatus.label}
+          tone={state.dirtySincePublish ? 'warning' : 'neutral'}
+        />
+        <StatusBadge p={B} label={liveStatus.label} tone="success" />
+      </div>
       <div style={{ flex: 1 }} />
       {page === 'flow' && (
         <button
@@ -131,7 +125,7 @@ export default function BHeader({
               background: simOpen ? B.accent : B.ink3,
             }}
           />
-          {simOpen ? 'Hide test' : 'Test flow'}
+          {simOpen ? 'Hide preview' : 'Preview replies'}
         </button>
       )}
     </div>

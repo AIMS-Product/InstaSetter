@@ -12,6 +12,7 @@ import type {
 import { interleave } from '@/lib/services/conversation-viewer-types'
 import { ToolBadge } from '@/components/tool-badge'
 import RPHeader from './header'
+import { BRAND_INBOX_STATUS, StatusBadge, StatusNote } from '../surface-status'
 
 // Status tones mirror the real write surface in
 // src/lib/services/conversation.ts: {active, stalled, completed}.
@@ -126,33 +127,40 @@ export default function PageRuns({ p }: { p: Palette }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <RPHeader
         p={p}
-        eyebrow="Instagram DM Flow"
-        title="Conversations"
+        eyebrow="Brand-wide data"
+        title="Brand inbox"
         right={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <StatusBadge
+              p={p}
+              label={BRAND_INBOX_STATUS.label}
+              tone="warning"
+            />
             <span style={{ fontSize: 11, color: p.ink3 }}>
               {runs === null
                 ? 'Loading…'
-                : `${runs.length} recent · newest first`}
+                : `${runs.length} recent brand conversations`}
             </span>
           </div>
         }
       />
 
-      <div
+      <StatusNote
+        p={p}
+        label={BRAND_INBOX_STATUS.label}
+        detail={BRAND_INBOX_STATUS.detail}
+        tone="warning"
         role="status"
-        aria-live="polite"
-        style={{
-          padding: '10px 32px',
-          background: p.lineSoft,
-          borderBottom: `1px solid ${p.line}`,
-          fontSize: 12,
-          color: p.ink2,
-        }}
-      >
-        Showing all brand-wide conversations. Per-flow scoping arrives once
-        flow_id lands on the conversations table.
-      </div>
+        ariaLive="polite"
+      />
 
       <div
         style={{
@@ -168,7 +176,7 @@ export default function PageRuns({ p }: { p: Palette }) {
           p={p}
           label="Started today"
           value={runs === null ? '—' : String(startedToday)}
-          detail={runs === null ? '' : `${runs.length} total in list`}
+          detail={runs === null ? '' : `${runs.length} total in brand list`}
         />
         <Kpi
           p={p}
@@ -178,8 +186,8 @@ export default function PageRuns({ p }: { p: Palette }) {
             runs === null
               ? ''
               : bookedCount === 0
-                ? 'no book_call events yet'
-                : `${bookedCount} book_call calls`
+                ? 'no brand-wide book_call events yet'
+                : `${bookedCount} brand-wide book_call calls`
           }
         />
         <Kpi
@@ -190,8 +198,8 @@ export default function PageRuns({ p }: { p: Palette }) {
             runs === null
               ? ''
               : completedCount === 0
-                ? 'none completed yet'
-                : `${completedCount} summary-generated`
+                ? 'none completed in brand list'
+                : `${completedCount} brand-wide summary-generated`
           }
         />
         <Kpi
@@ -202,8 +210,8 @@ export default function PageRuns({ p }: { p: Palette }) {
             runs === null
               ? ''
               : stalledCount === 0
-                ? 'none stalled'
-                : `${stalledCount} inactive`
+                ? 'none stalled in brand list'
+                : `${stalledCount} brand-wide inactive`
           }
           bad={stalledCount > 0}
         />
@@ -232,8 +240,8 @@ export default function PageRuns({ p }: { p: Palette }) {
           )}
           {runs !== null && runs.length === 0 && (
             <div style={{ padding: 24, color: p.ink2, fontSize: 13 }}>
-              No conversations yet. Real inbound DMs appear here as your bot
-              handles them.
+              No brand conversations yet. Real inbound DMs across
+              VendingPreneurs appear here once the bot starts handling them.
             </div>
           )}
           {runs?.map((r) => {

@@ -6,6 +6,7 @@ import { IconButton } from '@/components/icon-button'
 import { ToolBadge } from '@/components/tool-badge'
 import type { BlockOverrides } from '@/lib/prompts/compile-block/schemas'
 import { useFlowActions, useFlowState } from '../../store'
+import { getSimulatorStatus } from '../../surface-status'
 import type { Turn } from '../../types'
 import { B } from './palette'
 import { isFlowCompileEnabled } from './simulator-overrides'
@@ -28,6 +29,7 @@ export default function BSimFloat({
   const [pending, setPending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const compileEnabled = isFlowCompileEnabled()
+  const simulatorStatus = getSimulatorStatus(compileEnabled)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -138,13 +140,11 @@ export default function BSimFloat({
         />
         <span
           style={{ fontSize: 12, fontWeight: 500 }}
-          title={
-            compileEnabled
-              ? "Flow Compile is on — the selected block's draft goal, guidance, routes, captures, and triggers are appended to the system prompt as an Active Block Directive."
-              : "Runs the real system prompt from src/lib/prompts/setter-v2.ts. Flow-builder edits don't affect it."
-          }
+          title={String(simulatorStatus.detail)}
         >
-          Simulator · Claude live
+          {compileEnabled
+            ? 'Simulator · Draft preview'
+            : 'Simulator · Live prompt'}
         </span>
         <span style={{ flex: 1 }} />
         <IconButton
@@ -188,7 +188,7 @@ export default function BSimFloat({
           >
             Type a message as the prospect.
             <br />
-            Replies come from the real system prompt via Claude.
+            {simulatorStatus.detail}
           </div>
         )}
         {state.conversation.map((m, i) => {

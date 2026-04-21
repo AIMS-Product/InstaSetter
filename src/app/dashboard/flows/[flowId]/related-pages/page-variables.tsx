@@ -8,6 +8,11 @@ import {
   blockColor,
 } from '../shared-data'
 import { useFlowState } from '../store'
+import {
+  StatusBadge,
+  StatusNote,
+  VARIABLE_REFERENCE_STATUS,
+} from '../surface-status'
 import type { BlockType, Palette, Variable } from '../types'
 import RPHeader from './header'
 
@@ -55,23 +60,14 @@ export default function PageVariables({ p }: { p: Palette }) {
     <div style={{ height: '100%', overflow: 'auto' }}>
       <RPHeader
         p={p}
-        eyebrow="Library"
+        eyebrow="Reference"
         title="Variables"
         right={
-          <button
-            style={{
-              padding: '7px 14px',
-              borderRadius: 8,
-              border: 'none',
-              background: p.ink,
-              color: p.panel,
-              fontSize: 12.5,
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            + New variable
-          </button>
+          <StatusBadge
+            p={p}
+            label={VARIABLE_REFERENCE_STATUS.label}
+            tone="neutral"
+          />
         }
       />
       <div style={{ padding: '24px 32px', maxWidth: 960, margin: '0 auto' }}>
@@ -87,19 +83,14 @@ export default function PageVariables({ p }: { p: Palette }) {
           follows a person across every conversation, and <b>Conversation</b> is
           scoped to a single thread.
         </div>
-        <div
-          role="note"
-          style={{
-            padding: '10px 12px',
-            background: p.lineSoft,
-            borderRadius: 8,
-            fontSize: 12,
-            color: p.ink3,
-            marginBottom: 26,
-          }}
-        >
-          Values populate at runtime from each conversation. Brand defaults in
-          this editor now persist in the shared Supabase draft.
+        <div style={{ marginBottom: 26 }}>
+          <StatusNote
+            p={p}
+            label={VARIABLE_REFERENCE_STATUS.label}
+            detail={VARIABLE_REFERENCE_STATUS.detail}
+            tone="neutral"
+            role="note"
+          />
         </div>
         {SCOPES.map((sc) => (
           <div key={sc.key} style={{ marginBottom: 26 }}>
@@ -139,7 +130,7 @@ export default function PageVariables({ p }: { p: Palette }) {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1.3fr 1fr 0.7fr 1.3fr 40px',
+                  gridTemplateColumns: '1.3fr 1fr 0.7fr 1.3fr',
                   padding: '10px 14px',
                   background: p.lineSoft,
                   fontSize: 11,
@@ -150,10 +141,9 @@ export default function PageVariables({ p }: { p: Palette }) {
                 }}
               >
                 <span>Name</span>
-                <span>Current value</span>
+                <span>Draft value</span>
                 <span>Type</span>
                 <span>Captured by</span>
-                <span />
               </div>
               {grouped[sc.key].map((v) => {
                 const fullKey = `${v.scope}.${v.key}`
@@ -163,7 +153,7 @@ export default function PageVariables({ p }: { p: Palette }) {
                     key={v.key}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '1.3fr 1fr 0.7fr 1.3fr 40px',
+                      gridTemplateColumns: '1.3fr 1fr 0.7fr 1.3fr',
                       padding: '11px 14px',
                       borderTop: `1px solid ${p.lineSoft}`,
                       alignItems: 'center',
@@ -233,15 +223,6 @@ export default function PageVariables({ p }: { p: Palette }) {
                       ) : (
                         '—'
                       )}
-                    </div>
-                    <div
-                      style={{
-                        color: p.ink3,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ⋯
                     </div>
                   </div>
                 )
