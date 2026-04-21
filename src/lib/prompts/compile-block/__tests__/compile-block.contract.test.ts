@@ -123,6 +123,58 @@ describe('compileBlock — goal/guidance overrides', () => {
     })
     expect(compiled).toContain(DEFAULT_OPENING_GUIDANCE)
   })
+
+  it('appends capture overrides when provided', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'booking',
+        captures: [{ label: 'Email', variable: 'contact.email' }],
+      },
+    })
+    expect(compiled).toContain('Captures:')
+    expect(compiled).toContain('- Email -> contact.email')
+  })
+
+  it('appends route overrides when provided', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'booking',
+        branches: [
+          {
+            label: 'Booked',
+            when: 'contact.email is set',
+            target: 'summary',
+          },
+        ],
+      },
+    })
+    expect(compiled).toContain('Routes:')
+    expect(compiled).toContain('- Booked -> Summary when contact.email is set')
+  })
+
+  it('appends ambient trigger overrides when provided', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'followup',
+        triggers: [
+          {
+            name: 'Nudge',
+            afterMinutes: 1440,
+            cancelOnReply: true,
+            mode: 'human_agent_tag',
+            target: 'booking',
+          },
+        ],
+      },
+    })
+    expect(compiled).toContain('Ambient triggers:')
+    expect(compiled).toContain(
+      '- Nudge: after 1440 minutes, cancel on reply, send with the HUMAN_AGENT tag, then Booking'
+    )
+  })
 })
 
 describe('compileBlock contract — no overrides matches buildSystemPrompt across all block types', () => {

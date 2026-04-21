@@ -1,12 +1,23 @@
-export type BlockType =
-  | 'opening'
-  | 'qualifier'
-  | 'objection'
-  | 'booking'
-  | 'email'
-  | 'followup'
-  | 'escalation'
-  | 'summary'
+export const BLOCK_TYPES = [
+  'opening',
+  'qualifier',
+  'objection',
+  'booking',
+  'email',
+  'followup',
+  'escalation',
+  'summary',
+] as const
+
+export type BlockType = (typeof BLOCK_TYPES)[number]
+
+export const TRIGGER_MODES = [
+  'in_window_only',
+  'human_agent_tag',
+  'wait_for_next_window',
+] as const
+
+export type TriggerMode = (typeof TRIGGER_MODES)[number]
 
 export interface BlockCatalogEntry {
   type: BlockType
@@ -25,6 +36,16 @@ export interface Branch {
   label: string
   target: BlockType
   when: string
+}
+
+export interface AmbientTrigger {
+  id: string
+  name: string
+  whenBlock: BlockType
+  afterMinutes: number
+  cancelOnReply: boolean
+  mode: TriggerMode
+  target: BlockType
 }
 
 export interface Guardrail {

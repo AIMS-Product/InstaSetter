@@ -7,7 +7,7 @@ import {
   beforeAll,
   afterEach,
 } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { FlowStoreProvider } from '../../../store'
@@ -29,7 +29,9 @@ beforeAll(() => {
 
 function Wrap({ children }: { children: ReactNode }) {
   return (
-    <FlowStoreProvider brand="VendingPreneurs">{children}</FlowStoreProvider>
+    <FlowStoreProvider flowId="lg-organic-dm" brand="VendingPreneurs">
+      {children}
+    </FlowStoreProvider>
   )
 }
 
@@ -119,5 +121,63 @@ describe('BSimFloat — overrides pass-through', () => {
     await typeAndSend('yo')
     const call = actionSpy.mock.calls[0]?.[0]
     expect(call).not.toHaveProperty('overrides')
+  })
+
+  it('recovers when the server action rejects', async () => {
+    actionSpy
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce({
+        success: true,
+        data: { replyText: 'retry worked', toolCalls: [], truncated: false },
+      })
+
+    render(
+      <Wrap>
+        <BSimFloat open onClose={() => {}} overrides={null} />
+      </Wrap>
+    )
+
+    await typeAndSend('hello')
+    await screen.findByText(/simulator request failed\. please try again\./i)
+
+    const input = screen.getByPlaceholderText(/type as prospect/i)
+    const send = screen.getByRole('button', { name: /send/i })
+    expect((input as HTMLInputElement).disabled).toBe(false)
+    expect((send as HTMLButtonElement).disabled).toBe(true)
+
+    await userEvent.type(input, 'retry')
+    await userEvent.click(send)
+
+    await screen.findByText('retry worked')
+    expect(actionSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not replay prior system errors in retry history', async () => {
+    actionSpy
+      .mockResolvedValueOnce({
+        success: false,
+        error: 'Claude call failed',
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: { replyText: 'all good', toolCalls: [], truncated: false },
+      })
+
+    render(
+      <Wrap>
+        <BSimFloat open onClose={() => {}} overrides={null} />
+      </Wrap>
+    )
+
+    await typeAndSend('hello')
+    await screen.findByText(/claude call failed/i)
+
+    await typeAndSend('retry')
+
+    await waitFor(() => expect(actionSpy).toHaveBeenCalledTimes(2))
+    expect(actionSpy.mock.calls[1]?.[0]?.messages).toEqual([
+      { role: 'user', content: 'hello' },
+      { role: 'user', content: 'retry' },
+    ])
   })
 })

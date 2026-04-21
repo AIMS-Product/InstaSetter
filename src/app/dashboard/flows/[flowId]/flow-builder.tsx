@@ -4,9 +4,11 @@ import Link from 'next/link'
 import DirectionB from './directions/b-stage'
 
 export default function FlowBuilder({
+  flowId,
   brand,
   bookingUrl,
 }: {
+  flowId: string
   brand: string
   bookingUrl: string
 }) {
@@ -18,7 +20,7 @@ export default function FlowBuilder({
           a checklist that's slower to author with than pen-and-paper. Per the
           UX persona review decision (#7), we gate instead of degrade. */}
       <div className="hidden h-full w-full lg:block">
-        <DirectionB brand={brand} bookingUrl={bookingUrl} />
+        <DirectionB flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
       </div>
       <div className="flex h-full w-full lg:hidden">
         <MobileGate />

@@ -34,6 +34,30 @@ describe('BlockOverridesSchema', () => {
     }
   })
 
+  it('accepts capture, branch, and trigger override payloads', () => {
+    const result = BlockOverridesSchema.safeParse({
+      activeBlockType: 'booking',
+      captures: [{ label: 'Email', variable: 'contact.email' }],
+      branches: [
+        {
+          label: 'Booked',
+          when: 'contact.email is set',
+          target: 'summary',
+        },
+      ],
+      triggers: [
+        {
+          name: 'Re-engage',
+          afterMinutes: 1440,
+          cancelOnReply: true,
+          mode: 'human_agent_tag',
+          target: 'followup',
+        },
+      ],
+    })
+    expect(result.success).toBe(true)
+  })
+
   it('rejects unknown block type', () => {
     const result = BlockOverridesSchema.safeParse({
       activeBlockType: 'not-a-block',
@@ -53,6 +77,22 @@ describe('BlockOverridesSchema', () => {
     const result = BlockOverridesSchema.safeParse({
       activeBlockType: 'opening',
       guidance: true,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects invalid trigger mode', () => {
+    const result = BlockOverridesSchema.safeParse({
+      activeBlockType: 'booking',
+      triggers: [
+        {
+          name: 'Bad mode',
+          afterMinutes: 5,
+          cancelOnReply: true,
+          mode: 'later',
+          target: 'summary',
+        },
+      ],
     })
     expect(result.success).toBe(false)
   })

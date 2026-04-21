@@ -8,7 +8,10 @@ import type { BlockOverrides } from '@/lib/prompts/compile-block/schemas'
 import { useFlowActions, useFlowState } from '../../store'
 import type { Turn } from '../../types'
 import { B } from './palette'
+import { isFlowCompileEnabled } from './simulator-overrides'
 import { simulateReplyAction } from './simulator-actions'
+
+const ACTION_REJECTION_ERROR = 'Simulator request failed. Please try again.'
 
 export default function BSimFloat({
   open,
@@ -24,6 +27,7 @@ export default function BSimFloat({
   const [input, setInput] = useState('')
   const [pending, setPending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const compileEnabled = isFlowCompileEnabled()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -42,40 +46,58 @@ export default function BSimFloat({
     setPending(true)
 
     const history = [
-      ...state.conversation.map((t) => ({
-        role:
-          t.role === 'prospect' ? ('user' as const) : ('assistant' as const),
-        content: t.text,
-      })),
+      ...state.conversation.flatMap((t) => {
+        if (t.role === 'system') return []
+        return [
+          {
+            role:
+              t.role === 'prospect'
+                ? ('user' as const)
+                : ('assistant' as const),
+            content: t.text,
+          },
+        ]
+      }),
       { role: 'user' as const, content: text },
     ]
 
-    const result = await simulateReplyAction({
-      brand: state.flow.brand,
-      messages: history,
-      ...(overrides ? { overrides } : {}),
-    })
+    try {
+      const result = await simulateReplyAction({
+        brand: state.flow.brand,
+        messages: history,
+        ...(overrides ? { overrides } : {}),
+      })
 
-    if (result.success) {
-      const turn: Turn = {
-        role: 'bot',
-        text: result.data.replyText || '(no reply text)',
-        t: 'now',
-        toolCalls: result.data.toolCalls.map((c) => ({
-          name: c.name,
-          input: c.input,
-        })),
+      if (result.success) {
+        const turn: Turn = {
+          role: 'bot',
+          text: result.data.replyText || '(no reply text)',
+          t: 'now',
+          toolCalls: result.data.toolCalls.map((c) => ({
+            name: c.name,
+            input: c.input,
+          })),
+        }
+        actions.simReceive(turn)
+        return
       }
-      actions.simReceive(turn)
-    } else {
+
       actions.simReceive({
         role: 'system',
         text: result.error,
         t: 'now',
         error: true,
       })
+    } catch {
+      actions.simReceive({
+        role: 'system',
+        text: ACTION_REJECTION_ERROR,
+        t: 'now',
+        error: true,
+      })
+    } finally {
+      setPending(false)
     }
-    setPending(false)
   }
 
   return (
@@ -117,8 +139,8 @@ export default function BSimFloat({
         <span
           style={{ fontSize: 12, fontWeight: 500 }}
           title={
-            process.env.NEXT_PUBLIC_FLOW_COMPILE === 'true'
-              ? "Flow Compile is on — the selected block's edited goal and guidance are appended to the system prompt as an Active Block Directive."
+            compileEnabled
+              ? "Flow Compile is on — the selected block's local goal, guidance, routes, captures, and triggers are appended to the system prompt as an Active Block Directive."
               : "Runs the real system prompt from src/lib/prompts/setter-v2.ts. Flow-builder edits don't affect it."
           }
         >

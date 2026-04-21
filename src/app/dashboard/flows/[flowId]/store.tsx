@@ -11,7 +11,9 @@ import {
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
 import { deriveBlock } from './directions/b-stage/block-sections'
+import { BLOCK_TYPES } from './types'
 import type {
+  AmbientTrigger,
   BlockType,
   Branch,
   Capture,
@@ -21,21 +23,12 @@ import type {
   Variable,
 } from './types'
 
-export interface AmbientTrigger {
-  id: string
-  name: string
-  whenBlock: BlockType
-  afterMinutes: number
-  cancelOnReply: boolean
-  mode: 'in_window_only' | 'human_agent_tag' | 'wait_for_next_window'
-  target: BlockType
-}
-
 export interface VersionEntry {
   v: number
   at: string
   note?: string
   status: 'draft' | 'live' | 'archived'
+  snapshot: VersionSnapshot
 }
 
 export interface BotSettings {
@@ -43,6 +36,13 @@ export interface BotSettings {
   persona: string
   messageConstraints: string
   forbiddenPhrases: string[]
+}
+
+export interface VersionSnapshot {
+  flow: Flow
+  triggers: AmbientTrigger[]
+  bot: BotSettings
+  variables: Variable[]
 }
 
 export interface FlowState {
@@ -116,17 +116,6 @@ const BLOCK_POSITIONS: Record<BlockType, { x: number; y: number }> = {
   summary: { x: 0, y: 3 },
 }
 
-const BLOCK_TYPES: BlockType[] = [
-  'opening',
-  'qualifier',
-  'objection',
-  'booking',
-  'email',
-  'followup',
-  'escalation',
-  'summary',
-]
-
 const BLOCK_LABELS: Record<BlockType, string> = {
   opening: 'Opening',
   qualifier: 'Qualifier',
@@ -138,7 +127,11 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   summary: 'Summary',
 }
 
-export function buildInitialFlow(brand: string, bookingUrl?: string): Flow {
+export function buildInitialFlow(
+  brand: string,
+  bookingUrl?: string,
+  flowId: string = 'ig-organic-dm'
+): Flow {
   const nodes: FlowNode[] = BLOCK_TYPES.map((type) => {
     const d = deriveBlock(brand, type, { bookingUrl })
     return {
@@ -162,7 +155,7 @@ export function buildInitialFlow(brand: string, bookingUrl?: string): Flow {
     }
   })
   return {
-    id: 'ig-organic-dm',
+    id: flowId,
     brand,
     name: 'Instagram DM Flow',
     channel: 'Instagram — Organic DM',
@@ -225,20 +218,46 @@ function buildInitialBot(brand: string, bookingUrl?: string): BotSettings {
   }
 }
 
-function buildInitialVersions(): VersionEntry[] {
+function buildVersionEntry({
+  v,
+  status,
+  note,
+  source,
+}: {
+  v: number
+  status: VersionEntry['status']
+  note?: string
+  source: Pick<FlowState, 'flow' | 'triggers' | 'bot' | 'variables'>
+}): VersionEntry {
+  return {
+    v,
+    at: 'just now',
+    note,
+    status,
+    snapshot: makeVersionSnapshot(source),
+  }
+}
+
+function buildInitialVersions(
+  source: Pick<FlowState, 'flow' | 'triggers' | 'bot' | 'variables'>
+): VersionEntry[] {
   return [
-    {
+    buildVersionEntry({
       v: 1,
-      at: 'just now',
       note: 'Seeded from prompt sections',
       status: 'live',
-    },
+      source,
+    }),
   ]
 }
 
-function buildInitialState(brand: string, bookingUrl?: string): FlowState {
-  const flow = buildInitialFlow(brand, bookingUrl)
-  return {
+export function buildInitialState(
+  brand: string,
+  bookingUrl?: string,
+  flowId: string = 'ig-organic-dm'
+): FlowState {
+  const flow = buildInitialFlow(brand, bookingUrl, flowId)
+  const baseState = {
     flow,
     triggers: [],
     bot: buildInitialBot(brand, bookingUrl),
@@ -246,7 +265,6 @@ function buildInitialState(brand: string, bookingUrl?: string): FlowState {
     conversation: [],
     simActiveBlock: null,
     simMode: 'fast',
-    versions: buildInitialVersions(),
     publishedVersion: 1,
     draftVersion: 1,
     toast: null,
@@ -254,6 +272,11 @@ function buildInitialState(brand: string, bookingUrl?: string): FlowState {
     activeTab: 'design',
     paletteOpen: false,
     dirtySincePublish: false,
+  } satisfies Omit<FlowState, 'versions'>
+
+  return {
+    ...baseState,
+    versions: buildInitialVersions(baseState),
   }
 }
 
@@ -279,18 +302,86 @@ const CONTENT_EDIT_ACTIONS: ReadonlySet<Action['type']> = new Set([
   'update_bot',
 ])
 
+function deepCopy<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
+function makeVersionSnapshot(
+  source: Pick<FlowState, 'flow' | 'triggers' | 'bot' | 'variables'>
+): VersionSnapshot {
+  return deepCopy({
+    flow: source.flow,
+    triggers: source.triggers,
+    bot: source.bot,
+    variables: source.variables,
+  })
+}
+
+function getStateBookingUrl(
+  state: Pick<FlowState, 'variables'>
+): string | undefined {
+  const bookingUrl = state.variables.find(
+    (variable) => variable.scope === 'brand' && variable.key === 'booking_url'
+  )?.value
+
+  return typeof bookingUrl === 'string' ? bookingUrl : undefined
+}
+
+function reconcileVariables(
+  state: Pick<FlowState, 'variables'>,
+  flow: Flow
+): Variable[] {
+  const previousByKey = new Map(
+    state.variables.map((variable) => [
+      `${variable.scope}.${variable.key}`,
+      variable,
+    ])
+  )
+
+  return deriveVariables(flow, flow.brand, getStateBookingUrl(state)).map(
+    (variable) => {
+      const previous = previousByKey.get(`${variable.scope}.${variable.key}`)
+      if (!previous) return variable
+
+      return {
+        ...variable,
+        value: previous.value,
+      }
+    }
+  )
+}
+
+function withFlow(state: FlowState, flow: Flow): FlowState {
+  return {
+    ...state,
+    flow,
+    variables: reconcileVariables(state, flow),
+  }
+}
+
+function withDraftSnapshot(state: FlowState): FlowState {
+  return {
+    ...state,
+    versions: state.versions.map((version) =>
+      version.v === state.draftVersion
+        ? {
+            ...version,
+            snapshot: makeVersionSnapshot(state),
+          }
+        : version
+    ),
+  }
+}
+
 function replaceNode(
   state: FlowState,
   id: BlockType,
   fn: (n: FlowNode) => FlowNode
 ): FlowState {
-  return {
-    ...state,
-    flow: {
-      ...state.flow,
-      nodes: state.flow.nodes.map((n) => (n.id === id ? fn(n) : n)),
-    },
-  }
+  return withFlow(state, {
+    ...state.flow,
+    nodes: state.flow.nodes.map((n) => (n.id === id ? fn(n) : n)),
+  })
 }
 
 export function reducer(state: FlowState, action: Action): FlowState {
@@ -356,17 +447,29 @@ export function reducer(state: FlowState, action: Action): FlowState {
       return replaceNode(state, action.id, (n) => ({ ...n, pos: action.pos }))
     case 'add_node':
       return {
-        ...state,
-        flow: { ...state.flow, nodes: [...state.flow.nodes, action.node] },
+        ...withFlow(state, {
+          ...state.flow,
+          nodes: [...state.flow.nodes, action.node],
+        }),
         selectedId: action.node.id,
       }
     case 'delete_node':
       return {
-        ...state,
-        flow: {
+        ...withFlow(state, {
           ...state.flow,
-          nodes: state.flow.nodes.filter((n) => n.id !== action.id),
-        },
+          nodes: state.flow.nodes
+            .filter((n) => n.id !== action.id)
+            .map((node) => ({
+              ...node,
+              branches: node.branches.filter(
+                (branch) => branch.target !== action.id
+              ),
+            })),
+        }),
+        triggers: state.triggers.filter(
+          (trigger) =>
+            trigger.whenBlock !== action.id && trigger.target !== action.id
+        ),
         selectedId: state.selectedId === action.id ? null : state.selectedId,
       }
     case 'sim_reset':
@@ -400,18 +503,18 @@ export function reducer(state: FlowState, action: Action): FlowState {
         publishedVersion: state.draftVersion,
         draftVersion: nextV,
         versions: [
-          {
+          buildVersionEntry({
             v: nextV,
-            at: 'just now',
             note: 'New draft after publish',
             status: 'draft',
-          },
-          {
+            source: state,
+          }),
+          buildVersionEntry({
             v: state.draftVersion,
-            at: 'just now',
             note: 'Published',
             status: 'live',
-          },
+            source: state,
+          }),
           ...state.versions
             .filter((x) => x.v !== state.draftVersion)
             .map((x) =>
@@ -423,21 +526,44 @@ export function reducer(state: FlowState, action: Action): FlowState {
       }
     }
     case 'rollback':
-      return {
-        ...state,
-        publishedVersion: action.v,
-        versions: state.versions.map((x) => ({
-          ...x,
-          status:
-            x.v === action.v
-              ? ('live' as const)
-              : x.status === 'live'
-                ? 'archived'
-                : x.status,
-        })),
-        toast: `Rolled back to v${action.v}`,
-        dirtySincePublish: false,
-      }
+      return (() => {
+        const target = state.versions.find((version) => version.v === action.v)
+        if (!target) return state
+
+        const restored = deepCopy(target.snapshot)
+
+        return {
+          ...state,
+          flow: restored.flow,
+          triggers: restored.triggers,
+          bot: restored.bot,
+          variables: restored.variables,
+          publishedVersion: action.v,
+          versions: state.versions.map((version) => {
+            if (version.v === action.v) {
+              return {
+                ...version,
+                status: 'live' as const,
+                snapshot: restored,
+              }
+            }
+
+            if (version.v === state.draftVersion) {
+              return {
+                ...version,
+                status: 'draft' as const,
+                snapshot: restored,
+              }
+            }
+
+            return version.status === 'live'
+              ? { ...version, status: 'archived' as const }
+              : version
+          }),
+          toast: `Rolled back to v${action.v}`,
+          dirtySincePublish: false,
+        }
+      })()
     case 'toast':
       return { ...state, toast: action.msg }
     case 'update_bot':
@@ -476,13 +602,11 @@ const FlowStore = createContext<Ctx | null>(null)
 // Bump this when the shape of the persisted payload changes in a way that's
 // incompatible with older stores (e.g. new FlowNode fields, different Variable
 // scope). Stored blobs without a matching __schema are dropped and reseeded.
-const STORAGE_SCHEMA = 3
+const STORAGE_SCHEMA = 4
 
-// Key includes the brand so a deployment switching brands (or a dev swapping
-// BRAND_NAME) doesn't rehydrate the previous brand's snapshot and override
-// freshly derived state.
-function storageKeyFor(brand: string): string {
-  return `instasetter.flow-builder.v2.${brand}`
+// Key includes brand and flow id so each route keeps its own editor state.
+export function storageKeyFor(brand: string, flowId: string): string {
+  return `instasetter.flow-builder.v3.${brand}.${flowId}`
 }
 
 // Best-effort cleanup of the pre-v2 global key on first hit. Safe to leave
@@ -503,14 +627,25 @@ const PERSISTED_KEYS: Array<keyof FlowState> = [
 type PersistedPayload = Partial<FlowState> & {
   __schema?: number
   __brand?: string
+  __flowId?: string
+  __bookingUrl?: string | null
 }
 
 // Defensive checks for payloads written before the store got brand-scoped:
 // even if an older blob made it through the key rename, drop it if it
 // references Mike/Dallas/7K or doesn't match the current brand.
-function isStalePayload(parsed: PersistedPayload, brand: string): boolean {
+function isStalePayload(
+  parsed: PersistedPayload,
+  {
+    brand,
+    flowId,
+    bookingUrl,
+  }: { brand: string; flowId: string; bookingUrl?: string }
+): boolean {
   if (parsed.__schema !== STORAGE_SCHEMA) return true
   if (parsed.__brand && parsed.__brand !== brand) return true
+  if (parsed.__flowId && parsed.__flowId !== flowId) return true
+  if ((parsed.__bookingUrl ?? null) !== (bookingUrl ?? null)) return true
   if (parsed.bot?.name === 'Mike') return true
   if (Array.isArray(parsed.variables)) {
     const sus = parsed.variables.some(
@@ -527,7 +662,15 @@ function isStalePayload(parsed: PersistedPayload, brand: string): boolean {
   return false
 }
 
-function loadPersisted(brand: string): Partial<FlowState> | null {
+function loadPersisted({
+  brand,
+  flowId,
+  bookingUrl,
+}: {
+  brand: string
+  flowId: string
+  bookingUrl?: string
+}): Partial<FlowState> | null {
   if (typeof window === 'undefined') return null
   try {
     // Remove the legacy global key if it's still hanging around — its
@@ -537,76 +680,104 @@ function loadPersisted(brand: string): Partial<FlowState> | null {
     /* noop */
   }
   try {
-    const key = storageKeyFor(brand)
+    const key = storageKeyFor(brand, flowId)
     const raw = window.localStorage.getItem(key)
     if (!raw) return null
     const parsed = JSON.parse(raw) as PersistedPayload
-    if (isStalePayload(parsed, brand)) {
+    if (isStalePayload(parsed, { brand, flowId, bookingUrl })) {
       window.localStorage.removeItem(key)
       return null
     }
     // Strip the metadata before returning — the reducer doesn't need it.
-    const { __schema: _s, __brand: _b, ...rest } = parsed
+    const {
+      __schema: _s,
+      __brand: _b,
+      __flowId: _f,
+      __bookingUrl: _u,
+      ...rest
+    } = parsed
     void _s
     void _b
+    void _f
+    void _u
     return rest as Partial<FlowState>
   } catch {
     return null
   }
 }
 
-function savePersisted(state: FlowState, brand: string): void {
+function savePersisted(
+  state: FlowState,
+  {
+    brand,
+    flowId,
+    bookingUrl,
+  }: { brand: string; flowId: string; bookingUrl?: string }
+): void {
   if (typeof window === 'undefined') return
   try {
     const subset: PersistedPayload = {
       __schema: STORAGE_SCHEMA,
       __brand: brand,
+      __flowId: flowId,
+      __bookingUrl: bookingUrl ?? null,
     }
     for (const k of PERSISTED_KEYS) {
       // @ts-expect-error index by union type
       subset[k] = state[k]
     }
-    window.localStorage.setItem(storageKeyFor(brand), JSON.stringify(subset))
+    window.localStorage.setItem(
+      storageKeyFor(brand, flowId),
+      JSON.stringify(subset)
+    )
   } catch {
     /* noop */
   }
 }
 
-function dirtyTrackingReducer(state: FlowState, action: Action): FlowState {
+export function dirtyTrackingReducer(
+  state: FlowState,
+  action: Action
+): FlowState {
   const next = reducer(state, action)
   if (next === state) return next
-  if (CONTENT_EDIT_ACTIONS.has(action.type) && !next.dirtySincePublish) {
-    return { ...next, dirtySincePublish: true }
+  if (CONTENT_EDIT_ACTIONS.has(action.type)) {
+    const withSnapshot = withDraftSnapshot(next)
+    if (withSnapshot.dirtySincePublish) return withSnapshot
+    return { ...withSnapshot, dirtySincePublish: true }
   }
   return next
 }
 
 export function FlowStoreProvider({
   children,
+  flowId,
   brand,
   bookingUrl,
 }: {
   children: ReactNode
+  flowId: string
   brand: string
   bookingUrl?: string
 }) {
   const initial = useMemo(
-    () => buildInitialState(brand, bookingUrl),
-    [brand, bookingUrl]
+    () => buildInitialState(brand, bookingUrl, flowId),
+    [brand, bookingUrl, flowId]
   )
   const [state, dispatch] = useReducer(dirtyTrackingReducer, initial)
 
   useEffect(() => {
-    const persisted = loadPersisted(brand)
+    const persisted = loadPersisted({ brand, flowId, bookingUrl })
     if (persisted) dispatch({ type: 'hydrate', state: persisted })
-    // Brand is captured on mount. If it changes mid-session the provider
-    // remounts via the `initial` memo above, which re-triggers this effect.
-  }, [brand])
+  }, [brand, bookingUrl, flowId])
 
   useEffect(() => {
-    const t = window.setTimeout(() => savePersisted(state, brand), 400)
+    const t = window.setTimeout(
+      () => savePersisted(state, { brand, flowId, bookingUrl }),
+      400
+    )
     return () => window.clearTimeout(t)
-  }, [state, brand])
+  }, [state, brand, flowId, bookingUrl])
 
   const selectedBlock = useMemo(
     () =>

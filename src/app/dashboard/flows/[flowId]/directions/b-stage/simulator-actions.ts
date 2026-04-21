@@ -10,25 +10,23 @@ import {
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
 import { BlockOverridesSchema } from '@/lib/prompts/compile-block/schemas'
 import { compileBlock } from '@/lib/prompts/compile-block/compile-block'
+import { resolveFlowBookingUrl } from '../../flow-config'
+import { isFlowCompileEnabled } from './simulator-overrides'
 
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z.string().min(1),
 })
 
+type SimulatorMessage = z.infer<typeof messageSchema>
+
 const inputSchema = z.object({
   brand: z.string().min(1),
-  messages: z.array(messageSchema).min(1).max(40),
+  messages: z.array(messageSchema).min(1),
   overrides: BlockOverridesSchema.optional(),
 })
 
-// Mirror of config.ts's brandEnvSchema.BOOKING_URL — validates env shape
-// without triggering the client-config parse chain that requires Supabase
-// vars at import time.
-const bookingUrlSchema = z
-  .string()
-  .url()
-  .default('https://booking.vendingpreneurs.com/AK-DM')
+const MAX_HISTORY_MESSAGES = 40
 
 const MAX_TOOL_ROUNDS = 3
 
@@ -58,26 +56,32 @@ export async function simulateReplyAction(
     return { success: false, error: 'Invalid simulator input' }
   }
 
+  const messages = normalizeMessages(parsed.data.messages)
+  if (messages.length === 0) {
+    return { success: false, error: 'Invalid simulator input' }
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
   if (!apiKey) {
     return { success: false, error: 'Simulator not configured' }
   }
 
-  const bookingUrl = bookingUrlSchema.parse(process.env.BOOKING_URL)
-  const useCompile = process.env.NEXT_PUBLIC_FLOW_COMPILE === 'true'
-  const systemPrompt = useCompile
-    ? compileBlock({
-        brand: parsed.data.brand,
-        bookingUrl,
-        ...(parsed.data.overrides ? { overrides: parsed.data.overrides } : {}),
-      })
-    : buildSystemPrompt({ brandName: parsed.data.brand, bookingUrl })
-  const initialRequest = buildClaudeRequest(
-    systemPrompt,
-    parsed.data.messages as Anthropic.Messages.MessageParam[]
-  )
-
   try {
+    const bookingUrl = resolveFlowBookingUrl(process.env.BOOKING_URL)
+    const useCompile = isFlowCompileEnabled()
+    const systemPrompt = useCompile
+      ? compileBlock({
+          brand: parsed.data.brand,
+          bookingUrl,
+          ...(parsed.data.overrides
+            ? { overrides: parsed.data.overrides }
+            : {}),
+        })
+      : buildSystemPrompt({ brandName: parsed.data.brand, bookingUrl })
+    const initialRequest = buildClaudeRequest(
+      systemPrompt,
+      messages as Anthropic.Messages.MessageParam[]
+    )
     const anthropic = getAnthropicClient(apiKey)
 
     let response = await anthropic.messages.create(
@@ -88,9 +92,7 @@ export async function simulateReplyAction(
     let replyText = parsedResponse.replyText
     let truncated = parsedResponse.truncated
 
-    let runningMessages = [
-      ...parsed.data.messages,
-    ] as Anthropic.Messages.MessageParam[]
+    let runningMessages = [...messages] as Anthropic.Messages.MessageParam[]
     let round = 0
     while (
       response.stop_reason === 'tool_use' &&
@@ -134,4 +136,14 @@ export async function simulateReplyAction(
     console.error('simulateReplyAction failed', err)
     return { success: false, error: 'Claude call failed' }
   }
+}
+
+function normalizeMessages(messages: SimulatorMessage[]): SimulatorMessage[] {
+  const recentMessages = messages.slice(-MAX_HISTORY_MESSAGES)
+  const firstUserIndex = recentMessages.findIndex(
+    (message) => message.role === 'user'
+  )
+
+  if (firstUserIndex === -1) return recentMessages
+  return recentMessages.slice(firstUserIndex)
 }

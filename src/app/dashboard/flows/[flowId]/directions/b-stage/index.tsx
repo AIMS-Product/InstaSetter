@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import PageNav from '../../page-nav'
 import PageBot from '../../related-pages/page-bot'
 import PageRuns from '../../related-pages/page-runs'
@@ -19,8 +19,9 @@ import BInspector from './inspector'
 import BSimFloat from './sim-float'
 import PaletteDrawer from './palette-drawer'
 import { B } from './palette'
+import { buildSimulatorOverrides } from './simulator-overrides'
 
-function Shell() {
+function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
   const state = useFlowState()
   const actions = useFlowActions()
   const { selectedBlock } = useFlowStore()
@@ -29,16 +30,13 @@ function Shell() {
 
   const overrides = useMemo(
     () =>
-      selectedBlock
-        ? {
-            activeBlockType: selectedBlock.type,
-            ...(selectedBlock.goal ? { goal: selectedBlock.goal } : {}),
-            ...(selectedBlock.guidance
-              ? { guidance: selectedBlock.guidance }
-              : {}),
-          }
-        : null,
-    [selectedBlock]
+      buildSimulatorOverrides({
+        selectedBlock,
+        brand,
+        bookingUrl,
+        triggers: state.triggers,
+      }),
+    [bookingUrl, brand, selectedBlock, state.triggers]
   )
 
   return (
@@ -130,9 +128,11 @@ function Shell() {
 }
 
 function Toast({ msg, onDone }: { msg: string; onDone: () => void }) {
-  if (typeof window !== 'undefined') {
-    window.setTimeout(onDone, 2400)
-  }
+  useEffect(() => {
+    const timer = window.setTimeout(onDone, 2400)
+    return () => window.clearTimeout(timer)
+  }, [msg, onDone])
+
   return (
     <div
       style={{
@@ -156,15 +156,22 @@ function Toast({ msg, onDone }: { msg: string; onDone: () => void }) {
 }
 
 export default function DirectionB({
+  flowId,
   brand,
   bookingUrl,
 }: {
+  flowId: string
   brand: string
   bookingUrl: string
 }) {
   return (
-    <FlowStoreProvider brand={brand} bookingUrl={bookingUrl}>
-      <Shell />
+    <FlowStoreProvider
+      key={`${brand}:${flowId}:${bookingUrl}`}
+      flowId={flowId}
+      brand={brand}
+      bookingUrl={bookingUrl}
+    >
+      <Shell brand={brand} bookingUrl={bookingUrl} />
     </FlowStoreProvider>
   )
 }

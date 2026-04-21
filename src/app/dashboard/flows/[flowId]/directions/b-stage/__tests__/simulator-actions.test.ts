@@ -79,6 +79,7 @@ describe('simulateReplyAction — compile flag routing', () => {
   const originalFlag = process.env.NEXT_PUBLIC_FLOW_COMPILE
 
   beforeEach(() => {
+    createSpy.mockClear()
     vi.restoreAllMocks()
     process.env.ANTHROPIC_API_KEY = 'test-key'
   })
@@ -179,6 +180,75 @@ describe('simulateReplyAction — compile flag routing', () => {
     expect(result.success).toBe(true)
     expect(buildSpy).toHaveBeenCalled()
     expect(compileSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('simulateReplyAction — booking URL and transcript normalization', () => {
+  const originalKey = process.env.ANTHROPIC_API_KEY
+  const originalFlag = process.env.NEXT_PUBLIC_FLOW_COMPILE
+  const originalBookingUrl = process.env.BOOKING_URL
+
+  beforeEach(() => {
+    createSpy.mockClear()
+    vi.restoreAllMocks()
+    process.env.ANTHROPIC_API_KEY = 'test-key'
+  })
+
+  afterEach(() => {
+    if (originalKey === undefined) {
+      delete process.env.ANTHROPIC_API_KEY
+    } else {
+      process.env.ANTHROPIC_API_KEY = originalKey
+    }
+    if (originalFlag === undefined) {
+      delete process.env.NEXT_PUBLIC_FLOW_COMPILE
+    } else {
+      process.env.NEXT_PUBLIC_FLOW_COMPILE = originalFlag
+    }
+    if (originalBookingUrl === undefined) {
+      delete process.env.BOOKING_URL
+    } else {
+      process.env.BOOKING_URL = originalBookingUrl
+    }
+  })
+
+  it('falls back to the page booking URL when BOOKING_URL is blank', async () => {
+    process.env.NEXT_PUBLIC_FLOW_COMPILE = 'false'
+    process.env.BOOKING_URL = '   '
+
+    const result = await simulateReplyAction({
+      brand: 'VendingPreneurs',
+      messages: [{ role: 'user', content: 'hi' }],
+    })
+
+    expect(result.success).toBe(true)
+    expect(createSpy.mock.calls.at(-1)?.[0].system).toContain(
+      'https://booking.vendingpreneurs.com/AK-DM'
+    )
+  })
+
+  it('trims long transcripts instead of rejecting them', async () => {
+    const messages = Array.from({ length: 61 }, (_, index) => ({
+      role: index % 2 === 0 ? 'user' : 'assistant',
+      content: `message-${index}`,
+    }))
+
+    const result = await simulateReplyAction({
+      brand: 'VendingPreneurs',
+      messages,
+    })
+
+    expect(result.success).toBe(true)
+    const requestMessages = createSpy.mock.calls.at(-1)?.[0].messages as Array<{
+      role: string
+      content: string
+    }>
+    expect(requestMessages.length).toBeLessThanOrEqual(40)
+    expect(requestMessages[0]?.role).toBe('user')
+    expect(requestMessages.at(-1)).toMatchObject({
+      role: 'user',
+      content: 'message-60',
+    })
   })
 })
 

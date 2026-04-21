@@ -1,16 +1,18 @@
 import FlowBuilder from './flow-builder'
+import { resolveFlowBookingUrl, resolveFlowBrand } from './flow-config'
 
-function resolveBrand(): string {
-  return process.env.BRAND_NAME ?? 'VendingPreneurs'
-}
+export default async function FlowPage({
+  params,
+}: {
+  params: Promise<{ flowId: string }>
+}) {
+  const { flowId } = await params
 
-function resolveBookingUrl(): string {
   return (
-    process.env.BOOKING_URL?.trim() ||
-    'https://booking.vendingpreneurs.com/AK-DM'
+    <FlowBuilder
+      flowId={flowId}
+      brand={resolveFlowBrand(process.env.BRAND_NAME)}
+      bookingUrl={resolveFlowBookingUrl(process.env.BOOKING_URL)}
+    />
   )
-}
-
-export default function FlowPage() {
-  return <FlowBuilder brand={resolveBrand()} bookingUrl={resolveBookingUrl()} />
 }
