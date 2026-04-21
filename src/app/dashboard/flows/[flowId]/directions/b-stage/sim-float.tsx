@@ -116,7 +116,11 @@ export default function BSimFloat({
         />
         <span
           style={{ fontSize: 12, fontWeight: 500 }}
-          title="Runs the real system prompt from src/lib/prompts/setter-v2.ts. Flow-builder edits don't affect it."
+          title={
+            process.env.NEXT_PUBLIC_FLOW_COMPILE === 'true'
+              ? "Flow Compile is on — the selected block's edited goal and guidance are appended to the system prompt as an Active Block Directive."
+              : "Runs the real system prompt from src/lib/prompts/setter-v2.ts. Flow-builder edits don't affect it."
+          }
         >
           Simulator · Claude live
         </span>

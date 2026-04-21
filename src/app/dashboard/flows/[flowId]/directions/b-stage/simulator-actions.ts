@@ -22,6 +22,14 @@ const inputSchema = z.object({
   overrides: BlockOverridesSchema.optional(),
 })
 
+// Mirror of config.ts's brandEnvSchema.BOOKING_URL — validates env shape
+// without triggering the client-config parse chain that requires Supabase
+// vars at import time.
+const bookingUrlSchema = z
+  .string()
+  .url()
+  .default('https://booking.vendingpreneurs.com/AK-DM')
+
 const MAX_TOOL_ROUNDS = 3
 
 export interface SimulateReplyData {
@@ -47,12 +55,12 @@ export async function simulateReplyAction(
     return { success: false, error: 'Simulator not configured' }
   }
 
-  const bookingUrl = process.env.BOOKING_URL?.trim() || undefined
+  const bookingUrl = bookingUrlSchema.parse(process.env.BOOKING_URL)
   const useCompile = process.env.NEXT_PUBLIC_FLOW_COMPILE === 'true'
   const systemPrompt = useCompile
     ? compileBlock({
         brand: parsed.data.brand,
-        ...(bookingUrl ? { bookingUrl } : {}),
+        bookingUrl,
         ...(parsed.data.overrides ? { overrides: parsed.data.overrides } : {}),
       })
     : buildSystemPrompt({ brandName: parsed.data.brand, bookingUrl })
