@@ -9,6 +9,7 @@ import {
 } from '@/lib/services/claude'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
 import { BlockOverridesSchema } from '@/lib/prompts/compile-block/schemas'
+import { compileBlock } from '@/lib/prompts/compile-block/compile-block'
 
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -46,10 +47,15 @@ export async function simulateReplyAction(
     return { success: false, error: 'Simulator not configured' }
   }
 
-  const systemPrompt = buildSystemPrompt({
-    brandName: parsed.data.brand,
-    bookingUrl: process.env.BOOKING_URL?.trim() || undefined,
-  })
+  const bookingUrl = process.env.BOOKING_URL?.trim() || undefined
+  const useCompile = process.env.NEXT_PUBLIC_FLOW_COMPILE === 'true'
+  const systemPrompt = useCompile
+    ? compileBlock({
+        brand: parsed.data.brand,
+        ...(bookingUrl ? { bookingUrl } : {}),
+        ...(parsed.data.overrides ? { overrides: parsed.data.overrides } : {}),
+      })
+    : buildSystemPrompt({ brandName: parsed.data.brand, bookingUrl })
   const initialRequest = buildClaudeRequest(
     systemPrompt,
     parsed.data.messages as Anthropic.Messages.MessageParam[]
