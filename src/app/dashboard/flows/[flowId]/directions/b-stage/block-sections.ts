@@ -414,6 +414,38 @@ export function extractGuardrails(
   return out
 }
 
+const GLOBAL_GUARDRAIL_SOURCES = [
+  'src/lib/prompts/sections/persona.ts',
+  'src/lib/prompts/sections/message-constraints.ts',
+] as const
+
+const GLOBAL_GUARDRAIL_SOURCE_SET = new Set<string>(GLOBAL_GUARDRAIL_SOURCES)
+
+export function isGlobalGuardrailSource(source: string): boolean {
+  return GLOBAL_GUARDRAIL_SOURCE_SET.has(source)
+}
+
+export function extractBotGuardrails({
+  personaText,
+  messageConstraintsText,
+}: {
+  personaText: string
+  messageConstraintsText: string
+}): Guardrail[] {
+  return [
+    ...extractGuardrails(
+      messageConstraintsText,
+      'src/lib/prompts/sections/message-constraints.ts',
+      'Instagram DM format constraint — universal across every block.'
+    ),
+    ...extractGuardrails(
+      personaText,
+      'src/lib/prompts/sections/persona.ts',
+      'Persona-level identity/voice rule — shared team inbox, never a named person.'
+    ),
+  ]
+}
+
 // ---------------------------------------------------------------------------
 // Qualifier parser — extracts the 5 numbered qualifiers from qualification.ts.
 // ---------------------------------------------------------------------------
@@ -958,39 +990,13 @@ export const BLOCK_GUIDANCE: Record<BlockType, string> = {
     'Always call generate_summary at conversation end. Extra summaries are fine; missing summaries are failures.',
 }
 
-function commonGuardrails(brand: string, bookingUrl?: string): Guardrail[] {
-  const msgText = buildMessageConstraints(bookingUrl)
-  const personaText = buildPersona(brand)
-  return [
-    ...extractGuardrails(
-      msgText,
-      'src/lib/prompts/sections/message-constraints.ts',
-      'Instagram DM format constraint — universal across every block.'
-    ),
-    ...extractGuardrails(
-      personaText,
-      'src/lib/prompts/sections/persona.ts',
-      'Persona-level identity/voice rule — shared team inbox, never a named person.'
-    ),
-  ]
-}
-
 const personaExamplesCache = new Map<string, ExamplePair[]>()
-const commonGuardrailsCache = new Map<string, Guardrail[]>()
 
 function getPersonaExamples(brand: string): ExamplePair[] {
   if (!personaExamplesCache.has(brand)) {
     personaExamplesCache.set(brand, extractExamples(buildPersona(brand)))
   }
   return personaExamplesCache.get(brand)!
-}
-
-function getCommonGuardrails(brand: string, bookingUrl?: string): Guardrail[] {
-  const cacheKey = `${brand}:${bookingUrl ?? ''}`
-  if (!commonGuardrailsCache.has(cacheKey)) {
-    commonGuardrailsCache.set(cacheKey, commonGuardrails(brand, bookingUrl))
-  }
-  return commonGuardrailsCache.get(cacheKey)!
 }
 
 const derivedBlockCache = new Map<string, DerivedBlock>()
@@ -1019,10 +1025,7 @@ export function deriveBlock(
     .filter((s): s is string => Boolean(s))
 
   const blockConfig = deriveBlockConfig(brand, type, bank)
-  const guardrails = [
-    ...getCommonGuardrails(brand, bookingUrl),
-    ...derivePerBlockGuardrails(type, bank),
-  ]
+  const guardrails = derivePerBlockGuardrails(type, bank)
 
   const derived: DerivedBlock = {
     goal: BLOCK_GOALS[type],

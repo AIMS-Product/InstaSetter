@@ -56,6 +56,34 @@ describe('store reducer integrity', () => {
     )
   })
 
+  it('collapses the palette when selecting or adding a block', () => {
+    const state = {
+      ...buildInitialState(BRAND, BOOKING_URL, FLOW_ID),
+      paletteOpen: true,
+    }
+
+    const selected = reducer(state, { type: 'select_block', id: 'opening' })
+    expect(selected.selectedId).toBe('opening')
+    expect(selected.paletteOpen).toBe(false)
+
+    const added = reducer(state, {
+      type: 'add_node',
+      node: {
+        id: 'summary_2' as FlowNode['id'],
+        type: 'summary',
+        name: 'Summary 2',
+        goal: 'Write a summary',
+        guidance: '',
+        examples: [],
+        captures: [],
+        branches: [],
+        pos: { x: 3, y: 3 },
+      },
+    })
+    expect(added.selectedId).toBe('summary_2')
+    expect(added.paletteOpen).toBe(false)
+  })
+
   it('removes inbound branches and triggers when deleting a node', () => {
     const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
     const next = reducer(

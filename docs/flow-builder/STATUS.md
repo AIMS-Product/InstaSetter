@@ -17,7 +17,7 @@ Persistence: `localStorage` key `instasetter.flow-builder.v1` (stand-in only —
 - **Palette drawer:** collapsible left rail; HTML5 drag-to-add new nodes to canvas at drop coords; auto-id suffixes for duplicates.
 - **Simulator:** Send/Enter appends prospect message, heuristic traversal picks next block, reply from block examples, block chip on each bot bubble, "Mike is typing…", reset (↻).
 - **Publish:** increments draft version, flips live row, toast, header chip updates.
-- **Related pages:** Variables, Versions, Bot Settings all read from the same store (persona edits in Bot page persist; Versions list reflects publish history; Variables captures resolve from the live flow).
+- **Related pages:** Variables, Versions, and Bot Settings all read from the same store (Bot page currently summarizes bot-level persona and guardrails; Versions list reflects publish history; Variables captures resolve from the live flow).
 - **Persistence:** 400 ms debounced write to localStorage; hydrate on mount. Verified round-trip.
 
 ## Known stubs / placeholders
@@ -67,15 +67,15 @@ Tracked here so we don't lose them. When one starts, link the PR/branch from thi
 
 ## Verification log (manual)
 
-| Slice                   | Verified                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| 1 — lift state          | Reloaded; UI identical                                                           |
-| 2 — fields writable     | Edited Goal → canvas reflects                                                    |
-| 3 — examples/captures   | +add adds textarea; × removes; count 4→5→4                                       |
-| 4 — inspector tabs      | All 4 tabs render correct content; Routing edits persist                         |
-| 5 — canvas interactions | Zoom 100 → 144% via controls; node drag wired (pointer capture)                  |
-| 6 — palette             | Collapsed/expanded; 8 blocks listed with draggable attr; drop handler on canvas  |
-| 7 — simulator           | "Dallas, 7K saved" sent → bot reply from Booking block, block chip shown         |
-| 8 — publish             | v13 → v14 draft, v12 → v13 live, chips updated                                   |
-| 9 — related pages       | Variables shows live captures; Versions lists live history; Bot persona editable |
-| 10 — localStorage       | Edit goal, reload, edit preserved on screen and in DOM                           |
+| Slice                   | Verified                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1 — lift state          | Reloaded; UI identical                                                                               |
+| 2 — fields writable     | Edited Goal → canvas reflects                                                                        |
+| 3 — examples/captures   | +add adds textarea; × removes; count 4→5→4                                                           |
+| 4 — inspector tabs      | All 4 tabs render correct content; Routing edits persist                                             |
+| 5 — canvas interactions | Zoom 100 → 144% via controls; node drag wired (pointer capture)                                      |
+| 6 — palette             | Collapsed/expanded; 8 blocks listed with draggable attr; drop handler on canvas                      |
+| 7 — simulator           | "Dallas, 7K saved" sent → bot reply from Booking block, block chip shown                             |
+| 8 — publish             | v13 → v14 draft, v12 → v13 live, chips updated                                                       |
+| 9 — related pages       | Variables shows live captures; Versions lists live history; Bot page reflects bot-level prompt state |
+| 10 — localStorage       | Edit goal, reload, edit preserved on screen and in DOM                                               |

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Lock, Info, ChevronDown, ChevronRight } from 'lucide-react'
 import {
-  extractGuardrails,
+  extractBotGuardrails,
   parsePersonaSections,
   type PersonaSection,
 } from '../directions/b-stage/block-sections'
@@ -15,28 +15,20 @@ import RPHeader from './header'
 export default function PageBot({ p }: { p: Palette }) {
   const state = useFlowState()
   const bot = state.bot
+  const displayName = bot.name.trim() || 'Not named — shared team inbox'
 
   const personaSections = useMemo(
     () => parsePersonaSections(bot.persona),
     [bot.persona]
   )
-  const hardRules = useMemo<Guardrail[]>(
-    () => [
-      ...extractGuardrails(
-        bot.messageConstraints,
-        'src/lib/prompts/sections/message-constraints.ts',
-        'Instagram DM format constraint — universal across every block.'
-      ),
-      ...extractGuardrails(
-        bot.persona,
-        'src/lib/prompts/sections/persona.ts',
-        'Persona-level identity/voice rule — shared team inbox.'
-      ),
-    ],
+  const globalGuardrails = useMemo<Guardrail[]>(
+    () =>
+      extractBotGuardrails({
+        personaText: bot.persona,
+        messageConstraintsText: bot.messageConstraints,
+      }),
     [bot.messageConstraints, bot.persona]
   )
-
-  const flowCount = 1
 
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>
@@ -85,7 +77,7 @@ export default function PageBot({ p }: { p: Palette }) {
               }}
               title="The Instagram account is a shared team inbox, never a named person."
             >
-              Not named — shared team inbox
+              {displayName}
             </div>
           </div>
           <div
@@ -109,7 +101,7 @@ export default function PageBot({ p }: { p: Palette }) {
                 background: '#3A5A32',
               }}
             />
-            Active on {flowCount} flow{flowCount === 1 ? '' : 's'}
+            Flow scope: {state.flow.name}
           </div>
         </div>
 
@@ -127,8 +119,8 @@ export default function PageBot({ p }: { p: Palette }) {
 
         <SettingsSection
           p={p}
-          label="Hard rules"
-          sub="Every rule is enforced at runtime and cannot be overridden from the UI."
+          label="Global guardrails"
+          sub="These rules come from bot-level persona + message constraints and apply across every block."
         >
           <ul
             style={{
@@ -141,7 +133,7 @@ export default function PageBot({ p }: { p: Palette }) {
               overflow: 'hidden',
             }}
           >
-            {hardRules.length === 0 && (
+            {globalGuardrails.length === 0 && (
               <li
                 style={{
                   padding: 16,
@@ -153,7 +145,7 @@ export default function PageBot({ p }: { p: Palette }) {
                 No rules parsed.
               </li>
             )}
-            {hardRules.map((r, i) => (
+            {globalGuardrails.map((r, i) => (
               <li
                 key={r.id}
                 style={{
@@ -214,10 +206,10 @@ export default function PageBot({ p }: { p: Palette }) {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: p.ink }}>
-                Instagram — Organic DM
+                {state.flow.channel}
               </div>
               <div style={{ fontSize: 11, color: p.ink3 }}>
-                One active channel
+                Linked to this flow
               </div>
             </div>
             <span

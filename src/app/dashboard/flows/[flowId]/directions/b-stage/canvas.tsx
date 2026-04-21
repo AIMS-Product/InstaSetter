@@ -58,6 +58,8 @@ function Node({
   const color = blockColor(node.type, { l: 0.58, c: 0.14 })
   const tint = blockTint(node.type)
   const p = dragOverridePx ?? nodePx(node)
+  const exitCount = node.branches.length
+
   return (
     <div
       ref={nodeRef}
@@ -113,20 +115,6 @@ function Node({
           >
             {BLOCK_BY_TYPE[node.type]?.label}
           </span>
-          {active && (
-            <span
-              style={{
-                fontSize: 10,
-                padding: '1px 7px',
-                background: tint,
-                color: blockInk(node.type),
-                borderRadius: 999,
-                fontWeight: 600,
-              }}
-            >
-              LIVE
-            </span>
-          )}
         </div>
         <div
           style={{
@@ -155,34 +143,47 @@ function Node({
             </span>
           )}
         </div>
+        {(active || exitCount > 0) && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginTop: 10,
+              flexWrap: 'wrap',
+            }}
+          >
+            {active && (
+              <span
+                style={{
+                  fontSize: 10,
+                  padding: '2px 7px',
+                  background: tint,
+                  color: blockInk(node.type),
+                  borderRadius: 999,
+                  fontWeight: 600,
+                }}
+              >
+                Active
+              </span>
+            )}
+            {exitCount > 0 && (
+              <span
+                style={{
+                  fontSize: 10,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  background: B.lineSoft,
+                  color: B.ink2,
+                  fontWeight: 600,
+                }}
+              >
+                {exitCount} exit{exitCount === 1 ? '' : 's'}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-      {node.branches.length > 0 && (
-        <div
-          style={{
-            borderTop: `1px solid ${B.lineSoft}`,
-            padding: '8px 14px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 4,
-          }}
-        >
-          {node.branches.map((br) => (
-            <span
-              key={br.id}
-              style={{
-                fontSize: 10.5,
-                padding: '2px 8px',
-                borderRadius: 999,
-                background: tint,
-                color: blockInk(node.type),
-                fontWeight: 500,
-              }}
-            >
-              {br.label}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -550,7 +551,9 @@ export default function BCanvas() {
               <Node
                 node={n}
                 selected={state.selectedId === n.id}
-                active={state.simActiveBlock === n.id}
+                active={
+                  state.simActiveBlock === n.id && state.conversation.length > 0
+                }
                 onSelect={actions.select}
                 onDragStart={onNodeDragStart}
                 onKeyDown={onNodeKeyDown}

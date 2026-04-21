@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
   deriveBlock,
+  extractBotGuardrails,
   extractExamples,
   extractGuardrails,
+  isGlobalGuardrailSource,
   parsePersonaSections,
 } from '../block-sections'
 import { buildPersona } from '@/lib/prompts/sections/persona'
@@ -66,6 +68,19 @@ describe('extractGuardrails', () => {
       expect(r.why).toBe('test')
       expect(r.source).toContain('message-constraints')
     }
+  })
+
+  it('extracts bot-level guardrails from persona + message constraints separately', () => {
+    const rules = extractBotGuardrails({
+      personaText: buildPersona(BRAND),
+      messageConstraintsText: buildMessageConstraints(),
+    })
+
+    expect(rules.length).toBeGreaterThan(3)
+    expect(
+      rules.some((rule) => rule.source.includes('message-constraints'))
+    ).toBe(true)
+    expect(rules.some((rule) => rule.source.includes('persona'))).toBe(true)
   })
 })
 
@@ -206,7 +221,7 @@ describe('deriveBlock', () => {
     }
   })
 
-  it('every block has guardrails with non-empty why', () => {
+  it('every block has block-specific guardrails with non-empty why', () => {
     const types = [
       'opening',
       'qualifier',
@@ -224,6 +239,7 @@ describe('deriveBlock', () => {
         expect(g.text.length).toBeGreaterThan(0)
         expect(g.why.length).toBeGreaterThan(0)
         expect(g.source.length).toBeGreaterThan(0)
+        expect(isGlobalGuardrailSource(g.source)).toBe(false)
       }
     }
   })

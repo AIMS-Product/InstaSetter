@@ -10,7 +10,10 @@ import {
 } from 'react'
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
-import { deriveBlock } from './directions/b-stage/block-sections'
+import {
+  deriveBlock,
+  isGlobalGuardrailSource,
+} from './directions/b-stage/block-sections'
 import { BLOCK_TYPES } from './types'
 import type {
   AmbientTrigger,
@@ -359,6 +362,45 @@ function withFlow(state: FlowState, flow: Flow): FlowState {
   }
 }
 
+function stripBotLevelGuardrails(flow: Flow): Flow {
+  return {
+    ...flow,
+    nodes: flow.nodes.map((node) => {
+      if (!node.guardrails) return node
+
+      const guardrails = node.guardrails.filter(
+        (guardrail) => !isGlobalGuardrailSource(guardrail.source)
+      )
+
+      return guardrails.length === node.guardrails.length
+        ? node
+        : { ...node, guardrails }
+    }),
+  }
+}
+
+function normalizePersistedState(
+  state: Partial<FlowState>
+): Partial<FlowState> {
+  const next: Partial<FlowState> = { ...state }
+
+  if (state.flow) {
+    next.flow = stripBotLevelGuardrails(state.flow)
+  }
+
+  if (state.versions) {
+    next.versions = state.versions.map((version) => ({
+      ...version,
+      snapshot: {
+        ...version.snapshot,
+        flow: stripBotLevelGuardrails(version.snapshot.flow),
+      },
+    }))
+  }
+
+  return next
+}
+
 function withDraftSnapshot(state: FlowState): FlowState {
   return {
     ...state,
@@ -391,6 +433,7 @@ export function reducer(state: FlowState, action: Action): FlowState {
         ...state,
         selectedId: action.id,
         activeTab: action.id ? state.activeTab : 'design',
+        paletteOpen: action.id ? false : state.paletteOpen,
       }
     case 'set_tab':
       return { ...state, activeTab: action.tab }
@@ -452,6 +495,7 @@ export function reducer(state: FlowState, action: Action): FlowState {
           nodes: [...state.flow.nodes, action.node],
         }),
         selectedId: action.node.id,
+        paletteOpen: false,
       }
     case 'delete_node':
       return {
@@ -700,7 +744,7 @@ function loadPersisted({
     void _b
     void _f
     void _u
-    return rest as Partial<FlowState>
+    return normalizePersistedState(rest as Partial<FlowState>)
   } catch {
     return null
   }

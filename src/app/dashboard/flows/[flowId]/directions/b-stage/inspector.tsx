@@ -1,7 +1,7 @@
 'use client'
 
 import { useId, useState, type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { ChevronDown, ChevronRight, X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
@@ -101,6 +101,90 @@ const smallInputStyle: React.CSSProperties = {
   fontSize: 12.5,
 }
 
+function CollapsibleSection({
+  title,
+  summary,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  summary?: string
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <div
+      style={{
+        marginBottom: 14,
+        background: B.bg,
+        border: `1px solid ${B.line}`,
+        borderRadius: 10,
+        overflow: 'hidden',
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        aria-expanded={open}
+        style={{
+          width: '100%',
+          padding: '11px 12px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          textAlign: 'left',
+          fontFamily: 'inherit',
+        }}
+      >
+        {open ? (
+          <ChevronDown size={14} color={B.ink3} />
+        ) : (
+          <ChevronRight size={14} color={B.ink3} />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: B.ink,
+            }}
+          >
+            {title}
+          </div>
+          {summary && (
+            <div
+              style={{
+                fontSize: 11,
+                color: B.ink3,
+                marginTop: 2,
+                lineHeight: 1.4,
+              }}
+            >
+              {summary}
+            </div>
+          )}
+        </div>
+      </button>
+      {open && (
+        <div
+          style={{
+            padding: '0 12px 12px',
+            borderTop: `1px solid ${B.line}`,
+            background: B.panel,
+          }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DesignTab({
   block,
   onOpenPrompt,
@@ -109,9 +193,35 @@ function DesignTab({
   onOpenPrompt: (target?: string) => void
 }) {
   const actions = useFlowActions()
+  const examplePairCount = block.examplePairs?.length ?? 0
+  const localExampleCount = block.examples.length
+  const captureCount = block.captures.length
+  const guardrailCount = block.guardrails?.length ?? 0
+  const rationaleCount = block.rationale?.length ?? 0
+  const whySummary = block.stat
+    ? `${block.stat} · ${rationaleCount} supporting insight${
+        rationaleCount === 1 ? '' : 's'
+      }`
+    : `${rationaleCount} supporting insight${rationaleCount === 1 ? '' : 's'}`
+  const exampleSummary = [
+    `${examplePairCount} parsed pair${examplePairCount === 1 ? '' : 's'}`,
+    localExampleCount > 0
+      ? `${localExampleCount} local override${localExampleCount === 1 ? '' : 's'}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  const runtimeSummary = [
+    block.blockConfig ? `${block.blockConfig.kind} config` : null,
+    guardrailCount > 0
+      ? `${guardrailCount} guardrail${guardrailCount === 1 ? '' : 's'}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
     <>
-      <RationaleBanner rationale={block.rationale ?? []} stat={block.stat} />
       <Field label="Goal">
         {(labelId) => (
           <textarea
@@ -143,136 +253,158 @@ function DesignTab({
           />
         )}
       </Field>
-      <Field
-        label={`Good ↔ Bad examples · ${block.examplePairs?.length ?? 0}`}
-        hint="Side-by-side pairs parsed from the source section. Read-only today."
-      >
-        <ExamplePairs
-          pairs={block.examplePairs ?? []}
-          emptyHint="This section doesn't include paired counter-examples yet."
-        />
-      </Field>
-      <Field
-        label="Marketer examples"
-        action="+ add"
-        hint="Local overrides. Saved to this browser only."
-        onAction={() => actions.addExample(block.id, 'New example — edit me')}
-      >
-        {block.examples.length === 0 && (
-          <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-            No local overrides. Pairs above come from the compiled prompt.
-          </div>
-        )}
-        {block.examples.map((ex, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'relative',
-              marginBottom: 6,
-            }}
-          >
-            <textarea
-              aria-label={`Example ${i + 1}`}
-              value={ex}
-              rows={2}
-              onChange={(e) => actions.editExample(block.id, i, e.target.value)}
+      <CollapsibleSection title="Why This Exists" summary={whySummary}>
+        <RationaleBanner rationale={block.rationale ?? []} stat={block.stat} />
+      </CollapsibleSection>
+      <CollapsibleSection title="Examples" summary={exampleSummary}>
+        <Field
+          label={`Good ↔ Bad examples · ${examplePairCount}`}
+          hint="Side-by-side pairs parsed from the source section. Read-only today."
+        >
+          <ExamplePairs
+            pairs={block.examplePairs ?? []}
+            emptyHint="This section doesn't include paired counter-examples yet."
+          />
+        </Field>
+        <Field
+          label="Marketer examples"
+          action="+ add"
+          hint="Local overrides. Saved to this browser only."
+          onAction={() => actions.addExample(block.id, 'New example — edit me')}
+        >
+          {block.examples.length === 0 && (
+            <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
+              No local overrides. Pairs above come from the compiled prompt.
+            </div>
+          )}
+          {block.examples.map((ex, i) => (
+            <div
+              key={i}
               style={{
-                ...inputStyle,
-                background: B.lineSoft,
-                padding: '9px 34px 9px 11px',
-                fontSize: 12.5,
-              }}
-            />
-            <IconButton
-              icon={X}
-              label="Delete example"
-              onClick={() => actions.deleteExample(block.id, i)}
-              size={22}
-              iconSize={13}
-              style={{
-                position: 'absolute',
-                right: 6,
-                top: 6,
-                color: B.ink3,
-              }}
-            />
-          </div>
-        ))}
-      </Field>
-      <Field
-        label="Capture"
-        action="+ rule"
-        onAction={() =>
-          actions.addCapture(block.id, {
-            label: 'New capture',
-            variable: `contact.new_${Date.now()}`,
-          })
-        }
-      >
-        {block.captures.length === 0 && (
-          <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-            Nothing captured here.
-          </div>
-        )}
-        {block.captures.map((c) => (
-          <div
-            key={c.variable}
-            style={{
-              padding: '8px 10px',
-              background: B.panel,
-              border: `1px solid ${B.line}`,
-              borderRadius: 8,
-              fontSize: 12.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 4,
-            }}
-          >
-            <span style={{ color: B.ink2, flex: 1 }}>{c.label}</span>
-            <code
-              style={{
-                fontSize: 11,
-                background: B.accentSoft,
-                color: B.accentInk,
-                padding: '2px 6px',
-                borderRadius: 4,
+                position: 'relative',
+                marginBottom: 6,
               }}
             >
-              {c.variable}
-            </code>
-            <IconButton
-              icon={X}
-              label="Delete capture"
-              onClick={() => actions.deleteCapture(block.id, c.variable)}
-              size={20}
-              iconSize={12}
-              style={{ color: B.ink3 }}
-            />
-          </div>
-        ))}
-      </Field>
-      <BlockConfigPanel config={block.blockConfig} />
-      <GuardrailsPanel
-        guardrails={block.guardrails ?? []}
-        onOpenSource={(source) => {
-          // Map source file to PromptReader section id.
-          const map: Record<string, string> = {
-            'src/lib/prompts/sections/persona.ts': 'persona',
-            'src/lib/prompts/sections/message-constraints.ts':
-              'message-constraints',
-            'src/lib/prompts/sections/qualification.ts': 'qualification',
-            'src/lib/prompts/sections/objections.ts': 'objections',
-            'src/lib/prompts/sections/email-capture.ts': 'email-capture',
-            'src/lib/prompts/sections/decision-routing.ts': 'decision-routing',
-            'src/lib/prompts/sections/summary-generation.ts':
-              'summary-generation',
-            'src/lib/prompts/sections/location-gate.ts': 'location-gate',
-            'src/lib/prompts/sections/company-context.ts': 'company-context',
+              <textarea
+                aria-label={`Example ${i + 1}`}
+                value={ex}
+                rows={2}
+                onChange={(e) =>
+                  actions.editExample(block.id, i, e.target.value)
+                }
+                style={{
+                  ...inputStyle,
+                  background: B.lineSoft,
+                  padding: '9px 34px 9px 11px',
+                  fontSize: 12.5,
+                }}
+              />
+              <IconButton
+                icon={X}
+                label="Delete example"
+                onClick={() => actions.deleteExample(block.id, i)}
+                size={22}
+                iconSize={13}
+                style={{
+                  position: 'absolute',
+                  right: 6,
+                  top: 6,
+                  color: B.ink3,
+                }}
+              />
+            </div>
+          ))}
+        </Field>
+      </CollapsibleSection>
+      <CollapsibleSection
+        title="Data Capture"
+        summary={
+          captureCount > 0
+            ? `${captureCount} capture rule${captureCount === 1 ? '' : 's'}`
+            : 'No capture rules yet'
+        }
+      >
+        <Field
+          label="Capture rules"
+          action="+ rule"
+          onAction={() =>
+            actions.addCapture(block.id, {
+              label: 'New capture',
+              variable: `contact.new_${Date.now()}`,
+            })
           }
-          onOpenPrompt(map[source])
-        }}
-      />
+        >
+          {block.captures.length === 0 && (
+            <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
+              Nothing captured here.
+            </div>
+          )}
+          {block.captures.map((c) => (
+            <div
+              key={c.variable}
+              style={{
+                padding: '8px 10px',
+                background: B.panel,
+                border: `1px solid ${B.line}`,
+                borderRadius: 8,
+                fontSize: 12.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
+              <span style={{ color: B.ink2, flex: 1 }}>{c.label}</span>
+              <code
+                style={{
+                  fontSize: 11,
+                  background: B.accentSoft,
+                  color: B.accentInk,
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                }}
+              >
+                {c.variable}
+              </code>
+              <IconButton
+                icon={X}
+                label="Delete capture"
+                onClick={() => actions.deleteCapture(block.id, c.variable)}
+                size={20}
+                iconSize={12}
+                style={{ color: B.ink3 }}
+              />
+            </div>
+          ))}
+        </Field>
+      </CollapsibleSection>
+      <CollapsibleSection
+        title="Runtime Details"
+        summary={runtimeSummary || 'Block config and runtime guardrails'}
+      >
+        <BlockConfigPanel config={block.blockConfig} />
+        <GuardrailsPanel
+          guardrails={block.guardrails ?? []}
+          onOpenSource={(source) => {
+            // Map source file to PromptReader section id.
+            const map: Record<string, string> = {
+              'src/lib/prompts/sections/persona.ts': 'persona',
+              'src/lib/prompts/sections/message-constraints.ts':
+                'message-constraints',
+              'src/lib/prompts/sections/qualification.ts': 'qualification',
+              'src/lib/prompts/sections/objections.ts': 'objections',
+              'src/lib/prompts/sections/email-capture.ts': 'email-capture',
+              'src/lib/prompts/sections/decision-routing.ts':
+                'decision-routing',
+              'src/lib/prompts/sections/summary-generation.ts':
+                'summary-generation',
+              'src/lib/prompts/sections/location-gate.ts': 'location-gate',
+              'src/lib/prompts/sections/company-context.ts': 'company-context',
+            }
+            onOpenPrompt(map[source])
+          }}
+        />
+      </CollapsibleSection>
     </>
   )
 }

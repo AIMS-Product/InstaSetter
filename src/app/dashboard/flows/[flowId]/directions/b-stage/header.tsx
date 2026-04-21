@@ -1,40 +1,31 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useFlowState } from '../../store'
-import { fetchTodayConversationCountAction } from '../../actions'
+import type { PageId } from '../../types'
 import { B } from './palette'
 
 export default function BHeader({
+  page,
   simOpen,
   onToggleSim,
 }: {
+  page: PageId
   simOpen: boolean
   onToggleSim: () => void
 }) {
   const state = useFlowState()
-  const [todayCount, setTodayCount] = useState<number | null>(null)
 
-  useEffect(() => {
-    let alive = true
-    fetchTodayConversationCountAction().then((n) => {
-      if (alive) setTodayCount(n)
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
   return (
     <div
       style={{
-        height: 52,
+        height: 56,
         flexShrink: 0,
         background: B.panel,
         borderBottom: `1px solid ${B.line}`,
         display: 'flex',
         alignItems: 'center',
         padding: '0 16px',
-        gap: 14,
+        gap: 12,
       }}
     >
       <div
@@ -55,15 +46,35 @@ export default function BHeader({
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          fontSize: 13,
-          color: B.ink2,
+          flexDirection: 'column',
+          minWidth: 0,
+          gap: 1,
         }}
       >
-        <span>{state.flow.brand}</span>
-        <span style={{ color: B.ink3 }}>›</span>
-        <span style={{ color: B.ink, fontWeight: 500 }}>{state.flow.name}</span>
+        <div
+          style={{
+            fontSize: 10,
+            color: B.ink3,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            fontWeight: 700,
+          }}
+        >
+          {state.flow.brand}
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            color: B.ink,
+            fontWeight: 600,
+            lineHeight: 1.2,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {state.flow.name}
+        </div>
       </div>
       {state.dirtySincePublish && (
         <div
@@ -71,7 +82,7 @@ export default function BHeader({
           aria-label="Draft has unpublished changes"
           style={{
             fontSize: 11,
-            padding: '2px 8px',
+            padding: '4px 8px',
             borderRadius: 999,
             background: '#FBE7D9',
             color: '#8B4316',
@@ -90,81 +101,39 @@ export default function BHeader({
               background: '#E08040',
             }}
           />
-          Unsaved changes
+          Draft changes
         </div>
       )}
       <div style={{ flex: 1 }} />
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          fontSize: 12,
-          color: B.ink3,
-        }}
-      >
-        <span
+      {page === 'flow' && (
+        <button
+          type="button"
+          onClick={onToggleSim}
           style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: todayCount && todayCount > 0 ? '#3FB37F' : B.line,
+            padding: '7px 12px',
+            borderRadius: 8,
+            border: `1px solid ${simOpen ? B.accentSoft : B.line}`,
+            background: simOpen ? B.accentSoft : B.lineSoft,
+            color: simOpen ? B.accentInk : B.ink2,
+            fontSize: 12,
+            cursor: 'pointer',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
           }}
-        />
-        Prompt setter-v2
-        {todayCount !== null && todayCount > 0 && (
-          <span>
-            {' '}
-            · {todayCount} conversation{todayCount === 1 ? '' : 's'} today
-          </span>
-        )}
-      </div>
-      <button
-        type="button"
-        onClick={onToggleSim}
-        style={{
-          padding: '6px 12px',
-          borderRadius: 8,
-          border: `1px solid ${B.line}`,
-          background: simOpen ? B.accentSoft : B.panel,
-          color: simOpen ? B.accentInk : B.ink2,
-          fontSize: 12,
-          cursor: 'pointer',
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}
-      >
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: simOpen ? B.accent : B.ink3,
-          }}
-        />
-        Simulator
-      </button>
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Publishing not wired yet — your edits save locally for now."
-        style={{
-          padding: '6px 14px',
-          borderRadius: 8,
-          border: 'none',
-          background: B.accent,
-          color: B.panel,
-          fontSize: 12,
-          cursor: 'not-allowed',
-          fontWeight: 500,
-          opacity: 0.45,
-        }}
-      >
-        Publish
-      </button>
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: simOpen ? B.accent : B.ink3,
+            }}
+          />
+          {simOpen ? 'Hide test' : 'Test flow'}
+        </button>
+      )}
     </div>
   )
 }

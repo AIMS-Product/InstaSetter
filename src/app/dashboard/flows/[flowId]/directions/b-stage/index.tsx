@@ -26,7 +26,7 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
   const actions = useFlowActions()
   const { selectedBlock } = useFlowStore()
   const [page, setPage] = useState<PageId>('flow')
-  const [simOpen, setSimOpen] = useState(true)
+  const [simOpen, setSimOpen] = useState(false)
 
   const overrides = useMemo(
     () =>
@@ -52,7 +52,11 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
         color: B.ink,
       }}
     >
-      <BHeader simOpen={simOpen} onToggleSim={() => setSimOpen((s) => !s)} />
+      <BHeader
+        page={page}
+        simOpen={simOpen}
+        onToggleSim={() => setSimOpen((s) => !s)}
+      />
       <div
         style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}
       >
