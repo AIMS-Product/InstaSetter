@@ -124,3 +124,47 @@ describe('compileBlock — goal/guidance overrides', () => {
     expect(compiled).toContain(DEFAULT_OPENING_GUIDANCE)
   })
 })
+
+describe('compileBlock contract — no overrides matches buildSystemPrompt across all block types', () => {
+  const TYPES = [
+    'opening',
+    'qualifier',
+    'objection',
+    'booking',
+    'email',
+    'followup',
+    'escalation',
+    'summary',
+  ] as const
+  const URLS = [undefined, 'https://calendly.com/vending'] as const
+
+  // No-overrides path: compileBlock must equal buildSystemPrompt regardless of bookingUrl.
+  for (const bookingUrl of URLS) {
+    it(`no overrides, bookingUrl=${bookingUrl ?? 'undefined'}`, () => {
+      const baseline = buildSystemPrompt({
+        brandName: BRAND,
+        ...(bookingUrl ? { bookingUrl } : {}),
+      })
+      expect(
+        compileBlock({
+          brand: BRAND,
+          ...(bookingUrl ? { bookingUrl } : {}),
+        })
+      ).toBe(baseline)
+    })
+  }
+
+  // activeBlockType path for EVERY block type — the output must START WITH the baseline
+  // and contain the directive heading. This locks Issue 3's invariant per type.
+  for (const type of TYPES) {
+    it(`activeBlockType=${type} preserves baseline prefix and names the block`, () => {
+      const baseline = buildSystemPrompt({ brandName: BRAND })
+      const compiled = compileBlock({
+        brand: BRAND,
+        overrides: { activeBlockType: type },
+      })
+      expect(compiled.startsWith(baseline)).toBe(true)
+      expect(compiled).toContain('## Active Block Directive')
+    })
+  }
+})
