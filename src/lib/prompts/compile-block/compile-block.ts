@@ -22,8 +22,12 @@ export function compileBlock(input: CompileBlockInput): string {
 
   const { activeBlockType } = input.overrides
   const label = BLOCK_BY_TYPE[activeBlockType].label
-  const goal = BLOCK_GOALS[activeBlockType]
-  const guidance = BLOCK_GUIDANCE[activeBlockType]
+  const goal = input.overrides.goal?.trim()
+    ? input.overrides.goal
+    : BLOCK_GOALS[activeBlockType]
+  const guidance = input.overrides.guidance?.trim()
+    ? input.overrides.guidance
+    : BLOCK_GUIDANCE[activeBlockType]
 
   return `${baseline}\n\n## Active Block Directive\n\nBlock: ${label}\nGoal: ${goal}\nGuidance: ${guidance}\n`
 }

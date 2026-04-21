@@ -72,3 +72,55 @@ describe('compileBlock — active block directive (no overrides)', () => {
     )
   })
 })
+
+describe('compileBlock — goal/guidance overrides', () => {
+  const DEFAULT_OPENING_GOAL =
+    'Greet warmly, detect initial interest, and ask for location'
+  const DEFAULT_OPENING_GUIDANCE =
+    "Match the prospect's energy. Don't interrogate. Ask ONE question — start with area. Run the location gate BEFORE qualification."
+
+  it('replaces default goal with override.goal', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening', goal: 'Ask for city' },
+    })
+    expect(compiled).toContain('Ask for city')
+    expect(compiled).not.toContain(DEFAULT_OPENING_GOAL)
+  })
+
+  it('replaces default guidance with override.guidance', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'opening',
+        guidance: 'Only one question, peer-to-peer tone.',
+      },
+    })
+    expect(compiled).toContain('Only one question, peer-to-peer tone.')
+    expect(compiled).not.toContain(DEFAULT_OPENING_GUIDANCE)
+  })
+
+  it('falls back to default goal when override.goal is absent', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening' },
+    })
+    expect(compiled).toContain(DEFAULT_OPENING_GOAL)
+  })
+
+  it('falls back to default goal when override.goal is empty string', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening', goal: '' },
+    })
+    expect(compiled).toContain(DEFAULT_OPENING_GOAL)
+  })
+
+  it('falls back to default guidance when override.guidance is empty string', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening', guidance: '' },
+    })
+    expect(compiled).toContain(DEFAULT_OPENING_GUIDANCE)
+  })
+})
