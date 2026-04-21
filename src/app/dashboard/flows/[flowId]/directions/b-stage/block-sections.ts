@@ -922,7 +922,7 @@ const BLOCK_BRANCHES: Record<BlockType, Branch[]> = {
   summary: [],
 }
 
-const BLOCK_GOALS: Record<BlockType, string> = {
+export const BLOCK_GOALS: Record<BlockType, string> = {
   opening:
     'Greet warmly, detect initial interest, and ask for location as the first qualifier.',
   qualifier:
@@ -940,7 +940,7 @@ const BLOCK_GOALS: Record<BlockType, string> = {
     'Write structured lead data to the closer via generate_summary at every natural end point.',
 }
 
-const BLOCK_GUIDANCE: Record<BlockType, string> = {
+export const BLOCK_GUIDANCE: Record<BlockType, string> = {
   opening:
     "Match the prospect's energy. Don't interrogate. Ask ONE question — start with area. Run the location gate BEFORE qualification.",
   qualifier:
