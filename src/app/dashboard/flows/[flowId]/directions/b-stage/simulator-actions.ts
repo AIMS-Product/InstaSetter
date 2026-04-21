@@ -8,6 +8,7 @@ import {
   type ToolCall,
 } from '@/lib/services/claude'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
+import { BlockOverridesSchema } from '@/lib/prompts/compile-block/schemas'
 
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -17,6 +18,7 @@ const messageSchema = z.object({
 const inputSchema = z.object({
   brand: z.string().min(1),
   messages: z.array(messageSchema).min(1).max(40),
+  overrides: BlockOverridesSchema.optional(),
 })
 
 const MAX_TOOL_ROUNDS = 3
