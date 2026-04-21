@@ -110,8 +110,11 @@ export default function BSimFloat({
             background: '#6FEB97',
           }}
         />
-        <span style={{ fontSize: 12, fontWeight: 500 }}>
-          Simulator · Live (matches production)
+        <span
+          style={{ fontSize: 12, fontWeight: 500 }}
+          title="Runs the real system prompt from src/lib/prompts/setter-v2.ts. Flow-builder edits don't affect it."
+        >
+          Simulator · Claude live
         </span>
         <span style={{ flex: 1 }} />
         <IconButton

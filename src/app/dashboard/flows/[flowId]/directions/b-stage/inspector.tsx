@@ -6,8 +6,12 @@ import { IconButton } from '@/components/icon-button'
 import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
 import type { FlowNode } from '../../types'
+import { BlockConfigPanel } from './block-config-panel'
+import { ExamplePairs } from './example-pairs'
+import { GuardrailsPanel } from './guardrails-panel'
 import { B } from './palette'
 import { PromptReader } from './prompt-reader'
+import { RationaleBanner } from './rationale-banner'
 
 // Field renders its label with a stable id and exposes it to children via
 // render-prop. Children that own the primary editable element (textarea/input)
@@ -107,6 +111,7 @@ function DesignTab({
   const actions = useFlowActions()
   return (
     <>
+      <RationaleBanner rationale={block.rationale ?? []} stat={block.stat} />
       <Field label="Goal">
         {(labelId) => (
           <textarea
@@ -121,10 +126,10 @@ function DesignTab({
         )}
       </Field>
       <Field
-        label="How it should sound"
+        label="Guidance"
         action="↗ View Persona"
         onAction={() => onOpenPrompt('persona')}
-        hint="Inherits tone from the Persona section · override for this step"
+        hint="Inherits voice from the Persona section. Override locally for this block."
       >
         {(labelId) => (
           <textarea
@@ -139,13 +144,23 @@ function DesignTab({
         )}
       </Field>
       <Field
-        label="Good examples"
+        label={`Good ↔ Bad examples · ${block.examplePairs?.length ?? 0}`}
+        hint="Side-by-side pairs parsed from the source section. Read-only today."
+      >
+        <ExamplePairs
+          pairs={block.examplePairs ?? []}
+          emptyHint="This section doesn't include paired counter-examples yet."
+        />
+      </Field>
+      <Field
+        label="Marketer examples"
         action="+ add"
+        hint="Local overrides. Saved to this browser only."
         onAction={() => actions.addExample(block.id, 'New example — edit me')}
       >
         {block.examples.length === 0 && (
           <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-            Add a couple of sample replies so Mike has voice.
+            No local overrides. Pairs above come from the compiled prompt.
           </div>
         )}
         {block.examples.map((ex, i) => (
@@ -237,6 +252,27 @@ function DesignTab({
           </div>
         ))}
       </Field>
+      <BlockConfigPanel config={block.blockConfig} />
+      <GuardrailsPanel
+        guardrails={block.guardrails ?? []}
+        onOpenSource={(source) => {
+          // Map source file to PromptReader section id.
+          const map: Record<string, string> = {
+            'src/lib/prompts/sections/persona.ts': 'persona',
+            'src/lib/prompts/sections/message-constraints.ts':
+              'message-constraints',
+            'src/lib/prompts/sections/qualification.ts': 'qualification',
+            'src/lib/prompts/sections/objections.ts': 'objections',
+            'src/lib/prompts/sections/email-capture.ts': 'email-capture',
+            'src/lib/prompts/sections/decision-routing.ts': 'decision-routing',
+            'src/lib/prompts/sections/summary-generation.ts':
+              'summary-generation',
+            'src/lib/prompts/sections/location-gate.ts': 'location-gate',
+            'src/lib/prompts/sections/company-context.ts': 'company-context',
+          }
+          onOpenPrompt(map[source])
+        }}
+      />
     </>
   )
 }

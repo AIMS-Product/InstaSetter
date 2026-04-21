@@ -1,54 +1,33 @@
 import 'server-only'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
-export interface ConversationListItem {
-  id: string
-  status: string
-  started_at: string
-  ended_at: string | null
-  summary: string | null
-  message_count: number
-  event_count: number
-  last_message_at: string | null
-  last_message_preview: string | null
-  contact: {
-    id: string
-    instagram_handle: string
-    name: string | null
+export type {
+  ConversationDetail,
+  ConversationEvent,
+  ConversationListItem,
+  ConversationMessage,
+  TimelineItem,
+} from './conversation-viewer-types'
+export { interleave } from './conversation-viewer-types'
+
+import type {
+  ConversationDetail,
+  ConversationListItem,
+} from './conversation-viewer-types'
+
+export async function countConversationsStartedSince(
+  sinceIso: string
+): Promise<number> {
+  const client = createServiceRoleClient()
+  const { count, error } = await client
+    .from('conversations')
+    .select('id', { count: 'exact', head: true })
+    .gte('started_at', sinceIso)
+  if (error) {
+    console.error('countConversationsStartedSince failed', error)
+    return 0
   }
-}
-
-export interface ConversationMessage {
-  id: string
-  role: string
-  content: string
-  created_at: string
-}
-
-export interface ConversationEvent {
-  id: string
-  message_id: string | null
-  tool_name: string
-  tool_input: Record<string, unknown>
-  integration: string
-  created_at: string
-}
-
-export interface ConversationDetail {
-  id: string
-  status: string
-  prompt_version: string
-  summary: string | null
-  started_at: string
-  ended_at: string | null
-  contact: {
-    id: string
-    instagram_handle: string
-    name: string | null
-    email: string | null
-  }
-  messages: ConversationMessage[]
-  events: ConversationEvent[]
+  return count ?? 0
 }
 
 export async function listConversations(
@@ -80,7 +59,7 @@ export async function listConversations(
       .order('created_at', { ascending: false }),
     client
       .from('lead_events')
-      .select('conversation_id')
+      .select('conversation_id, tool_name')
       .in('conversation_id', conversationIds),
   ])
 
@@ -104,12 +83,19 @@ export async function listConversations(
   }
 
   const eventCountByConv = new Map<string, number>()
+  const eventToolsByConv = new Map<string, Set<string>>()
   if (eventsRes.data) {
     for (const e of eventsRes.data) {
       eventCountByConv.set(
         e.conversation_id,
         (eventCountByConv.get(e.conversation_id) ?? 0) + 1
       )
+      if (!eventToolsByConv.has(e.conversation_id)) {
+        eventToolsByConv.set(e.conversation_id, new Set())
+      }
+      if (e.tool_name) {
+        eventToolsByConv.get(e.conversation_id)!.add(e.tool_name)
+      }
     }
   }
 
@@ -124,6 +110,7 @@ export async function listConversations(
       summary: c.summary,
       message_count: lastMsg?.count ?? 0,
       event_count: eventCountByConv.get(c.id) ?? 0,
+      event_tool_names: Array.from(eventToolsByConv.get(c.id) ?? []),
       last_message_at: lastMsg?.created_at ?? null,
       last_message_preview: lastMsg?.content.slice(0, 120) ?? null,
       contact: {
@@ -135,9 +122,23 @@ export async function listConversations(
   })
 }
 
+export interface GetConversationOptions {
+  // Cap on how many of the MOST RECENT messages to return. Default keeps
+  // transcript payloads bounded — long threads have shipped 200+ messages
+  // and large tool_input blobs on every row click.
+  messageLimit?: number
+  eventLimit?: number
+}
+
+const DEFAULT_MESSAGE_LIMIT = 80
+const DEFAULT_EVENT_LIMIT = 80
+
 export async function getConversation(
-  conversationId: string
+  conversationId: string,
+  opts: GetConversationOptions = {}
 ): Promise<ConversationDetail | null> {
+  const messageLimit = opts.messageLimit ?? DEFAULT_MESSAGE_LIMIT
+  const eventLimit = opts.eventLimit ?? DEFAULT_EVENT_LIMIT
   const client = createServiceRoleClient()
 
   const { data: conv, error } = await client
@@ -153,17 +154,22 @@ export async function getConversation(
     return null
   }
 
+  // Grab the most recent N rows by sorting desc + limit, then reverse to
+  // chronological order for the caller. This keeps the newest N messages
+  // (what operators care about) without paying for the entire history.
   const [messagesRes, eventsRes] = await Promise.all([
     client
       .from('messages')
       .select('id, role, content, created_at')
       .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true }),
+      .order('created_at', { ascending: false })
+      .limit(messageLimit),
     client
       .from('lead_events')
       .select('id, message_id, tool_name, tool_input, integration, created_at')
       .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true }),
+      .order('created_at', { ascending: false })
+      .limit(eventLimit),
   ])
 
   const contact = Array.isArray(conv.contacts)
@@ -183,19 +189,25 @@ export async function getConversation(
       name: contact?.name ?? null,
       email: contact?.email ?? null,
     },
-    messages: (messagesRes.data ?? []).map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-      created_at: m.created_at,
-    })),
-    events: (eventsRes.data ?? []).map((e) => ({
-      id: e.id,
-      message_id: e.message_id,
-      tool_name: e.tool_name,
-      tool_input: (e.tool_input as Record<string, unknown>) ?? {},
-      integration: e.integration,
-      created_at: e.created_at,
-    })),
+    // Re-sort ascending so callers receive chronological order — the desc
+    // + limit query above is just a "keep the latest N" optimisation.
+    messages: (messagesRes.data ?? [])
+      .map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        created_at: m.created_at,
+      }))
+      .sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    events: (eventsRes.data ?? [])
+      .map((e) => ({
+        id: e.id,
+        message_id: e.message_id,
+        tool_name: e.tool_name,
+        tool_input: (e.tool_input as Record<string, unknown>) ?? {},
+        integration: e.integration,
+        created_at: e.created_at,
+      }))
+      .sort((a, b) => a.created_at.localeCompare(b.created_at)),
   }
 }

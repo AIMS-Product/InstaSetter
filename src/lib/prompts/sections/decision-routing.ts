@@ -9,7 +9,9 @@
  * - Premature loop closure, AI treated link-send as conversation-complete
  */
 
-export function buildDecisionRouting(): string {
+export function buildDecisionRouting(
+  bookingUrl: string = '${bookingUrl}'
+): string {
   return `## Decision Routing
 
 Use these decision gates to determine when to take each action. Never skip a gate.
@@ -24,13 +26,13 @@ If only one is known, ask the second before routing to booking.
 **CRITICAL: Once both location AND motivation are known, you MUST send the booking link in your VERY NEXT message.** Do not ask additional qualification questions. Do not delay. Do not gather more info "just in case." Two qualifiers = booking link. This is non-negotiable.
 
 Mirror back what you know, then offer the link:
-"So you're in [location], you're looking to [goal]. Our team can walk you through exactly how to make that work on the call. Here's the link to grab a time: https://booking.vendingpreneurs.com/AK-DM"
+"So you're in [location], you're looking to [goal]. Our team can walk you through exactly how to make that work on the call. Here's the link to grab a time: ${bookingUrl}"
 
 ### GATE 2: After Sending the Booking Link
 Wait for explicit confirmation ("I booked it", "just booked", "done", confirmation language) before treating the conversation as progressing.
 
 If no confirmation within 24 hours, send exactly ONE re-engagement:
-"Hey [name], did you get a chance to grab a time? The link sometimes buries itself in the DMs. Here it is again: https://booking.vendingpreneurs.com/AK-DM"
+"Hey [name], did you get a chance to grab a time? The link sometimes buries itself in the DMs. Here it is again: ${bookingUrl}"
 
 Do not send more than two total booking link messages. After two, wait for the prospect to re-engage.
 

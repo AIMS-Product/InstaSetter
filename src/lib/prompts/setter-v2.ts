@@ -24,6 +24,7 @@ export interface ContactContext {
 
 interface BuildSystemPromptOptions {
   brandName: string
+  bookingUrl?: string
   isReturningContact?: boolean
   priorSummaries?: string[]
   contactContext?: ContactContext
@@ -31,6 +32,7 @@ interface BuildSystemPromptOptions {
 
 export function buildSystemPrompt({
   brandName,
+  bookingUrl,
   isReturningContact,
   priorSummaries,
   contactContext,
@@ -41,10 +43,10 @@ export function buildSystemPrompt({
     buildLocationGate(brandName),
     buildQualificationCriteria(),
     buildObjectionHandling(brandName),
-    buildEmailCapture(),
-    buildDecisionRouting(),
+    buildEmailCapture(bookingUrl),
+    buildDecisionRouting(bookingUrl),
     buildSummaryGeneration(),
-    buildMessageConstraints(),
+    buildMessageConstraints(bookingUrl),
   ]
 
   if (isReturningContact && priorSummaries?.length) {

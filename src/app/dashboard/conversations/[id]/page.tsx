@@ -1,26 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getConversation } from '@/lib/services/conversation-viewer'
+import { getConversation, interleave } from '@/lib/services/conversation-viewer'
 import { ToolBadge } from '@/components/tool-badge'
 
 export const revalidate = 0
-
-type TimelineItem =
-  | {
-      kind: 'message'
-      id: string
-      role: string
-      content: string
-      createdAt: string
-    }
-  | {
-      kind: 'event'
-      id: string
-      toolName: string
-      toolInput: Record<string, unknown>
-      integration: string
-      createdAt: string
-    }
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
@@ -33,49 +16,6 @@ function formatDate(iso: string): string {
     day: 'numeric',
     year: 'numeric',
   })
-}
-
-function interleave(
-  messages: { id: string; role: string; content: string; created_at: string }[],
-  events: {
-    id: string
-    message_id: string | null
-    tool_name: string
-    tool_input: Record<string, unknown>
-    integration: string
-    created_at: string
-  }[]
-): TimelineItem[] {
-  const items: TimelineItem[] = []
-  for (const m of messages) {
-    items.push({
-      kind: 'message',
-      id: m.id,
-      role: m.role,
-      content: m.content,
-      createdAt: m.created_at,
-    })
-  }
-  for (const e of events) {
-    items.push({
-      kind: 'event',
-      id: e.id,
-      toolName: e.tool_name,
-      toolInput: e.tool_input,
-      integration: e.integration,
-      createdAt: e.created_at,
-    })
-  }
-  items.sort((a, b) => {
-    const diff =
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    if (diff !== 0) return diff
-    // stable: messages before events of same timestamp
-    if (a.kind === 'message' && b.kind === 'event') return -1
-    if (a.kind === 'event' && b.kind === 'message') return 1
-    return 0
-  })
-  return items
 }
 
 interface Params {

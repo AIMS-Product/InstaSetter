@@ -20,6 +20,14 @@ const anthropicEnvSchema = z.object({
 
 const brandEnvSchema = z.object({
   BRAND_NAME: z.string().min(1),
+  // Optional so deployments that haven't set it still work; defaults to the
+  // VendingPreneurs booking link which was hardcoded across the prompt
+  // sections. For a second brand, set BOOKING_URL and the section builders
+  // will interpolate it.
+  BOOKING_URL: z
+    .string()
+    .url()
+    .default('https://booking.vendingpreneurs.com/AK-DM'),
 })
 
 const sendpulseEnvSchema = z.object({
@@ -49,6 +57,7 @@ export function getAnthropicConfig() {
 export function getBrandConfig() {
   return brandEnvSchema.parse({
     BRAND_NAME: process.env.BRAND_NAME,
+    BOOKING_URL: process.env.BOOKING_URL,
   })
 }
 

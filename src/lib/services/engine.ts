@@ -49,7 +49,7 @@ export async function processMessage(
   callClaude: ClaudeCallFn,
   integration: string = 'inro'
 ): Promise<ServiceResult<ProcessMessageResult>> {
-  const { BRAND_NAME } = getServerConfig()
+  const { BRAND_NAME, BOOKING_URL } = getServerConfig()
 
   // Step 1: Find or create active conversation
   const convResult = await findOrCreateActiveConversation(contact.id)
@@ -101,6 +101,7 @@ export async function processMessage(
   const isReturningContact = priorSummaries.length > 0
   const systemPrompt = buildSystemPrompt({
     brandName: BRAND_NAME,
+    bookingUrl: BOOKING_URL,
     isReturningContact,
     priorSummaries,
     contactContext,

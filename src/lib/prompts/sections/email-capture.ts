@@ -9,14 +9,16 @@
  * - Explicit confirmation loop validates data
  */
 
-export function buildEmailCapture(): string {
+export function buildEmailCapture(
+  bookingUrl: string = 'https://booking.vendingpreneurs.com/AK-DM'
+): string {
   return `## Email Capture
 
 Email capture is mandatory in every conversation that reaches booking confirmation. This is a critical gap, only 0.4% of historical conversations captured an email.
 
 ### Primary Trigger: With the Booking Link
 When you send the booking link, include the email ask in the SAME message:
-"Here's the link to grab a time: https://booking.vendingpreneurs.com/AK-DM. What email should I send your confirmation and prep materials to?"
+"Here's the link to grab a time: ${bookingUrl}. What email should I send your confirmation and prep materials to?"
 
 If you forgot to ask for email in the booking message, ask immediately in your next response. Do NOT let more than one message pass after sending the booking link without asking for email.
 

@@ -1,129 +1,126 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  BLOCK_BY_TYPE,
-  CONVERSATION,
-  SANS_FAMILY,
-  SERIF_FAMILY,
-  blockColor,
-} from '../shared-data'
-import type { BlockType, Palette } from '../types'
+import { useEffect, useState } from 'react'
+import { SANS_FAMILY, SERIF_FAMILY } from '../shared-data'
+import type { Palette } from '../types'
+import { fetchConversationAction, fetchFlowRunsAction } from '../actions'
+import type {
+  ConversationDetail,
+  ConversationListItem,
+  TimelineItem,
+} from '@/lib/services/conversation-viewer-types'
+import { interleave } from '@/lib/services/conversation-viewer-types'
+import { ToolBadge } from '@/components/tool-badge'
 import RPHeader from './header'
 
-interface Run {
-  id: string
-  handle: string
-  at: string
-  status:
-    | 'active'
-    | 'booked'
-    | 'objection'
-    | 'escalated'
-    | 'waiting'
-    | 'ghosted'
-  block: BlockType
-  turns: number
-  outcome: string | null
-  last: string
-}
-
-const RUNS: Run[] = [
-  {
-    id: 'r1',
-    handle: '@ashford.k',
-    at: '3m ago',
-    status: 'active',
-    block: 'qualifier',
-    turns: 4,
-    outcome: null,
-    last: 'Dallas, 7K saved, ready',
-  },
-  {
-    id: 'r2',
-    handle: '@renee.rx',
-    at: '12m ago',
-    status: 'booked',
-    block: 'summary',
-    turns: 7,
-    outcome: '+1 booking',
-    last: 'cool see you thurs',
-  },
-  {
-    id: 'r3',
-    handle: '@travis.co',
-    at: '28m ago',
-    status: 'objection',
-    block: 'objection',
-    turns: 5,
-    outcome: null,
-    last: 'is this like another mlm',
-  },
-  {
-    id: 'r4',
-    handle: '@jules.van',
-    at: '44m ago',
-    status: 'escalated',
-    block: 'escalation',
-    turns: 9,
-    outcome: 'handed off',
-    last: 'the 15k seems crazy',
-  },
-  {
-    id: 'r5',
-    handle: '@d.wilkes',
-    at: '1h ago',
-    status: 'waiting',
-    block: 'booking',
-    turns: 6,
-    outcome: null,
-    last: 'dropping link now',
-  },
-  {
-    id: 'r6',
-    handle: '@mo.ramos',
-    at: '2h ago',
-    status: 'booked',
-    block: 'summary',
-    turns: 8,
-    outcome: '+1 booking',
-    last: 'sent email too',
-  },
-  {
-    id: 'r7',
-    handle: '@brea.kay',
-    at: '2h ago',
-    status: 'ghosted',
-    block: 'followup',
-    turns: 3,
-    outcome: null,
-    last: 'radio silence 24h',
-  },
-  {
-    id: 'r8',
-    handle: '@k.oduya',
-    at: '3h ago',
-    status: 'active',
-    block: 'opening',
-    turns: 2,
-    outcome: null,
-    last: 'yeah interested',
-  },
-]
-
-const STATUS_TONE = (p: Palette) => ({
-  active: { bg: p.accentSoft, fg: p.accentInk, label: 'Talking' },
-  booked: { bg: '#E6EFE1', fg: '#2F4E2A', label: 'Booked' },
-  objection: { bg: '#FBE7D9', fg: '#8B4316', label: 'Objection' },
-  escalated: { bg: '#FAD9D9', fg: '#882828', label: 'Escalated' },
-  waiting: { bg: '#F1ECDD', fg: '#6B5E3B', label: 'Waiting' },
-  ghosted: { bg: '#ECECEC', fg: '#666', label: 'Ghosted' },
+// Status tones mirror the real write surface in
+// src/lib/services/conversation.ts: {active, stalled, completed}.
+// Unknown values fall through to `stalled` tone so badges stay visible.
+const STATUS_TONE = (
+  p: Palette
+): Record<string, { bg: string; fg: string; label: string }> => ({
+  active: { bg: p.accentSoft, fg: p.accentInk, label: 'Active' },
+  stalled: { bg: '#FBE7D9', fg: '#8B4316', label: 'Stalled' },
+  completed: { bg: '#E6EFE1', fg: '#3A5A32', label: 'Completed' },
 })
 
+const FALLBACK_TONE_KEY = 'stalled'
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return '—'
+  const diff = Date.now() - new Date(iso).getTime()
+  const s = Math.floor(diff / 1000)
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h`
+  return `${Math.floor(h / 24)}d`
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getHours().toString().padStart(2, '0')}:${d
+    .getMinutes()
+    .toString()
+    .padStart(2, '0')}`
+}
+
+// Discriminated state for the right-hand transcript panel.
+// `ok` and `missing` both represent a completed fetch — `missing` exists so
+// the UI can distinguish "still loading" from "server returned null" and stop
+// showing the loading spinner when a conversation doesn't exist or failed.
+type DetailResult =
+  | { id: string; status: 'ok'; detail: ConversationDetail }
+  | { id: string; status: 'missing' }
+  | { id: string; status: 'error'; message: string }
+
 export default function PageRuns({ p }: { p: Palette }) {
-  const [sel, setSel] = useState('r1')
-  const run = RUNS.find((r) => r.id === sel) ?? RUNS[0]!
+  const [runs, setRuns] = useState<ConversationListItem[] | null>(null)
+  const [sel, setSel] = useState<string | null>(null)
+  const [detailResult, setDetailResult] = useState<DetailResult | null>(null)
+
+  // The panel is "loading" when a selection exists but no result for THIS id
+  // has come back yet. If the last result is for a different id, we're mid-
+  // transition between rows — still loading. Derived, not stored, so we never
+  // setState synchronously in an effect.
+  const detailStatus: 'idle' | 'loading' | 'ok' | 'missing' | 'error' = (() => {
+    if (!sel) return 'idle'
+    if (!detailResult || detailResult.id !== sel) return 'loading'
+    return detailResult.status
+  })()
+  const detail =
+    detailResult && detailResult.status === 'ok' && detailResult.id === sel
+      ? detailResult.detail
+      : null
+
+  useEffect(() => {
+    let alive = true
+    fetchFlowRunsAction(50).then((rows) => {
+      if (!alive) return
+      setRuns(rows)
+      if (rows[0]) setSel(rows[0].id)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!sel) return
+    let alive = true
+    fetchConversationAction(sel)
+      .then((d) => {
+        if (!alive) return
+        setDetailResult(
+          d === null
+            ? { id: sel, status: 'missing' }
+            : { id: sel, status: 'ok', detail: d }
+        )
+      })
+      .catch((err) => {
+        if (!alive) return
+        setDetailResult({
+          id: sel,
+          status: 'error',
+          message: err instanceof Error ? err.message : String(err),
+        })
+      })
+    return () => {
+      alive = false
+    }
+  }, [sel])
+
   const tones = STATUS_TONE(p)
+  const todayStr = new Date().toDateString()
+  const startedToday =
+    runs?.filter((r) => new Date(r.started_at).toDateString() === todayStr)
+      .length ?? 0
+  const bookedCount =
+    runs?.filter((r) => r.event_tool_names.includes('book_call')).length ?? 0
+  const completedCount =
+    runs?.filter((r) => r.status === 'completed').length ?? 0
+  const stalledCount = runs?.filter((r) => r.status === 'stalled').length ?? 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -133,47 +130,29 @@ export default function PageRuns({ p }: { p: Palette }) {
         title="Conversations"
         right={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                background: p.lineSoft,
-                borderRadius: 8,
-                padding: 2,
-                fontSize: 12,
-              }}
-            >
-              {['Today', 'Week', 'Month'].map((t, i) => (
-                <div
-                  key={t}
-                  style={{
-                    padding: '5px 12px',
-                    borderRadius: 6,
-                    background: i === 0 ? p.panel : 'transparent',
-                    color: i === 0 ? p.ink : p.ink2,
-                    fontWeight: i === 0 ? 500 : 400,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {t}
-                </div>
-              ))}
-            </div>
-            <button
-              style={{
-                padding: '6px 12px',
-                borderRadius: 8,
-                border: `1px solid ${p.line}`,
-                background: p.panel,
-                fontSize: 12,
-                color: p.ink2,
-                cursor: 'pointer',
-              }}
-            >
-              Export
-            </button>
+            <span style={{ fontSize: 11, color: p.ink3 }}>
+              {runs === null
+                ? 'Loading…'
+                : `${runs.length} recent · newest first`}
+            </span>
           </div>
         }
       />
+
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          padding: '10px 32px',
+          background: p.lineSoft,
+          borderBottom: `1px solid ${p.line}`,
+          fontSize: 12,
+          color: p.ink2,
+        }}
+      >
+        Showing all brand-wide conversations. Per-flow scoping arrives once
+        flow_id lands on the conversations table.
+      </div>
 
       <div
         style={{
@@ -185,69 +164,49 @@ export default function PageRuns({ p }: { p: Palette }) {
           borderBottom: `1px solid ${p.line}`,
         }}
       >
-        {[
-          {
-            k: '146',
-            l: 'Started today',
-            d: '+18 vs yesterday',
-            good: true as const,
-          },
-          { k: '42', l: 'Booked', d: '29% conversion', good: true as const },
-          {
-            k: '11',
-            l: 'Escalated',
-            d: '3 price, 8 unqualified',
-            good: false as const,
-          },
-          { k: '2.1m', l: 'Avg. response', d: 'p50 · p95 8m', good: null },
-        ].map((s) => (
-          <div
-            key={s.l}
-            style={{
-              padding: '12px 16px',
-              background: p.lineSoft,
-              borderRadius: 10,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                color: p.ink3,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                fontWeight: 600,
-              }}
-            >
-              {s.l}
-            </div>
-            <div
-              style={{
-                fontSize: 26,
-                color: p.ink,
-                marginTop: 4,
-                fontWeight: 500,
-                fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
-                letterSpacing: -0.3,
-              }}
-            >
-              {s.k}
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color:
-                  s.good === true
-                    ? '#3A5A32'
-                    : s.good === false
-                      ? '#8B4316'
-                      : p.ink3,
-                marginTop: 2,
-              }}
-            >
-              {s.d}
-            </div>
-          </div>
-        ))}
+        <Kpi
+          p={p}
+          label="Started today"
+          value={runs === null ? '—' : String(startedToday)}
+          detail={runs === null ? '' : `${runs.length} total in list`}
+        />
+        <Kpi
+          p={p}
+          label="Booked"
+          value={runs === null ? '—' : String(bookedCount)}
+          detail={
+            runs === null
+              ? ''
+              : bookedCount === 0
+                ? 'no book_call events yet'
+                : `${bookedCount} book_call calls`
+          }
+        />
+        <Kpi
+          p={p}
+          label="Completed"
+          value={runs === null ? '—' : String(completedCount)}
+          detail={
+            runs === null
+              ? ''
+              : completedCount === 0
+                ? 'none completed yet'
+                : `${completedCount} summary-generated`
+          }
+        />
+        <Kpi
+          p={p}
+          label="Stalled"
+          value={runs === null ? '—' : String(stalledCount)}
+          detail={
+            runs === null
+              ? ''
+              : stalledCount === 0
+                ? 'none stalled'
+                : `${stalledCount} inactive`
+          }
+          bad={stalledCount > 0}
+        />
       </div>
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
@@ -259,21 +218,45 @@ export default function PageRuns({ p }: { p: Palette }) {
             background: p.panel,
           }}
         >
-          {RUNS.map((r) => {
-            const tone = tones[r.status]
+          {runs === null && (
+            <div
+              style={{
+                padding: 24,
+                fontSize: 12.5,
+                color: p.ink3,
+                textAlign: 'center',
+              }}
+            >
+              Loading conversations…
+            </div>
+          )}
+          {runs !== null && runs.length === 0 && (
+            <div style={{ padding: 24, color: p.ink2, fontSize: 13 }}>
+              No conversations yet. Real inbound DMs appear here as your bot
+              handles them.
+            </div>
+          )}
+          {runs?.map((r) => {
+            const tone = tones[r.status] ?? tones[FALLBACK_TONE_KEY]!
             const active = sel === r.id
             return (
-              <div
+              <button
                 key={r.id}
+                type="button"
                 onClick={() => setSel(r.id)}
                 style={{
+                  width: '100%',
+                  textAlign: 'left',
                   padding: '13px 18px',
-                  borderBottom: `1px solid ${p.lineSoft}`,
-                  background: active ? p.sel : 'transparent',
-                  cursor: 'pointer',
+                  borderTop: 'none',
+                  borderRight: 'none',
                   borderLeft: active
                     ? `3px solid ${p.accent}`
                     : '3px solid transparent',
+                  borderBottom: `1px solid ${p.lineSoft}`,
+                  background: active ? p.sel : 'transparent',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
                 }}
               >
                 <div
@@ -284,10 +267,18 @@ export default function PageRuns({ p }: { p: Palette }) {
                     marginBottom: 4,
                   }}
                 >
-                  <span style={{ fontSize: 13, fontWeight: 500, color: p.ink }}>
-                    {r.handle}
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: p.ink,
+                    }}
+                  >
+                    {r.contact.name ?? r.contact.instagram_handle}
                   </span>
-                  <span style={{ fontSize: 10.5, color: p.ink3 }}>{r.at}</span>
+                  <span style={{ fontSize: 10.5, color: p.ink3 }}>
+                    {timeAgo(r.last_message_at ?? r.started_at)}
+                  </span>
                   <span style={{ flex: 1 }} />
                   <span
                     style={{
@@ -312,29 +303,19 @@ export default function PageRuns({ p }: { p: Palette }) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {r.last}
+                  {r.last_message_preview ?? '—'}
                 </div>
                 <div
                   style={{
                     fontSize: 10.5,
                     color: p.ink3,
                     marginTop: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
                   }}
                 >
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: blockColor(r.block, { l: 0.55, c: 0.13 }),
-                    }}
-                  />
-                  in {BLOCK_BY_TYPE[r.block]?.label} · {r.turns} turns
+                  {r.message_count} msg
+                  {r.event_count > 0 && ` · ${r.event_count} evt`}
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
@@ -347,203 +328,281 @@ export default function PageRuns({ p }: { p: Palette }) {
             padding: '24px 32px',
           }}
         >
-          <div
-            style={{
-              background: p.panel,
-              borderRadius: 12,
-              border: `1px solid ${p.line}`,
-              padding: 22,
-              maxWidth: 720,
-              margin: '0 auto',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                marginBottom: 14,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${p.accent}, ${p.accentSoft})`,
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: p.panel,
-                  fontWeight: 600,
-                  fontSize: 14,
-                }}
-              >
-                {run.handle.slice(1, 3).toUpperCase()}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 500, color: p.ink }}>
-                  {run.handle}
-                </div>
-                <div style={{ fontSize: 11.5, color: p.ink3 }}>
-                  Instagram DM · started {run.at}
-                </div>
-              </div>
-              <button
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  border: `1px solid ${p.line}`,
-                  background: p.panel,
-                  fontSize: 12,
-                  color: p.ink2,
-                  cursor: 'pointer',
-                }}
-              >
-                Replay in graph
-              </button>
-              <button
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: p.ink,
-                  color: p.panel,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
-              >
-                Take over →
-              </button>
-            </div>
-
-            <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: 8,
-                background: p.sel,
-                fontSize: 12,
-                color: p.ink2,
-                marginBottom: 18,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-              }}
-            >
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: p.accent,
-                }}
-              />
-              Currently in{' '}
-              <b style={{ color: p.ink }}>{BLOCK_BY_TYPE[run.block]?.label}</b>{' '}
-              · waiting on prospect response
-            </div>
-
-            <div style={{ display: 'grid', gap: 10 }}>
-              {CONVERSATION.map((m, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    flexDirection:
-                      m.role === 'prospect' ? 'row-reverse' : 'row',
-                    gap: 8,
-                    alignItems: 'flex-end',
-                  }}
-                >
-                  <div
-                    style={{
-                      maxWidth: '70%',
-                      padding: '9px 13px',
-                      borderRadius: 14,
-                      background: m.role === 'prospect' ? p.ink : p.panel,
-                      color: m.role === 'prospect' ? p.panel : p.ink,
-                      fontSize: 13.5,
-                      lineHeight: 1.45,
-                      border: m.role === 'bot' ? `1px solid ${p.line}` : 'none',
-                      position: 'relative',
-                    }}
-                  >
-                    {m.text}
-                    {m.block && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: -8,
-                          left: 10,
-                          fontSize: 9.5,
-                          padding: '1px 7px',
-                          borderRadius: 999,
-                          background: p.panel,
-                          color: p.ink3,
-                          border: `1px solid ${p.line}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: '50%',
-                            background: blockColor(m.block),
-                          }}
-                        />
-                        {BLOCK_BY_TYPE[m.block]?.label}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                marginTop: 22,
-                padding: 14,
-                borderRadius: 10,
-                border: `1px dashed ${p.line}`,
-                background: p.lineSoft,
-                fontSize: 12.5,
-                color: p.ink2,
-              }}
-            >
-              <div style={{ fontWeight: 500, color: p.ink, marginBottom: 4 }}>
-                What Mike&rsquo;s thinking
-              </div>
-              Location{' '}
-              <code
-                style={{
-                  background: p.panel,
-                  padding: '1px 5px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                }}
-              >
-                Dallas
-              </code>
-              , motivation{' '}
-              <code
-                style={{
-                  background: p.panel,
-                  padding: '1px 5px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                }}
-              >
-                side income
-              </code>{' '}
-              — both set. Next turn will enter <b>Booking Handoff</b> and send
-              the link.
-            </div>
-          </div>
+          {detailStatus === 'idle' && (
+            <CenteredNote p={p}>
+              Select a conversation to view the transcript.
+            </CenteredNote>
+          )}
+          {detailStatus === 'loading' && (
+            <CenteredNote p={p}>Loading transcript…</CenteredNote>
+          )}
+          {detailStatus === 'missing' && (
+            <CenteredNote p={p}>
+              That conversation is no longer available.
+            </CenteredNote>
+          )}
+          {detailStatus === 'error' && detailResult?.status === 'error' && (
+            <CenteredNote p={p} tone="error">
+              Couldn&apos;t load transcript: {detailResult.message}
+            </CenteredNote>
+          )}
+          {detailStatus === 'ok' && detail && (
+            <TranscriptPanel p={p} detail={detail} />
+          )}
         </div>
       </div>
     </div>
   )
+}
+
+function CenteredNote({
+  p,
+  children,
+  tone,
+}: {
+  p: Palette
+  children: React.ReactNode
+  tone?: 'error'
+}) {
+  return (
+    <div
+      style={{
+        textAlign: 'center',
+        marginTop: 80,
+        color: tone === 'error' ? '#8E2A2A' : p.ink3,
+        fontSize: 13,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function Kpi({
+  p,
+  label,
+  value,
+  detail,
+  bad,
+}: {
+  p: Palette
+  label: string
+  value: string
+  detail: string
+  bad?: boolean
+}) {
+  return (
+    <div
+      style={{
+        padding: '12px 16px',
+        background: p.lineSoft,
+        borderRadius: 10,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          color: p.ink3,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: 26,
+          color: p.ink,
+          marginTop: 4,
+          fontWeight: 500,
+          fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
+          letterSpacing: -0.3,
+        }}
+      >
+        {value}
+      </div>
+      <div
+        style={{
+          fontSize: 11,
+          color: bad ? '#8B4316' : p.ink3,
+          marginTop: 2,
+        }}
+      >
+        {detail || '\u00A0'}
+      </div>
+    </div>
+  )
+}
+
+function TranscriptPanel({
+  p,
+  detail,
+}: {
+  p: Palette
+  detail: ConversationDetail
+}) {
+  const timeline = interleave(detail.messages, detail.events)
+  const contact = detail.contact
+  const knownFromEvents = findKnownQualifiers(detail)
+  const thinking =
+    detail.summary ??
+    (knownFromEvents
+      ? `Known qualifiers: ${knownFromEvents}`
+      : 'No summary yet — the bot generates one when the conversation ends.')
+
+  return (
+    <div
+      style={{
+        background: p.panel,
+        borderRadius: 12,
+        border: `1px solid ${p.line}`,
+        padding: 22,
+        maxWidth: 760,
+        margin: '0 auto',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 14,
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${p.accent}, ${p.accentSoft})`,
+            display: 'grid',
+            placeItems: 'center',
+            color: p.panel,
+            fontWeight: 600,
+            fontSize: 14,
+          }}
+        >
+          {(contact.instagram_handle ?? 'U').slice(0, 2).toUpperCase()}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: p.ink }}>
+            {contact.name ?? contact.instagram_handle}
+          </div>
+          <div style={{ fontSize: 11.5, color: p.ink3 }}>
+            {contact.instagram_handle} · {detail.status} ·{' '}
+            {detail.prompt_version}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: 14,
+          borderRadius: 10,
+          border: `1px dashed ${p.line}`,
+          background: p.lineSoft,
+          fontSize: 12.5,
+          color: p.ink2,
+          marginBottom: 18,
+        }}
+      >
+        <div style={{ fontWeight: 500, color: p.ink, marginBottom: 4 }}>
+          Summary
+        </div>
+        {thinking}
+      </div>
+
+      {timeline.length === 0 && (
+        <div
+          style={{
+            textAlign: 'center',
+            color: p.ink3,
+            fontSize: 13,
+            padding: 24,
+          }}
+        >
+          No messages in this conversation yet.
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gap: 10 }}>
+        {timeline.map((item) => {
+          if (item.kind === 'message') {
+            return <MessageBubble key={item.id} p={p} item={item} />
+          }
+          return (
+            <div key={item.id} style={{ paddingLeft: 2 }}>
+              <ToolBadge
+                call={{ name: item.toolName, input: item.toolInput }}
+                tone="block"
+              />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MessageBubble({
+  p,
+  item,
+}: {
+  p: Palette
+  item: Extract<TimelineItem, { kind: 'message' }>
+}) {
+  const isBot = item.role === 'assistant'
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: isBot ? 'row' : 'row-reverse',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '78%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          alignItems: isBot ? 'flex-start' : 'flex-end',
+        }}
+      >
+        <div
+          style={{
+            padding: '9px 13px',
+            borderRadius: 14,
+            background: isBot ? p.lineSoft : p.ink,
+            color: isBot ? p.ink : p.panel,
+            fontSize: 13.5,
+            lineHeight: 1.55,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {item.content}
+        </div>
+        <div style={{ fontSize: 10.5, color: p.ink3 }}>
+          {formatTime(item.createdAt)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function findKnownQualifiers(detail: ConversationDetail): string | null {
+  // qualify_lead can fire multiple times as new data emerges. Merge all calls
+  // in chronological order (later values win per key) so earlier captures
+  // aren't lost if later calls only carry one new field.
+  const merged: Record<string, string> = {}
+  for (const event of detail.events) {
+    if (event.tool_name !== 'qualify_lead') continue
+    for (const [k, v] of Object.entries(event.tool_input ?? {})) {
+      if (v === null || v === undefined || v === '') continue
+      merged[k] = String(v)
+    }
+  }
+  const entries = Object.entries(merged)
+  if (entries.length === 0) return null
+  return entries.map(([k, v]) => `${k}=${v}`).join(', ')
 }

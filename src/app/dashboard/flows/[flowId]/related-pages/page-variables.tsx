@@ -80,12 +80,26 @@ export default function PageVariables({ p }: { p: Palette }) {
             fontSize: 13.5,
             color: p.ink2,
             lineHeight: 1.55,
+            marginBottom: 12,
+          }}
+        >
+          What the bot remembers. <b>Brand</b> stays put forever, <b>Contact</b>{' '}
+          follows a person across every conversation, and <b>Conversation</b> is
+          scoped to a single thread.
+        </div>
+        <div
+          role="note"
+          style={{
+            padding: '10px 12px',
+            background: p.lineSoft,
+            borderRadius: 8,
+            fontSize: 12,
+            color: p.ink3,
             marginBottom: 26,
           }}
         >
-          Variables are things Mike remembers. <b>Brand</b> stays put forever,{' '}
-          <b>Contact</b> follows a person across every conversation you&rsquo;ll
-          have with them, <b>Conversation</b> is one thread.
+          Values populate at runtime from each conversation. Brand defaults are
+          editable once writes are wired to Supabase.
         </div>
         {SCOPES.map((sc) => (
           <div key={sc.key} style={{ marginBottom: 26 }}>

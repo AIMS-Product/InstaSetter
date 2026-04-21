@@ -10,7 +10,7 @@ export default function PageVersions({ p }: { p: Palette }) {
   const state = useFlowState()
   const actions = useFlowActions()
   const versions = state.versions
-  const [sel, setSel] = useState<number>(state.draftVersion)
+  const [sel, setSel] = useState<number>(state.publishedVersion)
   const tones = {
     draft: { bg: p.accentSoft, fg: p.accentInk, label: 'Draft' },
     live: { bg: '#E6EFE1', fg: '#3A5A32', label: 'Live' },
@@ -24,26 +24,21 @@ export default function PageVersions({ p }: { p: Palette }) {
         p={p}
         eyebrow={state.flow.name}
         title="Version history"
-        right={
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => actions.publish()}
-              style={{
-                padding: '7px 14px',
-                borderRadius: 8,
-                border: 'none',
-                background: p.accent,
-                color: p.panel,
-                fontSize: 12.5,
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              Publish draft v{state.draftVersion}
-            </button>
-          </div>
-        }
+        right={null}
       />
+      <div
+        role="status"
+        style={{
+          padding: '10px 32px',
+          background: p.lineSoft,
+          borderBottom: `1px solid ${p.line}`,
+          fontSize: 12,
+          color: p.ink2,
+        }}
+      >
+        Version history begins once edits are persisted to the backend.
+        Currently serving the compiled <code>setter-v2</code> prompt.
+      </div>
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
         <div
           style={{

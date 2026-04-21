@@ -131,9 +131,15 @@ function Toast({ msg, onDone }: { msg: string; onDone: () => void }) {
   )
 }
 
-export default function DirectionB() {
+export default function DirectionB({
+  brand,
+  bookingUrl,
+}: {
+  brand: string
+  bookingUrl: string
+}) {
   return (
-    <FlowStoreProvider>
+    <FlowStoreProvider brand={brand} bookingUrl={bookingUrl}>
       <Shell />
     </FlowStoreProvider>
   )

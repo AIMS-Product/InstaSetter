@@ -8,7 +8,9 @@ import {
   useReducer,
   type ReactNode,
 } from 'react'
-import { FLOW, VARIABLES, CONVERSATION } from './shared-data'
+import { buildPersona } from '@/lib/prompts/sections/persona'
+import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
+import { deriveBlock } from './directions/b-stage/block-sections'
 import type {
   BlockType,
   Branch,
@@ -58,9 +60,6 @@ export interface FlowState {
   selectedId: BlockType | null
   activeTab: 'design' | 'routing' | 'triggers' | 'data'
   paletteOpen: boolean
-  // True when the draft has been edited since the last publish. Used to drive
-  // the "Unsaved changes" pill in the header (P1.3). Reset on publish and on
-  // rollback, since both align the draft with a known-good version.
   dirtySincePublish: boolean
 }
 
@@ -104,69 +103,163 @@ type Action =
   | { type: 'toggle_palette' }
   | { type: 'hydrate'; state: Partial<FlowState> }
 
-const initialBot: BotSettings = {
-  name: 'Mike',
-  persona:
-    'Mike is a calm, direct appointment setter for a vending-machine business. He talks like a text, not a brochure. He\u2019s warm, doesn\u2019t force questions, and never sounds like a bot.',
-  messageConstraints: 'MAXIMUM 2 sentences per reply. One question at a time.',
-  forbiddenPhrases: ['just popping in', 'Still with me?'],
+// Canvas layout for the 8-block flow. Keeps the visual structure the user
+// already sees while every other field becomes derived from the real prompt.
+const BLOCK_POSITIONS: Record<BlockType, { x: number; y: number }> = {
+  opening: { x: 0, y: 0 },
+  qualifier: { x: 0, y: 1 },
+  objection: { x: 1, y: 1 },
+  booking: { x: 0, y: 2 },
+  email: { x: 1, y: 2 },
+  followup: { x: 2, y: 2 },
+  escalation: { x: 2, y: 3 },
+  summary: { x: 0, y: 3 },
 }
 
-const initialVersions: VersionEntry[] = [
-  {
-    v: 13,
-    at: '2 min ago',
-    note: 'Objection handler: stronger acknowledgement',
-    status: 'draft',
-  },
-  {
-    v: 12,
-    at: '2 days ago',
-    note: 'Shipped post-shadow parity',
-    status: 'live',
-  },
-  { v: 11, at: '5 days ago', note: 'Booking link copy', status: 'archived' },
-  {
-    v: 10,
-    at: '9 days ago',
-    note: 'Added Follow-up block',
-    status: 'archived',
-  },
-  { v: 9, at: '12 days ago', note: 'Seed from setter-v2', status: 'archived' },
+const BLOCK_TYPES: BlockType[] = [
+  'opening',
+  'qualifier',
+  'objection',
+  'booking',
+  'email',
+  'followup',
+  'escalation',
+  'summary',
 ]
 
-export const INITIAL_STATE: FlowState = {
-  flow: FLOW,
-  triggers: [
-    {
-      id: 't1',
-      name: '24h nudge after booking link',
-      whenBlock: 'booking',
-      afterMinutes: 60 * 24,
-      cancelOnReply: true,
-      mode: 'in_window_only',
-      target: 'followup',
-    },
-  ],
-  bot: initialBot,
-  variables: VARIABLES,
-  conversation: CONVERSATION,
-  simActiveBlock: 'qualifier',
-  simMode: 'fast',
-  versions: initialVersions,
-  publishedVersion: 12,
-  draftVersion: 13,
-  toast: null,
-  selectedId: 'qualifier',
-  activeTab: 'design',
-  paletteOpen: false,
-  dirtySincePublish: false,
+const BLOCK_LABELS: Record<BlockType, string> = {
+  opening: 'Opening',
+  qualifier: 'Qualifier',
+  objection: 'Objection Handler',
+  booking: 'Booking Handoff',
+  email: 'Email Capture',
+  followup: 'Post-Call Follow-up',
+  escalation: 'Escalation',
+  summary: 'Summary',
 }
 
-// Actions that mutate user-authored content. The reducer wrapper flips
-// dirtySincePublish to true whenever one of these fires; publish / rollback
-// reset it. Non-content actions (select, tab switch, palette toggle, sim,
-// toast, hydrate) do not touch the dirty flag.
+export function buildInitialFlow(brand: string, bookingUrl?: string): Flow {
+  const nodes: FlowNode[] = BLOCK_TYPES.map((type) => {
+    const d = deriveBlock(brand, type, { bookingUrl })
+    return {
+      id: type,
+      type,
+      name: BLOCK_LABELS[type],
+      goal: d.goal,
+      guidance: d.guidance,
+      examples: d.examples,
+      captures: d.captures,
+      branches: d.branches,
+      pos: BLOCK_POSITIONS[type],
+      rationale: d.rationale,
+      ...(d.stat ? { stat: d.stat } : {}),
+      examplePairs: d.examplePairs,
+      guardrails: d.guardrails,
+      blockConfig: d.blockConfig,
+      primarySectionIds: d.primarySectionIds,
+      globalSectionIds: d.globalSectionIds,
+      editable: 'local-only' as const,
+    }
+  })
+  return {
+    id: 'ig-organic-dm',
+    brand,
+    name: 'Instagram DM Flow',
+    channel: 'Instagram — Organic DM',
+    draft: 1,
+    published: 1,
+    nodes,
+  }
+}
+
+export function deriveVariables(
+  flow: Flow,
+  brand: string,
+  bookingUrl?: string
+): Variable[] {
+  const seen = new Set<string>()
+  const captureVars: Variable[] = []
+  for (const node of flow.nodes) {
+    for (const capture of node.captures) {
+      if (seen.has(capture.variable)) continue
+      seen.add(capture.variable)
+      const [scope, ...keyParts] = capture.variable.split('.')
+      if (scope !== 'brand' && scope !== 'contact' && scope !== 'conversation')
+        continue
+      const key = keyParts.join('.')
+      captureVars.push({
+        scope,
+        key,
+        value: null,
+        capturedBy: node.id,
+        kind: guessKind(key),
+      })
+    }
+  }
+  return [
+    { scope: 'brand', key: 'brand_name', value: brand, kind: 'text' },
+    {
+      scope: 'brand',
+      key: 'booking_url',
+      value: bookingUrl ?? null,
+      kind: 'url',
+    },
+    { scope: 'brand', key: 'timezone', value: null, kind: 'text' },
+    ...captureVars,
+  ]
+}
+
+function guessKind(key: string): Variable['kind'] {
+  if (key.includes('email')) return 'email'
+  if (key.includes('url')) return 'url'
+  if (key.includes('budget') || key.includes('count')) return 'number'
+  return 'text'
+}
+
+function buildInitialBot(brand: string, bookingUrl?: string): BotSettings {
+  return {
+    name: '',
+    persona: buildPersona(brand),
+    messageConstraints: buildMessageConstraints(bookingUrl),
+    forbiddenPhrases: [],
+  }
+}
+
+function buildInitialVersions(): VersionEntry[] {
+  return [
+    {
+      v: 1,
+      at: 'just now',
+      note: 'Seeded from prompt sections',
+      status: 'live',
+    },
+  ]
+}
+
+function buildInitialState(brand: string, bookingUrl?: string): FlowState {
+  const flow = buildInitialFlow(brand, bookingUrl)
+  return {
+    flow,
+    triggers: [],
+    bot: buildInitialBot(brand, bookingUrl),
+    variables: deriveVariables(flow, brand, bookingUrl),
+    conversation: [],
+    simActiveBlock: null,
+    simMode: 'fast',
+    versions: buildInitialVersions(),
+    publishedVersion: 1,
+    draftVersion: 1,
+    toast: null,
+    selectedId: null,
+    activeTab: 'design',
+    paletteOpen: false,
+    dirtySincePublish: false,
+  }
+}
+
+// Retained for test compatibility. Prefer `buildInitialState(brand, bookingUrl)` in app code.
+export const INITIAL_STATE: FlowState = buildInitialState('VendingPreneurs')
+
 const CONTENT_EDIT_ACTIONS: ReadonlySet<Action['type']> = new Set([
   'update_block_field',
   'add_example',
@@ -380,7 +473,22 @@ interface Ctx {
 
 const FlowStore = createContext<Ctx | null>(null)
 
-const STORAGE_KEY = 'instasetter.flow-builder.v1'
+// Bump this when the shape of the persisted payload changes in a way that's
+// incompatible with older stores (e.g. new FlowNode fields, different Variable
+// scope). Stored blobs without a matching __schema are dropped and reseeded.
+const STORAGE_SCHEMA = 3
+
+// Key includes the brand so a deployment switching brands (or a dev swapping
+// BRAND_NAME) doesn't rehydrate the previous brand's snapshot and override
+// freshly derived state.
+function storageKeyFor(brand: string): string {
+  return `instasetter.flow-builder.v2.${brand}`
+}
+
+// Best-effort cleanup of the pre-v2 global key on first hit. Safe to leave
+// running forever — the key won't exist after the first successful clear.
+const LEGACY_STORAGE_KEY = 'instasetter.flow-builder.v1'
+
 const PERSISTED_KEYS: Array<keyof FlowState> = [
   'flow',
   'triggers',
@@ -392,36 +500,78 @@ const PERSISTED_KEYS: Array<keyof FlowState> = [
   'dirtySincePublish',
 ]
 
-function loadPersisted(): Partial<FlowState> | null {
+type PersistedPayload = Partial<FlowState> & {
+  __schema?: number
+  __brand?: string
+}
+
+// Defensive checks for payloads written before the store got brand-scoped:
+// even if an older blob made it through the key rename, drop it if it
+// references Mike/Dallas/7K or doesn't match the current brand.
+function isStalePayload(parsed: PersistedPayload, brand: string): boolean {
+  if (parsed.__schema !== STORAGE_SCHEMA) return true
+  if (parsed.__brand && parsed.__brand !== brand) return true
+  if (parsed.bot?.name === 'Mike') return true
+  if (Array.isArray(parsed.variables)) {
+    const sus = parsed.variables.some(
+      (v) =>
+        (v.scope === 'contact' && v.value === 'Dallas') ||
+        (v.scope === 'contact' && v.value === 7000)
+    )
+    if (sus) return true
+  }
+  if (parsed.flow?.brand && parsed.flow.brand !== brand) return true
+  if (parsed.flow?.nodes?.some((n) => n.guidance?.includes('Dallas'))) {
+    return true
+  }
+  return false
+}
+
+function loadPersisted(brand: string): Partial<FlowState> | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    // Remove the legacy global key if it's still hanging around — its
+    // content may belong to any brand and can't be safely reused.
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+  } catch {
+    /* noop */
+  }
+  try {
+    const key = storageKeyFor(brand)
+    const raw = window.localStorage.getItem(key)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<FlowState>
-    return parsed
+    const parsed = JSON.parse(raw) as PersistedPayload
+    if (isStalePayload(parsed, brand)) {
+      window.localStorage.removeItem(key)
+      return null
+    }
+    // Strip the metadata before returning — the reducer doesn't need it.
+    const { __schema: _s, __brand: _b, ...rest } = parsed
+    void _s
+    void _b
+    return rest as Partial<FlowState>
   } catch {
     return null
   }
 }
 
-function savePersisted(state: FlowState): void {
+function savePersisted(state: FlowState, brand: string): void {
   if (typeof window === 'undefined') return
   try {
-    const subset: Partial<FlowState> = {}
+    const subset: PersistedPayload = {
+      __schema: STORAGE_SCHEMA,
+      __brand: brand,
+    }
     for (const k of PERSISTED_KEYS) {
       // @ts-expect-error index by union type
       subset[k] = state[k]
     }
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(subset))
+    window.localStorage.setItem(storageKeyFor(brand), JSON.stringify(subset))
   } catch {
     /* noop */
   }
 }
 
-// Same shape as `reducer` but flips dirtySincePublish true on any content
-// edit. publish/rollback reset it in the base reducer. Kept as a thin wrapper
-// so tests can continue to exercise `reducer` directly without having to
-// reason about the dirty flag.
 function dirtyTrackingReducer(state: FlowState, action: Action): FlowState {
   const next = reducer(state, action)
   if (next === state) return next
@@ -431,20 +581,32 @@ function dirtyTrackingReducer(state: FlowState, action: Action): FlowState {
   return next
 }
 
-export function FlowStoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(dirtyTrackingReducer, INITIAL_STATE)
+export function FlowStoreProvider({
+  children,
+  brand,
+  bookingUrl,
+}: {
+  children: ReactNode
+  brand: string
+  bookingUrl?: string
+}) {
+  const initial = useMemo(
+    () => buildInitialState(brand, bookingUrl),
+    [brand, bookingUrl]
+  )
+  const [state, dispatch] = useReducer(dirtyTrackingReducer, initial)
 
-  // Hydrate from localStorage on mount (client-only)
   useEffect(() => {
-    const persisted = loadPersisted()
+    const persisted = loadPersisted(brand)
     if (persisted) dispatch({ type: 'hydrate', state: persisted })
-  }, [])
+    // Brand is captured on mount. If it changes mid-session the provider
+    // remounts via the `initial` memo above, which re-triggers this effect.
+  }, [brand])
 
-  // Debounced save on change
   useEffect(() => {
-    const t = window.setTimeout(() => savePersisted(state), 400)
+    const t = window.setTimeout(() => savePersisted(state, brand), 400)
     return () => window.clearTimeout(t)
-  }, [state])
+  }, [state, brand])
 
   const selectedBlock = useMemo(
     () =>
@@ -475,7 +637,6 @@ export function useFlowDispatch(): React.Dispatch<Action> {
   return useFlowStore().dispatch
 }
 
-/** Stable actions bound to dispatch. */
 export function useFlowActions() {
   const dispatch = useFlowDispatch()
   return useMemo(

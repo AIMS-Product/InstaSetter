@@ -27,6 +27,133 @@ export interface Branch {
   when: string
 }
 
+export interface Guardrail {
+  id: string
+  text: string
+  why: string
+  source: string
+}
+
+export interface ExamplePair {
+  prospect?: string
+  good?: string
+  bad?: string
+}
+
+export interface OpeningConfig {
+  kind: 'opening'
+  firstQuestion: string
+  supportedMarkets: string[]
+  outOfAreaScript: string
+}
+
+export interface QualifierEntry {
+  priority: number
+  key: 'location' | 'motivation' | 'experience' | 'capital' | 'timeline'
+  label: string
+  ask: string
+  rules: string[]
+  locked: boolean
+}
+
+export interface QualifierThreshold {
+  name: 'hot' | 'warm' | 'cold'
+  criteria: string
+}
+
+export interface QualifierConfig {
+  kind: 'qualifier'
+  minToBook: number
+  qualifiers: QualifierEntry[]
+  thresholds: QualifierThreshold[]
+}
+
+export interface ObjectionHandler {
+  type:
+    | 'timing'
+    | 'no_capital'
+    | 'location'
+    | 'needs_to_think'
+    | 'price'
+    | 'bad_credit'
+    | 'trust'
+    | 'spouse_approval'
+    | 'already_has_machines'
+  label: string
+  occurrences: number
+  resolutionPct: number
+  opener: string
+  followUps: string[]
+}
+
+export interface ObjectionConfig {
+  kind: 'objection'
+  structure: readonly ['acknowledge', 'probe', 'respond']
+  handlers: ObjectionHandler[]
+}
+
+export interface BookingConfig {
+  kind: 'booking'
+  mirrorTemplate: string
+  linkPattern: string
+  emailAskCombined: string
+  reengagementAfterHours: number
+  maxLinkSends: number
+  reengagementScript: string
+}
+
+export interface EmailTrigger {
+  priority: 'primary' | 'backup' | 'secondary'
+  when: string
+  script: string
+  mandatory: boolean
+}
+
+export interface EmailConfig {
+  kind: 'email'
+  triggers: EmailTrigger[]
+  confirmationScript: string
+  hesitationScript: string
+}
+
+export interface FollowupConfig {
+  kind: 'followup'
+  delayHours: number
+  script: string
+  outcomes: string[]
+}
+
+export interface EscalationConfig {
+  kind: 'escalation'
+  triggers: string[]
+  handoffScript: string
+  captureMethod: string
+}
+
+export interface SummaryField {
+  key: string
+  label: string
+  notes: string
+}
+
+export interface SummaryConfig {
+  kind: 'summary'
+  triggerWords: string[]
+  requiredFields: SummaryField[]
+  optionalFields: SummaryField[]
+  mirrorTemplate: string
+}
+
+export type BlockConfig =
+  | OpeningConfig
+  | QualifierConfig
+  | ObjectionConfig
+  | BookingConfig
+  | EmailConfig
+  | FollowupConfig
+  | EscalationConfig
+  | SummaryConfig
+
 export interface FlowNode {
   id: BlockType
   type: BlockType
@@ -37,6 +164,14 @@ export interface FlowNode {
   captures: Capture[]
   branches: Branch[]
   pos: { x: number; y: number }
+  rationale?: string[]
+  stat?: string
+  examplePairs?: ExamplePair[]
+  guardrails?: Guardrail[]
+  blockConfig?: BlockConfig
+  primarySectionIds?: string[]
+  globalSectionIds?: string[]
+  editable?: 'locked' | 'local-only'
 }
 
 export interface Flow {

@@ -44,7 +44,10 @@ export async function simulateReplyAction(
     return { success: false, error: 'Simulator not configured' }
   }
 
-  const systemPrompt = buildSystemPrompt({ brandName: parsed.data.brand })
+  const systemPrompt = buildSystemPrompt({
+    brandName: parsed.data.brand,
+    bookingUrl: process.env.BOOKING_URL?.trim() || undefined,
+  })
   const initialRequest = buildClaudeRequest(
     systemPrompt,
     parsed.data.messages as Anthropic.Messages.MessageParam[]
