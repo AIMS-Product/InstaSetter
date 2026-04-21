@@ -29,5 +29,11 @@ export function compileBlock(input: CompileBlockInput): string {
     ? input.overrides.guidance
     : BLOCK_GUIDANCE[activeBlockType]
 
+  // Directive is appended as a suffix. Effective for blocks whose source
+  // sections are thin or conditional (Opening, Booking, Email, Follow-up,
+  // Escalation). Less effective for blocks with dense prescriptive content
+  // (Qualifier, Objection, Summary) because the earlier section instructions
+  // outweigh an end-of-prompt directive. The v2 plan is section replacement —
+  // see docs/flow-builder/FUTURE.md.
   return `${baseline}\n\n## Active Block Directive\n\nBlock: ${label}\nGoal: ${goal}\nGuidance: ${guidance}\n`
 }

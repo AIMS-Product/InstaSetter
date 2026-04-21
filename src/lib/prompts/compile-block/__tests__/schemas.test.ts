@@ -62,4 +62,22 @@ describe('BlockOverridesSchema', () => {
     expect(parent.safeParse(undefined).success).toBe(true)
     expect(parent.safeParse({ activeBlockType: 'booking' }).success).toBe(true)
   })
+
+  it('trims whitespace-only goal to empty string so compile-block falls back', () => {
+    const result = BlockOverridesSchema.safeParse({
+      activeBlockType: 'opening',
+      goal: '   ',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.goal).toBe('')
+  })
+
+  it('trims padded goal and preserves the meaningful content', () => {
+    const result = BlockOverridesSchema.safeParse({
+      activeBlockType: 'opening',
+      goal: '  Ask for city  ',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.goal).toBe('Ask for city')
+  })
 })

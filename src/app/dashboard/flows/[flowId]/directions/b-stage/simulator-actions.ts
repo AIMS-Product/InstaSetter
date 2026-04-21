@@ -32,6 +32,14 @@ const bookingUrlSchema = z
 
 const MAX_TOOL_ROUNDS = 3
 
+// Lazy singleton — one Anthropic client per process, shared across calls.
+// Avoids allocating a new HTTP agent pool per simulateReplyAction invocation.
+let _anthropic: Anthropic | null = null
+function getAnthropicClient(apiKey: string): Anthropic {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey })
+  return _anthropic
+}
+
 export interface SimulateReplyData {
   replyText: string
   toolCalls: ToolCall[]
@@ -70,7 +78,7 @@ export async function simulateReplyAction(
   )
 
   try {
-    const anthropic = new Anthropic({ apiKey })
+    const anthropic = getAnthropicClient(apiKey)
 
     let response = await anthropic.messages.create(
       initialRequest as Anthropic.Messages.MessageCreateParamsNonStreaming

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import PageNav from '../../page-nav'
 import PageBot from '../../related-pages/page-bot'
 import PageRuns from '../../related-pages/page-runs'
@@ -27,13 +27,19 @@ function Shell() {
   const [page, setPage] = useState<PageId>('flow')
   const [simOpen, setSimOpen] = useState(true)
 
-  const overrides = selectedBlock
-    ? {
-        activeBlockType: selectedBlock.type,
-        ...(selectedBlock.goal ? { goal: selectedBlock.goal } : {}),
-        ...(selectedBlock.guidance ? { guidance: selectedBlock.guidance } : {}),
-      }
-    : null
+  const overrides = useMemo(
+    () =>
+      selectedBlock
+        ? {
+            activeBlockType: selectedBlock.type,
+            ...(selectedBlock.goal ? { goal: selectedBlock.goal } : {}),
+            ...(selectedBlock.guidance
+              ? { guidance: selectedBlock.guidance }
+              : {}),
+          }
+        : null,
+    [selectedBlock]
+  )
 
   return (
     <main

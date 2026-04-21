@@ -15,8 +15,10 @@ const BLOCK_TYPES: readonly [BlockType, ...BlockType[]] = [
 export const BlockOverridesSchema = z
   .object({
     activeBlockType: z.enum(BLOCK_TYPES),
-    goal: z.string().optional(),
-    guidance: z.string().optional(),
+    // .trim() normalises whitespace-only input to '' so compile-block.ts's
+    // empty-string fallback applies consistently regardless of client padding.
+    goal: z.string().trim().optional(),
+    guidance: z.string().trim().optional(),
   })
   .strict()
 
