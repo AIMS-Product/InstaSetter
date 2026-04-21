@@ -12,17 +12,17 @@ Wave 7: Issue 9 (blocked by 6, 7, 8)
 
 ## Status
 
-| #   | Target                                                         | Status  | RED | GREEN | REFACTOR | Commit  | Agent         |
-| --- | -------------------------------------------------------------- | ------- | --- | ----- | -------- | ------- | ------------- |
-| 1   | Define BlockOverrides type + Zod schema                        | DONE    | ✓   | ✓     | ✓        | 2c62953 | issue-1-agent |
-| 2   | compileBlock with no overrides = buildSystemPrompt (byte)      | DONE    | ✓   | ✓     | ✓        | 1e161e6 | issue-2-agent |
-| 3   | compileBlock appends Active Block Directive on activeBlockType | DONE    | ✓   | ✓     | ✓        | 5adecac | issue-3-agent |
-| 4   | compileBlock uses override.goal / override.guidance            | DONE    | ✓   | ✓     | ✓        | f82f65c | issue-4-agent |
-| 5   | simulateReplyAction accepts optional overrides (schema only)   | DONE    | ✓   | ✓     | ✓        | d0b9fba | issue-5-agent |
-| 6   | simulateReplyAction routes via NEXT_PUBLIC_FLOW_COMPILE flag   | DONE    | ✓   | ✓     | ✓        | 9d74a29 | issue-6-agent |
-| 7   | Simulator panel threads active block state to action           | DONE    | ✓   | ✓     | ✓        | 5452b34 | issue-7-agent |
-| 8   | Contract test pinned for CI (8 block types × 2 booking URLs)   | DONE    | ✓   | ✓     | ✓        | 7079d00 | issue-8-agent |
-| 9   | End-to-end smoke: edited goal reaches Claude system prompt     | PENDING | -   | -     | -        | -       | -             |
+| #   | Target                                                         | Status | RED | GREEN | REFACTOR | Commit  | Agent         |
+| --- | -------------------------------------------------------------- | ------ | --- | ----- | -------- | ------- | ------------- |
+| 1   | Define BlockOverrides type + Zod schema                        | DONE   | ✓   | ✓     | ✓        | 2c62953 | issue-1-agent |
+| 2   | compileBlock with no overrides = buildSystemPrompt (byte)      | DONE   | ✓   | ✓     | ✓        | 1e161e6 | issue-2-agent |
+| 3   | compileBlock appends Active Block Directive on activeBlockType | DONE   | ✓   | ✓     | ✓        | 5adecac | issue-3-agent |
+| 4   | compileBlock uses override.goal / override.guidance            | DONE   | ✓   | ✓     | ✓        | f82f65c | issue-4-agent |
+| 5   | simulateReplyAction accepts optional overrides (schema only)   | DONE   | ✓   | ✓     | ✓        | d0b9fba | issue-5-agent |
+| 6   | simulateReplyAction routes via NEXT_PUBLIC_FLOW_COMPILE flag   | DONE   | ✓   | ✓     | ✓        | 9d74a29 | issue-6-agent |
+| 7   | Simulator panel threads active block state to action           | DONE   | ✓   | ✓     | ✓        | 5452b34 | issue-7-agent |
+| 8   | Contract test pinned for CI (8 block types × 2 booking URLs)   | DONE   | ✓   | ✓     | ✓        | 7079d00 | issue-8-agent |
+| 9   | End-to-end smoke: edited goal reaches Claude system prompt     | DONE   | ✓   | ✓     | ✓        | 1922588 | issue-9-agent |
 
 ## Verification
 

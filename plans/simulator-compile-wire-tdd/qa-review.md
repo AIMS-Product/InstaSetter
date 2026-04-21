@@ -292,3 +292,54 @@ All 4 component tests pass and the full suite reports 315/315 passing (4 new com
 ### Preserved behaviors
 
 - With the flag off (default in prod/staging), the simulator behaves identically to before this commit — the new `overrides` payload lands in the action's input schema (validated since Issue 5) but the legacy path never reads it. The DM pipeline is untouched. No existing tests changed.
+
+---
+
+## Issue 9: End-to-end smoke — edited goal reaches Claude system prompt (FINAL VERIFICATION)
+
+**Commit**: `1922588` | **Type**: feature (test-only) | **Status**: Final verification card — closes the plan
+
+### Summary
+
+Added the plan's closing proof: a fourth describe block in `simulator-actions.test.ts` that mocks the Anthropic SDK at module level, intercepts the `messages.create` call, and asserts the exact `system` string shipped to Claude. Four tests walk the full chain — `simulateReplyAction → compileBlock → system prompt → Anthropic SDK` — and pin two invariants per flag state:
+
+- **Flag on** + edited `overrides.goal` → the `system` string contains the edited text AND contains `## Active Block Directive`.
+- **Flag off** + same overrides → the `system` string contains NEITHER (legacy `buildSystemPrompt` path is unchanged).
+
+This is the test the original prospect case would have failed pre-wiring ("ask for city" in the UI → bot reply still said "area"). GREEN was a no-op: the 4 new tests passed on first run, confirming Issues 2-6 already implement the full chain correctly. The test-catches-drift property was sanity-verified by temporarily mutating `compile-block.ts` to ignore `overrides.goal` — the `flag on` test failed as expected, showing the default opening goal reaching Claude instead of the edited text. Reverted before commit.
+
+### Steps to test
+
+A non-technical tester can verify the user-visible behaviour in the dev app:
+
+1. Set `NEXT_PUBLIC_FLOW_COMPILE=true`, restart the dev server (`npm run dev`).
+2. Navigate to `/dashboard/flows/[any flow]` and select the **Opening** block.
+3. Edit its **Goal** to `Greet warmly and ask for their city.`
+4. Open the Simulator, send a prospect message like `hey I'm interested in vending`.
+5. **Expected**: the bot reply references **"city"**, not "area".
+6. Close the simulator. Unset the flag (`unset NEXT_PUBLIC_FLOW_COMPILE`) and restart the dev server.
+7. Repeat the same conversation — the bot should ask about **"area"** (the default opening qualifier).
+
+A developer can also verify with one command:
+
+1. From the project root, run: `npx vitest run simulator-actions`
+2. Observe that **13 tests pass** across three describe blocks:
+   - 4 from `simulateReplyAction — input schema` (Issue 5)
+   - 5 from `simulateReplyAction — compile flag routing` (Issue 6)
+   - 4 from the new `end-to-end — edited goal reaches Claude` (Issue 9)
+
+### Expected result
+
+All 13 simulator-action tests pass and the full suite reports 319/319 passing (4 new end-to-end tests on top of the 315 before Issue 9).
+
+### Edge cases
+
+- `NEXT_PUBLIC_FLOW_COMPILE='true'` + `overrides.goal = 'Greet warmly and ask for their city.'` → captured `system` string CONTAINS the edited goal text.
+- `NEXT_PUBLIC_FLOW_COMPILE='true'` + same overrides → captured `system` CONTAINS `## Active Block Directive` heading.
+- `NEXT_PUBLIC_FLOW_COMPILE='false'` + same overrides → captured `system` does NOT contain the edited goal text (legacy `buildSystemPrompt` path used).
+- `NEXT_PUBLIC_FLOW_COMPILE='false'` + same overrides → captured `system` does NOT contain `## Active Block Directive` (legacy path never appends the directive).
+- Sanity-verified drift detection: temporarily mutating `compile-block.ts` to drop `overrides.goal` caused the `flag on: edited goal appears` test to fail with a clear diff showing the default opening goal in place of the edited one — confirming this test catches the exact regression the whole plan was designed to prevent.
+
+### Preserved behaviors
+
+- No source code changed. Only the test file grew. The simulator, flow builder, DM pipeline, and every other code path behave identically to before this commit. This is a test-only closure that locks the end-to-end contract into CI — any future refactor that silently breaks the chain from inspector edit → Claude system prompt will now fail a test on the PR.
