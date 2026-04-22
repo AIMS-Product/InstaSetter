@@ -21,10 +21,10 @@ import { useFlowActions, useFlowState } from '../../store'
 import type { BlockType, FlowNode } from '../../types'
 import { B } from './palette'
 
-const B_COL = 290
-const B_ROW = 180
-export const B_NODE_W = 250
-export const B_NODE_H = 118
+const B_COL = 320
+const B_ROW = 320
+export const B_NODE_W = 240
+export const B_NODE_H = 240
 
 const nodePx = (n: FlowNode) => ({
   x: 80 + n.pos.x * B_COL,
@@ -80,6 +80,7 @@ function Node({
         left: p.x,
         top: p.y,
         width: B_NODE_W,
+        height: B_NODE_H,
         background: B.panel,
         borderRadius: 12,
         cursor: 'grab',
@@ -93,10 +94,20 @@ function Node({
         transition: 'box-shadow .18s, border-color .18s',
         userSelect: 'none',
         touchAction: 'none',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <div style={{ height: 3, background: color }} />
-      <div style={{ padding: '12px 14px 10px' }}>
+      <div style={{ height: 3, background: color, flexShrink: 0 }} />
+      <div
+        style={{
+          padding: '16px 18px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -129,13 +140,14 @@ function Node({
         </div>
         <div
           style={{
-            fontSize: 11.5,
+            fontSize: 12,
             color: B.ink2,
-            lineHeight: 1.45,
+            lineHeight: 1.5,
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 6,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            flex: 1,
           }}
         >
           {node.goal || (
@@ -150,8 +162,9 @@ function Node({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              marginTop: 10,
+              marginTop: 12,
               flexWrap: 'wrap',
+              flexShrink: 0,
             }}
           >
             {active && (
@@ -197,24 +210,16 @@ interface EdgeData {
 
 interface RoutedEdge extends EdgeData {
   key: string
-  kind: 'horizontal' | 'vertical' | 'step' | 'rail' | 'rowRail'
   sourcePosition: Position
   sourceIndex: number
   sourceCount: number
   targetPosition: Position
   targetIndex: number
   targetCount: number
-  railSide?: 'left' | 'right'
-  railDirection?: 'above' | 'below'
 }
 
 const EDGE_PORT_PAD_X = 34
 const EDGE_PORT_PAD_Y = 16
-const EDGE_SOURCE_GAP = 10
-const EDGE_TARGET_GAP = 1
-const EDGE_STEP_OFFSET = 24
-const EDGE_RADIUS = 18
-const EDGE_RAIL_OFFSET = 42
 
 function edgeKey(edge: EdgeData): string {
   return `${edge.from.id}:${edge.br.id}:${edge.to.id}`
@@ -231,90 +236,25 @@ function nodeCenter(
   }
 }
 
-function hasRowBlocker(
-  edge: EdgeData,
-  nodes: FlowNode[],
-  posOf: (node: FlowNode) => { x: number; y: number }
-) {
-  const fromCenter = nodeCenter(edge.from, posOf)
-  const toCenter = nodeCenter(edge.to, posOf)
-  const minX = Math.min(fromCenter.x, toCenter.x)
-  const maxX = Math.max(fromCenter.x, toCenter.x)
-
-  return nodes.some((node) => {
-    if (node.id === edge.from.id || node.id === edge.to.id) return false
-    const center = nodeCenter(node, posOf)
-    return (
-      center.x > minX &&
-      center.x < maxX &&
-      Math.abs(center.y - fromCenter.y) < B_NODE_H * 0.75
-    )
-  })
-}
-
 function chooseRoute(
   edge: EdgeData,
-  nodes: FlowNode[],
   posOf: (node: FlowNode) => { x: number; y: number }
-): Pick<
-  RoutedEdge,
-  'kind' | 'sourcePosition' | 'targetPosition' | 'railSide' | 'railDirection'
-> {
+): Pick<RoutedEdge, 'sourcePosition' | 'targetPosition'> {
   const fromCenter = nodeCenter(edge.from, posOf)
   const toCenter = nodeCenter(edge.to, posOf)
   const dx = toCenter.x - fromCenter.x
   const dy = toCenter.y - fromCenter.y
-  const sameRow = Math.abs(dy) < B_ROW * 0.45
-  const sameCol = Math.abs(dx) < B_COL * 0.35
-  const goingDown = dy >= 0
+  const horizontalDominant = Math.abs(dx) > Math.abs(dy) * 1.4
 
-  if (sameRow) {
-    if (hasRowBlocker(edge, nodes, posOf)) {
-      return {
-        kind: 'rowRail',
-        sourcePosition:
-          fromCenter.y < WORLD_H / 2 ? Position.Bottom : Position.Top,
-        targetPosition:
-          toCenter.y < WORLD_H / 2 ? Position.Bottom : Position.Top,
-        railDirection: fromCenter.y < WORLD_H / 2 ? 'below' : 'above',
-      }
-    }
-
+  if (horizontalDominant) {
     return dx >= 0
-      ? {
-          kind: 'horizontal',
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        }
-      : {
-          kind: 'horizontal',
-          sourcePosition: Position.Left,
-          targetPosition: Position.Right,
-        }
+      ? { sourcePosition: Position.Right, targetPosition: Position.Left }
+      : { sourcePosition: Position.Left, targetPosition: Position.Right }
   }
 
-  if (sameCol) {
-    if (Math.abs(dy) > B_ROW * 1.25) {
-      return {
-        kind: 'rail',
-        sourcePosition: goingDown ? Position.Bottom : Position.Top,
-        targetPosition: goingDown ? Position.Top : Position.Bottom,
-        railSide: fromCenter.x < WORLD_W / 2 ? 'left' : 'right',
-      }
-    }
-
-    return {
-      kind: 'vertical',
-      sourcePosition: goingDown ? Position.Bottom : Position.Top,
-      targetPosition: goingDown ? Position.Top : Position.Bottom,
-    }
-  }
-
-  return {
-    kind: 'step',
-    sourcePosition: goingDown ? Position.Bottom : Position.Top,
-    targetPosition: goingDown ? Position.Top : Position.Bottom,
-  }
+  return dy >= 0
+    ? { sourcePosition: Position.Bottom, targetPosition: Position.Top }
+    : { sourcePosition: Position.Top, targetPosition: Position.Bottom }
 }
 
 function laneRank(
@@ -336,19 +276,24 @@ function compareLaneRank(a: [number, number], b: [number, number]) {
   return a[1] - b[1]
 }
 
+type LaidOutEdge = EdgeData & {
+  key: string
+  sourcePosition: Position
+  targetPosition: Position
+}
+
 function buildRoutedEdges(
   edges: EdgeData[],
-  nodes: FlowNode[],
   posOf: (node: FlowNode) => { x: number; y: number }
 ): RoutedEdge[] {
-  const laidOut = edges.map((edge) => ({
+  const laidOut: LaidOutEdge[] = edges.map((edge) => ({
     ...edge,
     key: edgeKey(edge),
-    ...chooseRoute(edge, nodes, posOf),
+    ...chooseRoute(edge, posOf),
   }))
 
-  const outgoing = new Map<string, RoutedEdge[]>()
-  const incoming = new Map<string, RoutedEdge[]>()
+  const outgoing = new Map<string, LaidOutEdge[]>()
+  const incoming = new Map<string, LaidOutEdge[]>()
 
   for (const edge of laidOut) {
     const outKey = `${edge.from.id}:${edge.sourcePosition}`
@@ -550,74 +495,294 @@ function edgeAnchor(
   }
 }
 
-function edgeClearPoint(
-  point: { x: number; y: number },
-  position: Position,
-  distance: number
-) {
-  switch (position) {
-    case Position.Top:
-      return { x: point.x, y: point.y - distance }
-    case Position.Right:
-      return { x: point.x + distance, y: point.y }
-    case Position.Bottom:
-      return { x: point.x, y: point.y + distance }
-    case Position.Left:
-      return { x: point.x - distance, y: point.y }
-  }
+const EDGE_STUB = 22
+
+function horizSegmentCrosses(
+  y: number,
+  x1: number,
+  x2: number,
+  nodes: FlowNode[],
+  excludeIds: BlockType[],
+  posOf: (n: FlowNode) => { x: number; y: number }
+): FlowNode[] {
+  const xMin = Math.min(x1, x2)
+  const xMax = Math.max(x1, x2)
+  return nodes.filter((n) => {
+    if (excludeIds.includes(n.id)) return false
+    const p = posOf(n)
+    return (
+      p.x < xMax && p.x + B_NODE_W > xMin && p.y <= y && p.y + B_NODE_H >= y
+    )
+  })
 }
 
-function roundedOrthPath(
-  points: Array<{ x: number; y: number }>,
-  radius: number
-): string {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M${points[0]!.x},${points[0]!.y}`
+function vertSegmentCrosses(
+  x: number,
+  y1: number,
+  y2: number,
+  nodes: FlowNode[],
+  excludeIds: BlockType[],
+  posOf: (n: FlowNode) => { x: number; y: number }
+): FlowNode[] {
+  const yMin = Math.min(y1, y2)
+  const yMax = Math.max(y1, y2)
+  return nodes.filter((n) => {
+    if (excludeIds.includes(n.id)) return false
+    const p = posOf(n)
+    return (
+      p.y < yMax && p.y + B_NODE_H > yMin && p.x <= x && p.x + B_NODE_W >= x
+    )
+  })
+}
 
-  let d = `M${points[0]!.x},${points[0]!.y}`
+const LANE_MARGIN = 22
 
-  for (let i = 1; i < points.length; i += 1) {
-    const curr = points[i]!
-    const prev = points[i - 1]!
-    const next = points[i + 1]
+function findEscape(
+  preferredVal: number,
+  ranges: Array<{ start: number; end: number }>,
+  margin = LANE_MARGIN
+): number {
+  if (ranges.length === 0) return preferredVal
 
-    if (!next) {
-      d += ` L${curr.x},${curr.y}`
-      continue
+  const sorted = [...ranges].sort((a, b) => a.start - b.start)
+  const merged: Array<[number, number]> = []
+  for (const r of sorted) {
+    const last = merged[merged.length - 1]
+    if (last && last[1] >= r.start) {
+      last[1] = Math.max(last[1], r.end)
+    } else {
+      merged.push([r.start, r.end])
     }
-
-    const inDx = curr.x - prev.x
-    const inDy = curr.y - prev.y
-    const outDx = next.x - curr.x
-    const outDy = next.y - curr.y
-    const inLen = Math.abs(inDx) + Math.abs(inDy)
-    const outLen = Math.abs(outDx) + Math.abs(outDy)
-
-    if (inLen === 0 || outLen === 0) {
-      d += ` L${curr.x},${curr.y}`
-      continue
-    }
-
-    const bend = Math.min(radius, inLen / 2, outLen / 2)
-    const before = {
-      x: curr.x - Math.sign(inDx) * bend,
-      y: curr.y - Math.sign(inDy) * bend,
-    }
-    const after = {
-      x: curr.x + Math.sign(outDx) * bend,
-      y: curr.y + Math.sign(outDy) * bend,
-    }
-
-    d += ` L${before.x},${before.y} Q${curr.x},${curr.y} ${after.x},${after.y}`
   }
 
+  const gapCenter = (gapStart: number, gapEnd: number): number => {
+    if (gapStart === -Infinity) return gapEnd - margin
+    if (gapEnd === Infinity) return gapStart + margin
+    return (gapStart + gapEnd) / 2
+  }
+
+  const idx = merged.findIndex(
+    (m) => m[0] <= preferredVal && preferredVal <= m[1]
+  )
+
+  if (idx === -1) {
+    let gapStart = -Infinity
+    let gapEnd = Infinity
+    for (const m of merged) {
+      if (m[1] < preferredVal) gapStart = Math.max(gapStart, m[1])
+      if (m[0] > preferredVal) gapEnd = Math.min(gapEnd, m[0])
+    }
+    return gapCenter(gapStart, gapEnd)
+  }
+
+  const aboveStart = idx > 0 ? merged[idx - 1]![1] : -Infinity
+  const aboveEnd = merged[idx]![0]
+  const belowStart = merged[idx]![1]
+  const belowEnd = idx < merged.length - 1 ? merged[idx + 1]![0] : Infinity
+
+  const aboveCandidate = gapCenter(aboveStart, aboveEnd)
+  const belowCandidate = gapCenter(belowStart, belowEnd)
+
+  return Math.abs(aboveCandidate - preferredVal) <=
+    Math.abs(belowCandidate - preferredVal)
+    ? aboveCandidate
+    : belowCandidate
+}
+
+function findLaneX(
+  preferredX: number,
+  _y1: number,
+  _y2: number,
+  nodes: FlowNode[],
+  excludeIds: BlockType[],
+  posOf: (n: FlowNode) => { x: number; y: number }
+): number {
+  const ranges = nodes
+    .filter((n) => !excludeIds.includes(n.id))
+    .map((n) => posOf(n))
+    .map((p) => ({ start: p.x, end: p.x + B_NODE_W }))
+  return findEscape(preferredX, ranges)
+}
+
+function findLaneY(
+  preferredY: number,
+  _x1: number,
+  _x2: number,
+  nodes: FlowNode[],
+  excludeIds: BlockType[],
+  posOf: (n: FlowNode) => { x: number; y: number }
+): number {
+  const ranges = nodes
+    .filter((n) => !excludeIds.includes(n.id))
+    .map((n) => posOf(n))
+    .map((p) => ({ start: p.y, end: p.y + B_NODE_H }))
+  return findEscape(preferredY, ranges)
+}
+
+function pointsToPath(points: Array<{ x: number; y: number }>): string {
+  if (points.length === 0) return ''
+  let d = `M${points[0]!.x},${points[0]!.y}`
+  for (let i = 1; i < points.length; i += 1) {
+    d += ` L${points[i]!.x},${points[i]!.y}`
+  }
   return d
 }
 
-function routePath(
-  edge: RoutedEdge,
-  posOf: (node: FlowNode) => { x: number; y: number }
+function findColGaps(
+  nodes: FlowNode[],
+  posOf: (n: FlowNode) => { x: number; y: number }
+): Array<[number, number]> {
+  const ranges = nodes
+    .map((n) => posOf(n))
+    .map((p) => ({ start: p.x, end: p.x + B_NODE_W }))
+    .sort((a, b) => a.start - b.start)
+  const merged: Array<{ start: number; end: number }> = []
+  for (const r of ranges) {
+    const last = merged[merged.length - 1]
+    if (last && last.end >= r.start) {
+      last.end = Math.max(last.end, r.end)
+    } else {
+      merged.push({ ...r })
+    }
+  }
+  const gaps: Array<[number, number]> = []
+  for (let i = 0; i < merged.length - 1; i += 1) {
+    gaps.push([merged[i]!.end, merged[i + 1]!.start])
+  }
+  return gaps
+}
+
+function findRowGaps(
+  nodes: FlowNode[],
+  posOf: (n: FlowNode) => { x: number; y: number }
+): Array<[number, number]> {
+  const ranges = nodes
+    .map((n) => posOf(n))
+    .map((p) => ({ start: p.y, end: p.y + B_NODE_H }))
+    .sort((a, b) => a.start - b.start)
+  const merged: Array<{ start: number; end: number }> = []
+  for (const r of ranges) {
+    const last = merged[merged.length - 1]
+    if (last && last.end >= r.start) {
+      last.end = Math.max(last.end, r.end)
+    } else {
+      merged.push({ ...r })
+    }
+  }
+  const gaps: Array<[number, number]> = []
+  for (let i = 0; i < merged.length - 1; i += 1) {
+    gaps.push([merged[i]!.end, merged[i + 1]!.start])
+  }
+  return gaps
+}
+
+interface SegmentRef {
+  pathIdx: number
+  startIdx: number
+  rangeMin: number
+  rangeMax: number
+  value: number
+}
+
+function clusterByOverlap(segments: SegmentRef[]): SegmentRef[][] {
+  if (segments.length === 0) return []
+  const sorted = [...segments].sort((a, b) => a.rangeMin - b.rangeMin)
+  const clusters: SegmentRef[][] = [[sorted[0]!]]
+  for (let i = 1; i < sorted.length; i += 1) {
+    const seg = sorted[i]!
+    const last = clusters[clusters.length - 1]!
+    const lastMax = Math.max(...last.map((s) => s.rangeMax))
+    if (seg.rangeMin <= lastMax) {
+      last.push(seg)
+    } else {
+      clusters.push([seg])
+    }
+  }
+  return clusters
+}
+
+function distributeLanes(
+  paths: Array<{ points: Array<{ x: number; y: number }> }>,
+  nodes: FlowNode[],
+  posOf: (n: FlowNode) => { x: number; y: number }
 ) {
+  const colGaps = findColGaps(nodes, posOf)
+  const rowGaps = findRowGaps(nodes, posOf)
+
+  for (const [gapStart, gapEnd] of colGaps) {
+    const segments: SegmentRef[] = []
+    for (let p = 0; p < paths.length; p += 1) {
+      const pts = paths[p]!.points
+      for (let i = 0; i < pts.length - 1; i += 1) {
+        const a = pts[i]!
+        const b = pts[i + 1]!
+        if (a.x === b.x && a.x > gapStart && a.x < gapEnd) {
+          segments.push({
+            pathIdx: p,
+            startIdx: i,
+            rangeMin: Math.min(a.y, b.y),
+            rangeMax: Math.max(a.y, b.y),
+            value: a.x,
+          })
+        }
+      }
+    }
+    const clusters = clusterByOverlap(segments)
+    for (const cluster of clusters) {
+      if (cluster.length < 2) continue
+      const n = cluster.length
+      for (let i = 0; i < n; i += 1) {
+        const seg = cluster[i]!
+        const newX = gapStart + ((gapEnd - gapStart) * (i + 1)) / (n + 1)
+        const pts = paths[seg.pathIdx]!.points
+        const oldX = seg.value
+        if (pts[seg.startIdx]!.x === oldX) pts[seg.startIdx]!.x = newX
+        if (pts[seg.startIdx + 1]!.x === oldX) pts[seg.startIdx + 1]!.x = newX
+        seg.value = newX
+      }
+    }
+  }
+
+  for (const [gapStart, gapEnd] of rowGaps) {
+    const segments: SegmentRef[] = []
+    for (let p = 0; p < paths.length; p += 1) {
+      const pts = paths[p]!.points
+      for (let i = 0; i < pts.length - 1; i += 1) {
+        const a = pts[i]!
+        const b = pts[i + 1]!
+        if (a.y === b.y && a.y > gapStart && a.y < gapEnd) {
+          segments.push({
+            pathIdx: p,
+            startIdx: i,
+            rangeMin: Math.min(a.x, b.x),
+            rangeMax: Math.max(a.x, b.x),
+            value: a.y,
+          })
+        }
+      }
+    }
+    const clusters = clusterByOverlap(segments)
+    for (const cluster of clusters) {
+      if (cluster.length < 2) continue
+      const n = cluster.length
+      for (let i = 0; i < n; i += 1) {
+        const seg = cluster[i]!
+        const newY = gapStart + ((gapEnd - gapStart) * (i + 1)) / (n + 1)
+        const pts = paths[seg.pathIdx]!.points
+        const oldY = seg.value
+        if (pts[seg.startIdx]!.y === oldY) pts[seg.startIdx]!.y = newY
+        if (pts[seg.startIdx + 1]!.y === oldY) pts[seg.startIdx + 1]!.y = newY
+        seg.value = newY
+      }
+    }
+  }
+}
+
+function routePoints(
+  edge: RoutedEdge,
+  posOf: (node: FlowNode) => { x: number; y: number },
+  allNodes: FlowNode[]
+): Array<{ x: number; y: number }> {
   const source = edgeAnchor(
     edge.from,
     edge.sourcePosition,
@@ -625,119 +790,183 @@ function routePath(
     edge.sourceCount,
     posOf
   )
-  const targetBase = edgeAnchor(
+  const target = edgeAnchor(
     edge.to,
     edge.targetPosition,
     edge.targetIndex,
     edge.targetCount,
     posOf
   )
-  const sourceClear = edgeClearPoint(
-    source,
-    edge.sourcePosition,
-    EDGE_SOURCE_GAP
-  )
-  const targetClear = edgeClearPoint(
-    targetBase,
-    edge.targetPosition,
-    EDGE_TARGET_GAP
-  )
+  const exclude: BlockType[] = [edge.from.id, edge.to.id]
+  const sourceIsVertical =
+    edge.sourcePosition === Position.Top ||
+    edge.sourcePosition === Position.Bottom
 
-  switch (edge.kind) {
-    case 'horizontal': {
-      const laneY = (sourceClear.y + targetClear.y) / 2
-      return roundedOrthPath(
-        [
-          sourceClear,
-          { x: sourceClear.x, y: laneY },
-          { x: targetClear.x, y: laneY },
-          targetClear,
-          targetBase,
-        ],
-        EDGE_RADIUS
+  if (sourceIsVertical) {
+    if (Math.abs(source.x - target.x) < 0.5) {
+      const crosses = vertSegmentCrosses(
+        source.x,
+        source.y,
+        target.y,
+        allNodes,
+        exclude,
+        posOf
       )
+      if (crosses.length === 0) return [source, target]
     }
-    case 'vertical': {
-      const laneX = (sourceClear.x + targetClear.x) / 2
-      return roundedOrthPath(
-        [
-          sourceClear,
-          { x: laneX, y: sourceClear.y },
-          { x: laneX, y: targetClear.y },
-          targetClear,
-          targetBase,
-        ],
-        EDGE_RADIUS
-      )
-    }
-    case 'step': {
-      const midY = sourceClear.y + (targetClear.y - sourceClear.y) / 2
-      return roundedOrthPath(
-        [
-          sourceClear,
-          { x: sourceClear.x, y: midY },
-          { x: targetClear.x, y: midY },
-          targetClear,
-          targetBase,
-        ],
-        EDGE_RADIUS
-      )
-    }
-    case 'rail': {
-      const railX =
-        edge.railSide === 'left'
-          ? Math.min(sourceClear.x, targetClear.x) - EDGE_RAIL_OFFSET
-          : Math.max(sourceClear.x, targetClear.x) + EDGE_RAIL_OFFSET
-      const sourceStubY =
-        sourceClear.y +
-        (edge.sourcePosition === Position.Bottom
-          ? EDGE_STEP_OFFSET
-          : -EDGE_STEP_OFFSET)
-      const targetStubY =
-        targetClear.y +
-        (edge.targetPosition === Position.Top
-          ? -EDGE_STEP_OFFSET
-          : EDGE_STEP_OFFSET)
 
-      return roundedOrthPath(
-        [
-          sourceClear,
-          { x: sourceClear.x, y: sourceStubY },
-          { x: railX, y: sourceStubY },
-          { x: railX, y: targetStubY },
-          { x: targetClear.x, y: targetStubY },
-          targetClear,
-          targetBase,
-        ],
-        EDGE_RADIUS
-      )
-    }
-    case 'rowRail': {
-      const railY =
-        edge.railDirection === 'below'
-          ? Math.max(sourceClear.y, targetClear.y) + EDGE_STEP_OFFSET
-          : Math.min(sourceClear.y, targetClear.y) - EDGE_STEP_OFFSET
+    const dir = edge.sourcePosition === Position.Bottom ? 1 : -1
+    const span = Math.abs(target.y - source.y)
+    const stub = Math.min(EDGE_STUB, Math.max(span / 2, 4))
+    const sourceStubY = source.y + dir * stub
+    const targetStubY = target.y - dir * stub
 
-      return roundedOrthPath(
-        [
-          sourceClear,
-          { x: sourceClear.x, y: railY },
-          { x: targetClear.x, y: railY },
-          targetClear,
-          targetBase,
-        ],
-        EDGE_RADIUS
-      )
+    const segH = horizSegmentCrosses(
+      sourceStubY,
+      source.x,
+      target.x,
+      allNodes,
+      exclude,
+      posOf
+    )
+    const segVIn = vertSegmentCrosses(
+      target.x,
+      sourceStubY,
+      target.y,
+      allNodes,
+      exclude,
+      posOf
+    )
+
+    if (segH.length === 0 && segVIn.length === 0) {
+      return [
+        source,
+        { x: source.x, y: sourceStubY },
+        { x: target.x, y: sourceStubY },
+        target,
+      ]
     }
+
+    const laneX = findLaneX(
+      (source.x + target.x) / 2,
+      sourceStubY,
+      targetStubY,
+      allNodes,
+      exclude,
+      posOf
+    )
+    return [
+      source,
+      { x: source.x, y: sourceStubY },
+      { x: laneX, y: sourceStubY },
+      { x: laneX, y: targetStubY },
+      { x: target.x, y: targetStubY },
+      target,
+    ]
   }
+
+  if (Math.abs(source.y - target.y) < 0.5) {
+    const crosses = horizSegmentCrosses(
+      source.y,
+      source.x,
+      target.x,
+      allNodes,
+      exclude,
+      posOf
+    )
+    if (crosses.length === 0) return [source, target]
+  }
+
+  const dir = edge.sourcePosition === Position.Right ? 1 : -1
+  const span = Math.abs(target.x - source.x)
+  const stub = Math.min(EDGE_STUB, Math.max(span / 2, 4))
+  const sourceStubX = source.x + dir * stub
+  const targetStubX = target.x - dir * stub
+
+  const segV = vertSegmentCrosses(
+    sourceStubX,
+    source.y,
+    target.y,
+    allNodes,
+    exclude,
+    posOf
+  )
+  const segHIn = horizSegmentCrosses(
+    target.y,
+    sourceStubX,
+    target.x,
+    allNodes,
+    exclude,
+    posOf
+  )
+
+  if (segV.length === 0 && segHIn.length === 0) {
+    return [
+      source,
+      { x: sourceStubX, y: source.y },
+      { x: sourceStubX, y: target.y },
+      target,
+    ]
+  }
+
+  const laneY = findLaneY(
+    (source.y + target.y) / 2,
+    sourceStubX,
+    targetStubX,
+    allNodes,
+    exclude,
+    posOf
+  )
+  return [
+    source,
+    { x: sourceStubX, y: source.y },
+    { x: sourceStubX, y: laneY },
+    { x: targetStubX, y: laneY },
+    { x: targetStubX, y: target.y },
+    target,
+  ]
+}
+
+function pairBidirectional(edges: RoutedEdge[]): Array<{
+  edge: RoutedEdge
+  partnerBranch: { fromId: BlockType; branchId: string } | null
+}> {
+  const byForwardKey = new Map<string, number>()
+  const result: Array<{
+    edge: RoutedEdge
+    partnerBranch: { fromId: BlockType; branchId: string } | null
+  }> = []
+
+  for (const edge of edges) {
+    const reverseKey = `${edge.to.id}::${edge.from.id}`
+    const existing = byForwardKey.get(reverseKey)
+    if (existing !== undefined && result[existing]!.partnerBranch === null) {
+      result[existing]!.partnerBranch = {
+        fromId: edge.from.id,
+        branchId: edge.br.id,
+      }
+      continue
+    }
+    const forwardKey = `${edge.from.id}::${edge.to.id}`
+    byForwardKey.set(forwardKey, result.length)
+    result.push({ edge, partnerBranch: null })
+  }
+
+  return result
 }
 
 function Edges({
   nodes,
   dragOverrides,
+  selectedBranch,
+  onSelectBranch,
 }: {
   nodes: FlowNode[]
   dragOverrides: Record<string, { x: number; y: number }>
+  selectedBranch: { fromId: BlockType; branchId: string } | null
+  onSelectBranch: (
+    selection: { fromId: BlockType; branchId: string } | null
+  ) => void
 }) {
   const edges: EdgeData[] = nodes.flatMap((n) =>
     n.branches.reduce<EdgeData[]>((acc, br) => {
@@ -749,9 +978,14 @@ function Edges({
   const posOf = (n: FlowNode) => dragOverrides[n.id] ?? nodePx(n)
   const routedEdges = buildRoutedEdges(
     representativeIncomingEdges(edges, nodes, posOf),
-    nodes,
     posOf
   )
+  const pairedEdges = pairBidirectional(routedEdges)
+  const pathsWithPoints = pairedEdges.map((pe) => ({
+    paired: pe,
+    points: routePoints(pe.edge, posOf, nodes),
+  }))
+  distributeLanes(pathsWithPoints, nodes, posOf)
   return (
     <svg
       style={{
@@ -770,27 +1004,52 @@ function Edges({
           markerHeight="7"
           refX="8"
           refY="4"
-          orient="auto"
+          orient="auto-start-reverse"
           markerUnits="userSpaceOnUse"
         >
           <path d="M0,0 L8,4 L0,8 Z" fill="context-stroke" />
         </marker>
       </defs>
-      {routedEdges.map((edge) => {
+      {pathsWithPoints.map(({ paired: { edge, partnerBranch }, points }) => {
         const color = blockColor(edge.from.type, { l: 0.58, c: 0.14 })
-        const d = routePath(edge, posOf)
+        const d = pointsToPath(points)
+        const isSelected =
+          (selectedBranch?.fromId === edge.from.id &&
+            selectedBranch?.branchId === edge.br.id) ||
+          (partnerBranch !== null &&
+            selectedBranch?.fromId === partnerBranch.fromId &&
+            selectedBranch?.branchId === partnerBranch.branchId)
+        const handleSelect = (e: React.MouseEvent) => {
+          e.stopPropagation()
+          onSelectBranch({ fromId: edge.from.id, branchId: edge.br.id })
+        }
         return (
-          <path
-            key={edge.key}
-            d={d}
-            fill="none"
-            stroke={color}
-            strokeWidth={1.5}
-            opacity={0.55}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            markerEnd="url(#flow-arrow)"
-          />
+          <g key={edge.key}>
+            <path
+              d={d}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={14}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+              onClick={handleSelect}
+            />
+            <path
+              d={d}
+              fill="none"
+              stroke={color}
+              strokeWidth={isSelected ? 2.5 : 1.5}
+              opacity={isSelected ? 1 : 0.55}
+              strokeLinecap="butt"
+              strokeLinejoin="miter"
+              markerEnd="url(#flow-arrow)"
+              markerStart={
+                partnerBranch !== null ? 'url(#flow-arrow)' : undefined
+              }
+              style={{ pointerEvents: 'none' }}
+            />
+          </g>
         )
       })}
     </svg>
@@ -801,8 +1060,8 @@ function snapToGrid(val: number, grid = 20): number {
   return Math.round(val / grid) * grid
 }
 
-const WORLD_W = 1600
-const WORLD_H = 1200
+const WORLD_W = 1800
+const WORLD_H = 1500
 
 export default function BCanvas() {
   const state = useFlowState()
@@ -867,6 +1126,27 @@ export default function BCanvas() {
     }
   }, [])
 
+  // Delete/Backspace removes the selected branch.
+  useEffect(() => {
+    const sel = state.selectedBranch
+    if (!sel) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      const t = e.target as HTMLElement | null
+      if (
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          t.isContentEditable)
+      )
+        return
+      e.preventDefault()
+      actions.deleteBranch(sel.fromId, sel.branchId)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [state.selectedBranch, actions])
+
   const onWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
     if (!e.ctrlKey && !e.metaKey) return // only zoom on ctrl/cmd+wheel; normal wheel scrolls
     e.preventDefault()
@@ -884,10 +1164,17 @@ export default function BCanvas() {
   }
 
   const onPointerDownContainer = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
     const isMiddle = e.button === 1
     const isLeftSpace = e.button === 0 && spaceDown
+    const isLeftPlain = e.button === 0 && !spaceDown
+    const onNode = !!target.closest('[data-node]')
+    const onEdge = target.closest('svg') !== null && target.tagName === 'path'
+    if (isLeftPlain && !onNode && !onEdge && state.selectedBranch) {
+      actions.selectBranch(null)
+    }
     if (!isMiddle && !isLeftSpace) return
-    if ((e.target as HTMLElement).closest('[data-node]')) return
+    if (onNode) return
     e.preventDefault()
     setPanning(true)
     panStart.current = {
@@ -1098,7 +1385,12 @@ export default function BCanvas() {
           }}
         />
         <div style={{ position: 'relative', width: WORLD_W, height: WORLD_H }}>
-          <Edges nodes={state.flow.nodes} dragOverrides={dragOverrides} />
+          <Edges
+            nodes={state.flow.nodes}
+            dragOverrides={dragOverrides}
+            selectedBranch={state.selectedBranch}
+            onSelectBranch={actions.selectBranch}
+          />
           {state.flow.nodes.map((n) => (
             <div data-node={n.id} key={n.id}>
               <Node

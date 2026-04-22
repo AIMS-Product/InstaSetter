@@ -42,6 +42,7 @@ export interface FlowState {
   draftVersion: number
   toast: string | null
   selectedId: BlockType | null
+  selectedBranch: { fromId: BlockType; branchId: string } | null
   activeTab: 'design' | 'routing' | 'triggers' | 'data'
   paletteOpen: boolean
   dirtySincePublish: boolean
@@ -49,6 +50,10 @@ export interface FlowState {
 
 type Action =
   | { type: 'select_block'; id: BlockType | null }
+  | {
+      type: 'select_branch'
+      selection: { fromId: BlockType; branchId: string } | null
+    }
   | { type: 'set_tab'; tab: FlowState['activeTab'] }
   | {
       type: 'update_block_field'
@@ -252,6 +257,7 @@ export function buildInitialState(
     draftVersion: 1,
     toast: null,
     selectedId: null,
+    selectedBranch: null,
     activeTab: 'design',
     paletteOpen: false,
     dirtySincePublish: false,
@@ -373,8 +379,15 @@ export function reducer(state: FlowState, action: Action): FlowState {
       return {
         ...state,
         selectedId: action.id,
+        selectedBranch: action.id ? null : state.selectedBranch,
         activeTab: action.id ? state.activeTab : 'design',
         paletteOpen: action.id ? false : state.paletteOpen,
+      }
+    case 'select_branch':
+      return {
+        ...state,
+        selectedBranch: action.selection,
+        selectedId: action.selection ? null : state.selectedId,
       }
     case 'set_tab':
       return { ...state, activeTab: action.tab }
@@ -422,11 +435,16 @@ export function reducer(state: FlowState, action: Action): FlowState {
           b.id === action.branchId ? { ...b, ...action.patch } : b
         ),
       }))
-    case 'delete_branch':
-      return replaceNode(state, action.id, (n) => ({
+    case 'delete_branch': {
+      const next = replaceNode(state, action.id, (n) => ({
         ...n,
         branches: n.branches.filter((b) => b.id !== action.branchId),
       }))
+      const wasSelected =
+        state.selectedBranch?.fromId === action.id &&
+        state.selectedBranch?.branchId === action.branchId
+      return wasSelected ? { ...next, selectedBranch: null } : next
+    }
     case 'move_node':
       return replaceNode(state, action.id, (n) => ({ ...n, pos: action.pos }))
     case 'add_node':
@@ -654,6 +672,9 @@ export function useFlowActions() {
   return useMemo(
     () => ({
       select: (id: BlockType | null) => dispatch({ type: 'select_block', id }),
+      selectBranch: (
+        selection: { fromId: BlockType; branchId: string } | null
+      ) => dispatch({ type: 'select_branch', selection }),
       setTab: (tab: FlowState['activeTab']) =>
         dispatch({ type: 'set_tab', tab }),
       updateBlock: (

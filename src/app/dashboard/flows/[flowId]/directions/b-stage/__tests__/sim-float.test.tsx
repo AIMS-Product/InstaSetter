@@ -36,7 +36,7 @@ function Wrap({ children }: { children: ReactNode }) {
 }
 
 async function typeAndSend(text: string) {
-  const input = await screen.findByPlaceholderText(/type as prospect/i)
+  const input = await screen.findByPlaceholderText(/write a prospect dm/i)
   await userEvent.type(input, text)
   const send = screen.getByRole('button', { name: /send/i })
   await userEvent.click(send)
@@ -140,7 +140,7 @@ describe('BSimFloat — overrides pass-through', () => {
     await typeAndSend('hello')
     await screen.findByText(/simulator request failed\. please try again\./i)
 
-    const input = screen.getByPlaceholderText(/type as prospect/i)
+    const input = screen.getByPlaceholderText(/write a prospect dm/i)
     const send = screen.getByRole('button', { name: /send/i })
     expect((input as HTMLInputElement).disabled).toBe(false)
     expect((send as HTMLButtonElement).disabled).toBe(true)
