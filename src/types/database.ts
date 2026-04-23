@@ -20,7 +20,6 @@ export type Database = {
           email: string | null
           first_seen_at: string
           id: string
-          inro_contact_id: string | null
           instagram_handle: string
           last_message_at: string
           name: string | null
@@ -38,7 +37,6 @@ export type Database = {
           email?: string | null
           first_seen_at?: string
           id?: string
-          inro_contact_id?: string | null
           instagram_handle: string
           last_message_at?: string
           name?: string | null
@@ -56,7 +54,6 @@ export type Database = {
           email?: string | null
           first_seen_at?: string
           id?: string
-          inro_contact_id?: string | null
           instagram_handle?: string
           last_message_at?: string
           name?: string | null
@@ -672,8 +669,8 @@ export type Database = {
           conversation_id: string
           created_at: string
           dedup_hash: string | null
+          external_message_id: string | null
           id: string
-          inro_message_id: string | null
           metadata: Json | null
           role: string
           token_count: number | null
@@ -683,8 +680,8 @@ export type Database = {
           conversation_id: string
           created_at?: string
           dedup_hash?: string | null
+          external_message_id?: string | null
           id?: string
-          inro_message_id?: string | null
           metadata?: Json | null
           role: string
           token_count?: number | null
@@ -694,8 +691,8 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           dedup_hash?: string | null
+          external_message_id?: string | null
           id?: string
-          inro_message_id?: string | null
           metadata?: Json | null
           role?: string
           token_count?: number | null

@@ -128,7 +128,7 @@ Fallback if `operator` field turns out not to exist in practice: **B** (poll pau
 
 ## Interim state (now)
 
-Global kill switch via `BOT_ENABLED` env var. When set to `false`, both webhook handlers (SendPulse + Inro) short-circuit to a 200 response with `skipped: 'bot_paused'`. Set it on Vercel and the bot goes silent; unset / set to `true` to resume.
+Global kill switch via `BOT_ENABLED` env var. When set to `false`, the SendPulse webhook handler short-circuits to a 200 response with `skipped: 'bot_paused'`. Set it on Vercel and the bot goes silent; unset / set to `true` to resume.
 
 This is a temporary operational pause, not the final solution.
 

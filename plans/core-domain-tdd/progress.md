@@ -15,7 +15,7 @@ Wave 3b (parallel): Issue 18, 20
 | 1   | Test infrastructure setup                      | DONE   | ✓   | ✓     | ✓        | 5383aed |
 | 2   | Database migration — core domain tables        | DONE   | ✓   | ✓     | ✓        | 9f98d11 |
 | 3   | Domain enums and constants                     | DONE   | ✓   | ✓     | ✓        | c901bcd |
-| 4   | Inro webhook payload Zod schema                | DONE   | ✓   | ✓     | ✓        | 23d5594 |
+| 4   | SendPulse webhook payload Zod schema           | DONE   | ✓   | ✓     | ✓        | 23d5594 |
 | 5   | Lead summary Zod schema                        | DONE   | ✓   | ✓     | ✓        | ff18231 |
 | 6   | Message dedup hash utility                     | DONE   | ✓   | ✓     | ✓        | 8f240fb |
 | 7   | Config expansion + service role client         | DONE   | ✓   | ✓     | ✓        | 1a06669 |

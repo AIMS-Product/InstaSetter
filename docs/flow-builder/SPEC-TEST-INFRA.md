@@ -323,7 +323,7 @@ export async function insertTestContact(
 ): Promise<ContactRow & { id: string }> {
   const handle = `testuser_${nanoid(6)}`
   const row: ContactRow = {
-    inro_contact_id: `inro_${nanoid(8)}`,
+    sendpulse_contact_id: `sendpulse_${nanoid(8)}`,
     instagram_handle: handle,
     ...overrides,
   }

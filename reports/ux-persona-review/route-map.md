@@ -36,7 +36,6 @@ No `router.push` / `router.replace` / `redirect()` found in src/app.
 | Endpoint                  | File                                    | Kind             |
 | ------------------------- | --------------------------------------- | ---------------- |
 | `/api/webhooks/sendpulse` | src/app/api/webhooks/sendpulse/route.ts | External webhook |
-| `/api/webhooks/inro`      | src/app/api/webhooks/inro/route.ts      | External webhook |
 
 ## Flow Builder internal navigation (state-based, not URL)
 

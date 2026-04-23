@@ -11,10 +11,10 @@
 ```
 ┌─────────────────┐     HTTP POST      ┌──────────────────────────────────┐
 │                  │  (scenario action)  │         InstaSetter App          │
-│      Inro        │ ────────────────▶  │                                  │
+│      SendPulse        │ ────────────────▶  │                                  │
 │  (IG DM layer)   │                    │  ┌────────────────────────────┐  │
 │                  │  ◀──────────────── │  │   Webhook Handler          │  │
-│                  │  Inro REST API /   │  │   /api/webhooks/inro       │  │
+│                  │  SendPulse REST API /   │  │   /api/webhooks/sendpulse       │  │
 │                  │  MCP (send reply)  │  └────────┬───────────────────┘  │
 └─────────────────┘                    │           │                      │
                                        │  ┌────────▼───────────────────┐  │
@@ -47,21 +47,21 @@
 ### Message Flow (per DM)
 
 1. Contact sends Instagram DM
-2. Inro scenario triggers → HTTP Request action POSTs to `/api/webhooks/inro`
+2. SendPulse scenario triggers → HTTP Request action POSTs to `/api/webhooks/sendpulse`
 3. Payload includes: `contact_id`, `username`, `trigger.message`, conversation context
 4. App loads full conversation history from Supabase `messages` table
 5. App calls Claude Messages API with system prompt + full message history
 6. Claude returns reply text + (optionally) structured data (email captured, qualification score, lead summary)
-7. App sends reply back to contact via Inro REST API or MCP
+7. App sends reply back to contact via SendPulse REST API or MCP
 8. App stores both the incoming message and Claude's reply in Supabase
 9. If a lead event occurred (email captured, call booked, conversation ended), app triggers downstream integrations
 
-### Key Constraint: Inro Has No Push Webhooks
+### Key Constraint: SendPulse Has No Push Webhooks
 
-Inro does **not** fire native webhook events when a message arrives. Instead, you configure an Inro **scenario** with a trigger (keyword, all DMs, comment) and add an **HTTP Request action** that POSTs to our endpoint. This means:
+SendPulse receives Instagram message events and forwards them through its webhook integration. Configure a SendPulse flow with a trigger and HTTP Request action that POSTs to our endpoint. This means:
 
-- We must configure the Inro scenario to catch all relevant DM triggers
-- The payload shape is configurable by us (we define what variables Inro sends)
+- We must configure the SendPulse scenario to catch all relevant DM triggers
+- The payload shape is configurable by us (we define what variables SendPulse sends)
 - We should request: `contact.id`, `contact.username`, `contact.name`, `contact.email`, `trigger.message`, `trigger.date`
 
 ### Key Constraint: Anthropic API Is Stateless
@@ -82,12 +82,12 @@ These are the core tables. Not SQL — just the shape. Will be refined when we b
 
 ### contacts
 
-The canonical contact record. Synced from Inro on first interaction.
+The canonical contact record. Synced from SendPulse on first interaction.
 
 ```
 contacts
 ├── id                  uuid (PK)
-├── inro_contact_id     text (unique)     -- Inro's internal ID
+├── sendpulse_contact_id     text (unique)     -- SendPulse's internal ID
 ├── instagram_handle    text (unique)
 ├── instagram_name      text?
 ├── email               text?
@@ -131,10 +131,10 @@ messages
 ├── conversation_id     uuid (FK → conversations)
 ├── role                text              -- user | assistant
 ├── content             text              -- message text
-├── inro_message_id     text? (unique)    -- dedup key, if available from Inro
+├── sendpulse_message_id     text? (unique)    -- dedup key, if available from SendPulse
 ├── dedup_hash          text? (unique)    -- fallback: hash of contact_id + content + timestamp
 ├── created_at          timestamptz
-└── metadata            jsonb?            -- any extra context from Inro
+└── metadata            jsonb?            -- any extra context from SendPulse
 ```
 
 ### leads
@@ -173,7 +173,7 @@ integration_events
 ├── id                  uuid (PK)
 ├── lead_id             uuid? (FK → leads)
 ├── contact_id          uuid (FK → contacts)
-├── integration         text              -- close_crm | customerio | slack | calendly | inro
+├── integration         text              -- close_crm | customerio | slack | calendly | sendpulse
 ├── action              text              -- send_message | create_contact | trigger_sequence | send_alert
 ├── status              text              -- pending | success | failed
 ├── request_payload     jsonb?
@@ -192,7 +192,7 @@ src/
 ├── app/
 │   ├── api/
 │   │   └── webhooks/
-│   │       └── inro/           -- POST handler for Inro HTTP Request actions
+│   │       └── sendpulse/           -- POST handler for SendPulse HTTP Request actions
 │   ├── (dashboard)/
 │   │   ├── conversations/      -- conversation list + detail viewer
 │   │   ├── leads/              -- lead pipeline (hot/warm/cold)
@@ -211,7 +211,7 @@ src/
 │   └── ui/                     -- shared UI primitives (shadcn/ui)
 ├── lib/
 │   ├── services/
-│   │   ├── inro.ts             -- Inro API client (send messages, read contacts)
+│   │   ├── sendpulse.ts             -- SendPulse API client (send messages, read contacts)
 │   │   ├── claude.ts           -- Claude API wrapper (build messages, call API, parse response)
 │   │   ├── conversation.ts     -- conversation state management (load history, store messages)
 │   │   ├── lead.ts             -- lead creation, qualification logic, summary parsing
@@ -229,7 +229,7 @@ src/
 ├── hooks/
 ├── types/
 │   ├── database.ts             -- generated Supabase types
-│   ├── inro.ts                 -- Inro webhook payload types
+│   ├── sendpulse.ts                 -- SendPulse webhook payload types
 │   ├── lead.ts                 -- lead summary schema (Zod + TS)
 │   └── claude.ts               -- Claude API types
 └── store/
@@ -239,15 +239,15 @@ src/
 
 ## 4 · Integration Specs
 
-### Inro (DM Layer)
+### SendPulse (DM Layer)
 
-**Authentication:** API key or OAuth (TBD — need account access to view private API docs at `app.inro.social/api_doc.html`)
+**Authentication:** SendPulse API credentials and webhook secret.
 
-**Inbound (Inro → Us):**
+**Inbound (SendPulse → Us):**
 
-- Inro scenario triggers on incoming DM
-- HTTP Request action POSTs to `/api/webhooks/inro`
-- We define the payload shape using Inro's variable interpolation:
+- SendPulse scenario triggers on incoming DM
+- HTTP Request action POSTs to `/api/webhooks/sendpulse`
+- We define the payload shape using SendPulse's variable interpolation:
   ```json
   {
     "contact_id": "{{contact.id}}",
@@ -259,12 +259,10 @@ src/
   }
   ```
 
-**Outbound (Us → Inro):**
+**Outbound (Us → SendPulse):**
 
-- Send Claude's reply back to the contact via Inro REST API or MCP
-- MCP server: `https://api.inro.social/mcp` (OAuth 2.0)
-- MCP has "send message" tools for individual and batch sending
-- REST API alternative: TBD pending private API docs review
+- Send Claude's reply back to the contact via SendPulse REST API or MCP
+- REST API calls go through the SendPulse service wrapper in the app.
 
 **Open questions:**
 
@@ -285,7 +283,7 @@ src/
 2. Build `messages[]` array
 3. Call `anthropic.messages.create()` with system prompt + messages
 4. Parse response for: reply text, any structured data (email, qualification signals)
-5. Store response, send via Inro
+5. Store response, send via SendPulse
 
 **System prompt structure:**
 
@@ -340,8 +338,8 @@ Claude's reply needs to contain both the DM text AND structured signals. Options
 
 | Item                                           | Status              | Blocker                                                  |
 | ---------------------------------------------- | ------------------- | -------------------------------------------------------- |
-| Inro webhook handler + scenario setup          | Blocked             | Inro account access                                      |
-| Inro message sending (reply delivery)          | Blocked             | Inro API docs (behind auth)                              |
+| SendPulse webhook handler + scenario setup     | Blocked             | SendPulse account access                                 |
+| SendPulse message sending (reply delivery)     | Blocked             | SendPulse API docs (behind auth)                         |
 | Claude conversation engine                     | **Buildable**       | System prompt needs placeholder values for qual criteria |
 | Supabase schema + migrations                   | **Buildable**       | None                                                     |
 | Dashboard UI (conversations, leads, analytics) | **Buildable**       | None                                                     |
@@ -354,11 +352,11 @@ Claude's reply needs to contain both the DM text AND structured signals. Options
 
 ---
 
-## 6 · Inro-Specific Setup (Once Access Granted)
+## 6 · SendPulse-Specific Setup (Once Access Granted)
 
-When Inro credentials arrive, the immediate checklist:
+When SendPulse credentials arrive, the immediate checklist:
 
-1. **Log in and review private API docs** at `app.inro.social/api_doc.html`
+1. **Log in and review SendPulse webhook/API settings**
 2. **Confirm plan tier** — must be Pro or above for webhooks + API
 3. **Test scenario triggers** — can we catch ALL incoming DMs (not just keywords)?
 4. **Test HTTP Request action** — send a test POST to a RequestBin to see exact payload
@@ -371,7 +369,7 @@ When Inro credentials arrive, the immediate checklist:
 
 ## 7 · Instagram / Meta Constraints
 
-These are hard limits imposed by Meta, enforced through Inro:
+These are hard limits imposed by Meta, enforced through SendPulse:
 
 - **New IG accounts:** 20–30 DMs/day
 - **Established accounts:** 50–100 DMs/day
@@ -390,11 +388,11 @@ These are hard limits imposed by Meta, enforced through Inro:
 
 | Risk                                                               | Impact                                         | Mitigation                                                                                                                    |
 | ------------------------------------------------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Inro can't trigger on all DMs (keyword-only)                       | High — misses organic conversations            | Test immediately on access. Fallback: create catch-all keyword list                                                           |
-| Inro API doesn't support sending replies programmatically          | Critical — breaks Option B entirely            | MCP has send_message tools, so likely fine. Verify on access. Fallback: use Inro's native AI with limited customization       |
+| SendPulse can't trigger on all DMs (keyword-only)                  | High — misses organic conversations            | Test immediately on access. Fallback: create catch-all keyword list                                                           |
+| SendPulse API doesn't support sending replies programmatically     | Critical — breaks Option B entirely            | Verify the supported endpoint and keep a fallback path through SendPulse's native flows                                       |
 | Instagram rate limits throttle high-volume broadcast re-engagement | Medium — slows pipeline fill                   | Phase broadcasts over days. Prioritize organic + keyword triggers first                                                       |
 | Claude produces off-brand or inaccurate responses                  | High — damages brand trust                     | Extensive prompt testing (20+ simulated convos). Human monitoring in Phase 2. Conversation viewer in dashboard for ongoing QA |
-| No webhook signature verification from Inro                        | Medium — spoofed requests possible             | IP allowlisting if Inro publishes IPs. Shared secret in payload. Rate limiting on endpoint                                    |
+| No webhook signature verification from SendPulse                   | Medium — spoofed requests possible             | IP allowlisting if SendPulse publishes IPs. Shared secret in payload. Rate limiting on endpoint                               |
 | ManyChat training data incomplete                                  | Low — affects prompt quality, not architecture | Build prompt from strategy doc + team knowledge first. Refine with real data later                                            |
 | Contact sends messages faster than we process                      | Medium — race conditions, duplicate replies    | Queue incoming messages per conversation. Process sequentially per contact. Debounce rapid-fire                               |
 
@@ -415,14 +413,14 @@ A new `conversation` record is created, but prior conversation summaries are loa
 
 ### Message deduplication
 
-Store Inro's message ID (or a hash of `contact_id + message + timestamp`) on the `messages` table with a unique constraint. If duplicate, return 200 and skip. Short dedup window (~30 seconds) as fallback if Inro doesn't provide a stable ID.
+Store SendPulse's message ID (or a hash of `contact_id + message + timestamp`) on the `messages` table with a unique constraint. If duplicate, return 200 and skip. Short dedup window (~30 seconds) as fallback if SendPulse doesn't provide a stable ID.
 
 ### Opt-out handling
 
 Handled at two layers:
 
 1. **Claude** — recognizes opt-out language, responds with a clean exit, does not re-engage
-2. **App** — flags contact as `opted_out` in Supabase. Webhook handler checks this flag before processing. Inro blocklist used if available.
+2. **App** — flags contact as `opted_out` in Supabase. Webhook handler checks this flag before processing. SendPulse blocklist used if available.
 
 Non-optional. Meta can restrict the account if automated messages continue after opt-out.
 
@@ -442,9 +440,9 @@ System prompt constrains Claude to: 1–3 short paragraphs, under 300 words, tex
 
 A `/api/test/simulate` endpoint (dev/staging only) that:
 
-- Accepts a message as if it came from Inro
+- Accepts a message as if it came from SendPulse
 - Runs it through the full conversation engine (history loading, Claude call, response parsing)
-- Returns Claude's reply without sending to Inro
+- Returns Claude's reply without sending to SendPulse
 - Stores as a real conversation with a `test` flag
 
 This enables the 100+ simulated conversation runs planned for prompt iteration — no live Instagram account needed.
@@ -458,7 +456,7 @@ This enables the 100+ simulated conversation runs planned for prompt iteration �
 
 ### Live testing (Phase 2)
 
-Once Inro access is granted, test with a real Instagram account (test DMs) before pointing at the VendingPreneurs account. Human monitors all conversations for first 5 days.
+Once SendPulse access is granted, test with a real Instagram account (test DMs) before pointing at the VendingPreneurs account. Human monitors all conversations for first 5 days.
 
 ---
 

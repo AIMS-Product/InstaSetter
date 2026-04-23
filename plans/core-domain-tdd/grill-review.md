@@ -11,14 +11,14 @@ Status: COMPLETE
 ### Questions Asked
 
 1. No issue covers closing a conversation. When Claude calls generate_summary, should we also transition the conversation to status='completed'?
-2. The Inro webhook payload doesn't include a `source` field, but the contacts table has one. Where should it come from?
+2. The SendPulse webhook payload doesn't include a `source` field, but the contacts table has one. Where should it come from?
 3. Issue 18 checks for duplicates via `success: false`, but Issue 11 returns `isDuplicate: true`. Which contract?
 4. The middleware refreshes auth sessions on every request. Should the webhook route be excluded?
 
 ### Answers
 
 1. New Issue 21 — separate issue for closeConversation service function
-2. Add `source` as optional field to the Inro webhook payload schema (we control the Inro scenario config)
+2. Add `source` as optional field to the SendPulse webhook payload schema (we control the SendPulse scenario config)
 3. Fix Issue 18 to check `isDuplicate === true` (Issue 11's contract is correct)
 4. Separate issue for middleware exclusion
 
@@ -26,7 +26,7 @@ Status: COMPLETE
 
 - New Issue 21: `closeConversation(client, conversationId, summary)` — sets status='completed', stores summary, sets ended_at. Called from routeLeadEvents when generate_summary fires.
 - New Issue 22: Middleware config to exclude `/api/webhooks/*` from auth session refresh.
-- Issue 4 modified: add optional `source` field to inroWebhookSchema
+- Issue 4 modified: add optional `source` field to sendpulseWebhookSchema
 - Issue 18 modified: fix dedup check to use `result.isDuplicate === true`
 
 ### Plan Changes Required

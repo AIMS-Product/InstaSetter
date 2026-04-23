@@ -2,7 +2,7 @@
 
 # InstaSetter
 
-Instagram DM appointment setting automation using Inro API + Claude. Trained on hundreds of real conversations to automate appointment booking via Instagram DMs.
+Instagram DM appointment setting automation using SendPulse API + Claude. Trained on hundreds of real conversations to automate appointment booking via Instagram DMs.
 
 ## Stack
 
@@ -11,7 +11,7 @@ Instagram DM appointment setting automation using Inro API + Claude. Trained on 
 - **Database:** Supabase (project: `grkpgfphwqsawinsdbtc`, region: US West)
 - **Hosting:** Vercel (project: `insta-setter`, scope: `aimanagingservices`)
 - **GitHub:** `AIMS-Product/InstaSetter`
-- **External API:** Inro (Instagram DM automation)
+- **External API:** SendPulse (Instagram DM automation)
 
 ## Key Commands
 

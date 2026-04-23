@@ -1,7 +1,4 @@
--- SendPulse integration: add sendpulse_contact_id, make inro_contact_id nullable
-
--- Allow contacts without an Inro ID (SendPulse contacts won't have one)
-ALTER TABLE public.contacts ALTER COLUMN inro_contact_id DROP NOT NULL;
+-- SendPulse integration: add sendpulse_contact_id
 
 -- Add SendPulse contact ID with unique constraint
 ALTER TABLE public.contacts ADD COLUMN sendpulse_contact_id text;

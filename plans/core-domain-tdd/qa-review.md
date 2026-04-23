@@ -78,7 +78,7 @@ The middleware matcher already excludes /api/webhooks/\* from auth session proce
 
 1. This is an internal middleware behavior — no UI to test
 2. Run `npx vitest run src/__tests__/proxy.test.ts --reporter=verbose` and verify all 6 tests pass
-3. Alternatively: send a POST to /api/webhooks/inro — it should not trigger auth errors
+3. Alternatively: send a POST to /api/webhooks/sendpulse — it should not trigger auth errors
 
 ### Expected result
 
@@ -136,7 +136,7 @@ Created migration SQL for 5 core domain tables (contacts, conversations, message
 
 ### Summary
 
-Service function `upsertContact(client, payload)` that looks up contacts by `inro_contact_id`, creates new contacts with full fields, or updates existing contacts with only `last_message_at` and `updated_at`. Returns discriminated union `Result<ContactRow>`.
+Service function `upsertContact(client, payload)` that looks up contacts by `sendpulse_contact_id`, creates new contacts with full fields, or updates existing contacts with only `last_message_at` and `updated_at`. Returns discriminated union `Result<ContactRow>`.
 
 ### Steps to test
 
@@ -163,17 +163,17 @@ Service function `upsertContact(client, payload)` that looks up contacts by `inr
 
 ---
 
-## Issue 4: Inro webhook payload Zod schema
+## Issue 4: SendPulse webhook payload Zod schema
 
 **Commit**: `23d5594` | **Type**: feature | **Status**: Pass
 
 ### Summary
 
-Zod schema `inroWebhookSchema` validates Inro webhook payloads with required fields (contact_id, username, message, timestamp), optional fields (name, email, source), email format validation, ISO datetime validation, and source enum defaulting to 'organic_dm'. Exports inferred TypeScript type `InroWebhookPayload`.
+Zod schema `sendpulseWebhookSchema` validates SendPulse webhook payloads with required fields (contact_id, username, message, timestamp), optional fields (name, email, source), email format validation, ISO datetime validation, and source enum defaulting to 'organic_dm'. Exports inferred TypeScript type `SendPulseWebhookPayload`.
 
 ### Steps to test
 
-1. Run `npx vitest run src/types/__tests__/inro.test.ts --reporter=verbose`
+1. Run `npx vitest run src/types/__tests__/sendpulse.test.ts --reporter=verbose`
 2. All 8 tests should pass
 
 ### Expected result
@@ -374,7 +374,7 @@ Pure function `determineQualification` classifies leads as hot/warm/cold based o
 
 ### Summary
 
-`storeMessage(client, input)` inserts messages into the `messages` table with dedup protection. Checks for duplicates by `inro_message_id` (webhook messages) or `dedup_hash` (content hash). Handles Postgres 23505 unique violations as race-condition duplicates. Returns discriminated union: `{ success: true, isDuplicate: true }`, `{ success: true, isDuplicate: false, data: MessageRow }`, or `{ success: false, error: string }`.
+`storeMessage(client, input)` inserts messages into the `messages` table with dedup protection. Checks for duplicates by `sendpulse_message_id` (webhook messages) or `dedup_hash` (content hash). Handles Postgres 23505 unique violations as race-condition duplicates. Returns discriminated union: `{ success: true, isDuplicate: true }`, `{ success: true, isDuplicate: false, data: MessageRow }`, or `{ success: false, error: string }`.
 
 ### Steps to test
 
@@ -384,16 +384,16 @@ Pure function `determineQualification` classifies leads as hot/warm/cold based o
 ### Expected result
 
 - New messages inserted with generated dedup_hash
-- Duplicate by inro_message_id returns `{ success: true, isDuplicate: true }`
+- Duplicate by sendpulse_message_id returns `{ success: true, isDuplicate: true }`
 - Duplicate by dedup_hash (23505 violation) returns `{ success: true, isDuplicate: true }`
-- Assistant messages stored without inro_message_id field
+- Assistant messages stored without sendpulse_message_id field
 - Non-duplicate insert errors return `{ success: false, error }`
 - Dedup check DB errors return `{ success: false, error }`
 
 ### Edge cases
 
 - Uses `generateDedupHash(conversationId, content, timestamp)` from Issue 6
-- `inro_message_id` only set on insert when provided (user messages from webhook)
+- `sendpulse_message_id` only set on insert when provided (user messages from webhook)
 - 23505 unique violation treated as duplicate (race condition between check and insert)
 - Optional `tokenCount` and `metadata` fields forwarded when provided
 
@@ -697,7 +697,7 @@ Added `updated_at` to `closeConversation` update payload and comprehensive tests
 
 ### Summary
 
-`processMessage(client, contact, inroMessageId, content, timestamp, callClaude)` orchestrates the full message processing pipeline: find/create conversation, load prior summaries, store user message (with dedup), build system prompt, assemble message history, call Claude via injected function, parse response, store assistant reply, and route lead events (non-blocking stub for Issue 20).
+`processMessage(client, contact, sendpulseMessageId, content, timestamp, callClaude)` orchestrates the full message processing pipeline: find/create conversation, load prior summaries, store user message (with dedup), build system prompt, assemble message history, call Claude via injected function, parse response, store assistant reply, and route lead events (non-blocking stub for Issue 20).
 
 ### Steps to test
 
@@ -773,11 +773,11 @@ Replaced `routeLeadEvents` stub with full implementation. Routes tool calls from
 
 ### Summary
 
-POST handler at `/api/webhooks/inro` validates incoming Inro webhook payloads with Zod, upserts the contact, checks opt-out status, performs early dedup via storeMessage, and delegates to processMessage engine for Claude response. Returns 400 for invalid input, 200 with skip reason for opted-out/duplicate, 200 with reply for valid messages, and 500 with generic error for internal failures.
+POST handler at `/api/webhooks/sendpulse` validates incoming SendPulse webhook payloads with Zod, upserts the contact, checks opt-out status, performs early dedup via storeMessage, and delegates to processMessage engine for Claude response. Returns 400 for invalid input, 200 with skip reason for opted-out/duplicate, 200 with reply for valid messages, and 500 with generic error for internal failures.
 
 ### Steps to test
 
-1. Run `npx vitest run src/app/api/webhooks/inro/__tests__/route.test.ts --reporter=verbose`
+1. Run `npx vitest run src/app/api/webhooks/sendpulse/__tests__/route.test.ts --reporter=verbose`
 2. All 6 tests should pass
 
 ### Expected result

@@ -61,7 +61,7 @@ const stubMessage: MessageRow = {
   conversation_id: 'conv-1',
   role: 'user',
   content: 'Hi',
-  inro_message_id: null,
+  external_message_id: null,
   dedup_hash: null,
   token_count: null,
   metadata: null,

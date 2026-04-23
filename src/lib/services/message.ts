@@ -9,7 +9,7 @@ type StoreMessageInput = {
   role: string
   content: string
   timestamp: string
-  inroMessageId?: string
+  externalMessageId?: string
   tokenCount?: number
   metadata?: Json
 }
@@ -29,12 +29,12 @@ export async function storeMessage(
     input.timestamp
   )
 
-  // Check for existing duplicate by inro_message_id or dedup_hash
-  const { data: existing, error: lookupError } = input.inroMessageId
+  // Check for existing duplicate by provider message ID or content hash.
+  const { data: existing, error: lookupError } = input.externalMessageId
     ? await client
         .from('messages')
         .select()
-        .eq('inro_message_id', input.inroMessageId)
+        .eq('external_message_id', input.externalMessageId)
         .maybeSingle()
     : await client
         .from('messages')
@@ -59,8 +59,8 @@ export async function storeMessage(
     created_at: input.timestamp,
   }
 
-  if (input.inroMessageId) {
-    insertData.inro_message_id = input.inroMessageId
+  if (input.externalMessageId) {
+    insertData.external_message_id = input.externalMessageId
   }
 
   if (input.tokenCount !== undefined) {

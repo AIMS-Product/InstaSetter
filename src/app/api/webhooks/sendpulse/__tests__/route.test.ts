@@ -47,7 +47,6 @@ import { isBotEnabled } from '@/lib/config'
 
 const stubContact = (overrides: Partial<ContactRow> = {}): ContactRow => ({
   id: 'c1',
-  inro_contact_id: null,
   sendpulse_contact_id: 'sp_123',
   instagram_handle: 'testuser',
   name: null,

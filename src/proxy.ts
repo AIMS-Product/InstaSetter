@@ -4,16 +4,24 @@ import { updateSession } from '@/lib/supabase/proxy'
 /**
  * Basic-auth gate for /dashboard/* only.
  *
- * If either DASHBOARD_AUTH_USER or DASHBOARD_AUTH_PASSWORD is unset, the gate
- * is skipped — so local dev stays frictionless. In prod we set both in Vercel
- * and the gate enforces.
+ * Local dev can run without credentials. Deployed environments fail closed if
+ * credentials are missing, because a misconfigured deploy should not expose the
+ * operator dashboard.
  */
-function dashboardAuthGate(request: NextRequest): NextResponse | null {
+export function dashboardAuthGate(request: NextRequest): NextResponse | null {
   if (!request.nextUrl.pathname.startsWith('/dashboard')) return null
 
   const user = process.env.DASHBOARD_AUTH_USER
   const pass = process.env.DASHBOARD_AUTH_PASSWORD
-  if (!user || !pass) return null
+  if (!user || !pass) {
+    if (isDeployedRuntime()) {
+      return new NextResponse('Dashboard authentication is not configured', {
+        status: 503,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
+    }
+    return null
+  }
 
   const auth = request.headers.get('authorization')
   if (auth?.startsWith('Basic ')) {
@@ -38,6 +46,15 @@ function dashboardAuthGate(request: NextRequest): NextResponse | null {
   })
 }
 
+function isDeployedRuntime(): boolean {
+  const vercelEnv = process.env.VERCEL_ENV
+  return (
+    vercelEnv === 'production' ||
+    vercelEnv === 'preview' ||
+    process.env.NODE_ENV === 'production'
+  )
+}
+
 export async function proxy(request: NextRequest) {
   const gateResp = dashboardAuthGate(request)
   if (gateResp) return gateResp
@@ -52,7 +69,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder assets
-     * - API webhooks (no auth needed)
+     * - API webhooks (validated by each route)
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/webhooks).*)',
   ],

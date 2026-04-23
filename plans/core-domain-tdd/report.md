@@ -29,7 +29,7 @@
 | 1   | Test infrastructure setup                   | DONE   | `5383aed` | 2     |
 | 2   | Database migration — core domain tables     | DONE   | `9f98d11` | 18    |
 | 3   | Domain enums and constants                  | DONE   | `c901bcd` | 9     |
-| 4   | Inro webhook payload Zod schema             | DONE   | `23d5594` | 8     |
+| 4   | SendPulse webhook payload Zod schema        | DONE   | `23d5594` | 8     |
 | 5   | Lead summary Zod schema                     | DONE   | `ff18231` | 7     |
 | 6   | Message dedup hash utility                  | DONE   | `8f240fb` | 5     |
 | 7   | Config expansion + service role client      | DONE   | `1a06669` | 4     |
@@ -62,7 +62,7 @@
 ### Source files (13)
 
 - `src/types/enums.ts` — Domain union types and constants
-- `src/types/inro.ts` — Inro webhook payload Zod schema
+- `src/types/sendpulse.ts` — SendPulse webhook payload Zod schema
 - `src/types/lead.ts` — Lead summary Zod schema
 - `src/types/database.ts` — Extended with 5 core domain tables
 - `src/lib/config.ts` — Added ANTHROPIC_API_KEY, BRAND_NAME
@@ -75,7 +75,7 @@
 - `src/lib/services/claude.ts` — Claude request builder + response parser
 - `src/lib/services/engine.ts` — Process message pipeline + route lead events
 - `src/lib/prompts/setter-v1.ts` — System prompt v1 with 7 sections
-- `src/app/api/webhooks/inro/route.ts` — POST webhook handler
+- `src/app/api/webhooks/sendpulse/route.ts` — POST webhook handler
 
 ### Infrastructure
 
@@ -93,4 +93,4 @@ All under `src/` matching `**/__tests__/*.test.ts`
 - Review `plans/core-domain-tdd/qa-review.md` for manual verification steps
 - Run `supabase db push` to apply the migration to the remote database
 - Set `ANTHROPIC_API_KEY` and `BRAND_NAME` in Vercel env vars
-- Integrate with Inro: configure webhook URL pointing to `/api/webhooks/inro`
+- Integrate with SendPulse: configure webhook URL pointing to `/api/webhooks/sendpulse`

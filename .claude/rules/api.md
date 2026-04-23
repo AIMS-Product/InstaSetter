@@ -10,5 +10,5 @@ paths:
 - Never leak internal error details to the client.
 - Webhook routes (`api/webhooks/*`) must be excluded from auth middleware.
 - Webhook routes use `request.text()` for raw body — never `.json()` before signature verification.
-- Inro API integration: all Inro calls go through `@/lib/services/inro-service.ts`.
+- SendPulse API integration: all SendPulse calls go through `@/lib/services/sendpulse.ts`.
 - Rate limit external-facing endpoints.

@@ -6,7 +6,6 @@
 -- ============================================================
 create table public.contacts (
   id                  uuid primary key default gen_random_uuid(),
-  inro_contact_id     text not null,
   instagram_handle    text not null,
   name                text,
   email               text,
@@ -20,11 +19,9 @@ create table public.contacts (
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now(),
 
-  constraint contacts_inro_contact_id_key unique (inro_contact_id),
   constraint contacts_instagram_handle_key unique (instagram_handle)
 );
 
-create index idx_contacts_inro_contact_id on public.contacts (inro_contact_id);
 create index idx_contacts_instagram_handle on public.contacts (instagram_handle);
 
 alter table public.contacts enable row level security;
@@ -71,18 +68,18 @@ create table public.messages (
   conversation_id     uuid not null references public.conversations (id) on delete cascade,
   role                text not null,
   content             text not null,
-  inro_message_id     text,
+  external_message_id text,
   dedup_hash          text,
   token_count         integer,
   metadata            jsonb,
   created_at          timestamptz not null default now(),
 
-  constraint messages_inro_message_id_key unique (inro_message_id),
+  constraint messages_external_message_id_key unique (external_message_id),
   constraint messages_dedup_hash_key unique (dedup_hash)
 );
 
 create index idx_messages_conversation_id on public.messages (conversation_id);
-create index idx_messages_inro_message_id on public.messages (inro_message_id);
+create index idx_messages_external_message_id on public.messages (external_message_id);
 create index idx_messages_dedup_hash on public.messages (dedup_hash);
 
 alter table public.messages enable row level security;

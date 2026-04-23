@@ -17,13 +17,13 @@ Unresolved items from the strategy doc and scoping sessions. Update status as de
 - [ ] Target call booking rate
 - [ ] Current human setter benchmarks for comparison
 
-## Inro Integration Model
+## SendPulse Integration Model
 
-- [ ] Get Inro login credentials and account access from colleagues
-- [ ] Test Inro's native Claude integration — evaluate if it's good enough or if we need full custom (Option A vs B)
-  - **Option A:** Inro calls Claude directly, fires webhooks to us with conversation events → we handle data routing only
-  - **Option B:** Inro sends raw incoming messages via webhook, we call Claude, we send reply back through Inro API → we own conversation state
-- [ ] Review Inro API documentation — webhook event types, message sending API, conversation context payload
+- [ ] Get SendPulse login credentials and account access from colleagues
+- [ ] Test SendPulse's native Claude integration — evaluate if it's good enough or if we need full custom (Option A vs B)
+  - **Option A:** SendPulse calls Claude directly, fires webhooks to us with conversation events → we handle data routing only
+  - **Option B:** SendPulse sends raw incoming messages via webhook, we call Claude, we send reply back through SendPulse API → we own conversation state
+- [ ] Review SendPulse API documentation — webhook event types, message sending API, conversation context payload
 - [ ] Confirm plan tier supports webhook + API capabilities at required volume
 
 ## Conversation State
@@ -33,7 +33,7 @@ Unresolved items from the strategy doc and scoping sessions. Update status as de
 
 ## External Services — All Blocked on Credentials
 
-- [ ] Inro account access (blocked — waiting on colleagues)
+- [ ] SendPulse account access (blocked — waiting on colleagues)
 - [ ] ManyChat dashboard login for full conversation scraping (blocked — waiting on credentials)
 - [ ] Close CRM API key and contact write permissions (Greg / Stephen)
 - [ ] Customer.io account and API access
@@ -57,7 +57,7 @@ Unresolved items from the strategy doc and scoping sessions. Update status as de
 - [ ] Claude API downtime — fallback message? Human handoff? Silence?
 - [ ] Webhook delivery failure — retry logic, dead letter queue
 - [ ] Rapid-fire messages from contact — debounce / queue strategy
-- [ ] Inro API downtime — queued reply delivery
+- [ ] SendPulse API downtime — queued reply delivery
 
 ## Compliance & Data
 

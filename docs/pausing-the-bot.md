@@ -1,6 +1,6 @@
 # Pausing the Bot — Runbook
 
-How to silence the InstaSetter bot in production without tearing down the SendPulse or Inro integrations.
+How to silence the InstaSetter bot in production without tearing down the SendPulse integration.
 
 ---
 
@@ -16,12 +16,12 @@ This is a **global** kill switch — it silences the bot for every contact on ev
 
 - Env var `BOT_ENABLED` on the Vercel production environment.
 - **Unset** or `true` → bot runs normally (default).
-- `false` → both webhooks (`/api/webhooks/sendpulse` and `/api/webhooks/inro`) short-circuit after schema validation and return `200 { skipped: true, reason: 'bot_paused' }`.
+- `false` → the SendPulse webhook (`/api/webhooks/sendpulse`) short-circuits after schema validation and returns `200 { skipped: true, reason: 'bot_paused' }`.
 - SendPulse will stop retrying and won't treat it as a webhook failure.
 
 ## What happens while paused
 
-- ✅ Incoming webhooks still return 200 (SendPulse/Inro stay happy, no retry storm).
+- ✅ Incoming webhooks still return 200 (SendPulse stays happy, no retry storm).
 - ❌ No Claude calls, no replies sent, no messages stored in our DB, no contact upserts from these webhooks.
 - ❌ No tool events logged (no `qualify_lead`, `generate_summary`, `book_call` etc.).
 - ✅ Manual replies sent by the team via SendPulse UI still reach the user (we don't touch SendPulse's own message pipeline).
@@ -86,5 +86,4 @@ For fine-grained, per-contact pause (rather than stopping all traffic), see the 
 
 - Kill switch: [src/lib/config.ts — isBotEnabled()](../src/lib/config.ts)
 - SendPulse short-circuit: [src/app/api/webhooks/sendpulse/route.ts](../src/app/api/webhooks/sendpulse/route.ts)
-- Inro short-circuit: [src/app/api/webhooks/inro/route.ts](../src/app/api/webhooks/inro/route.ts)
-- Tests: each route's `__tests__/route.test.ts`
+- Tests: [src/app/api/webhooks/sendpulse/**tests**/route.test.ts](../src/app/api/webhooks/sendpulse/__tests__/route.test.ts)

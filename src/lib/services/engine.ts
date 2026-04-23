@@ -43,11 +43,11 @@ type ContactInput = {
 export async function processMessage(
   client: SupabaseClient<Database>,
   contact: ContactInput,
-  inroMessageId: string | undefined,
+  externalMessageId: string | undefined,
   content: string,
   timestamp: string,
   callClaude: ClaudeCallFn,
-  integration: string = 'inro'
+  integration: string = 'sendpulse'
 ): Promise<ServiceResult<ProcessMessageResult>> {
   const { BRAND_NAME, BOOKING_URL } = getServerConfig()
 
@@ -85,7 +85,7 @@ export async function processMessage(
     role: 'user',
     content,
     timestamp,
-    inroMessageId,
+    externalMessageId,
   })
 
   if (!storeResult.success) {
@@ -237,7 +237,7 @@ export async function routeLeadEvents(
   contactId: string,
   conversationId: string,
   toolCalls: ToolCall[],
-  integration: string = 'inro'
+  integration: string = 'sendpulse'
 ): Promise<{ success: boolean; eventsProcessed: number }> {
   if (toolCalls.length === 0) {
     return { success: true, eventsProcessed: 0 }

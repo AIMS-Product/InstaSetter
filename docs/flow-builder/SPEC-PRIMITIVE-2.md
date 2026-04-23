@@ -719,7 +719,7 @@ describe('fireDueTriggers', () => {
     const result = await fireDueTriggers({ now: new Date() })
     expect(result.fired).toBe(1)
     expect(sendPulseStub.calls).toHaveLength(1)
-    expect(sendPulseStub.calls[0]!.contactId).toBe(contact.inro_contact_id)
+    expect(sendPulseStub.calls[0]!.contactId).toBe(contact.sendpulse_contact_id)
     const { data } = await db
       .from('ins_scheduled_triggers')
       .select()
@@ -929,7 +929,7 @@ export async function fireDueTriggers(args: {
         ctx
       )
       const sendResult = await sendInstagramMessage(
-        ctx.inroContactId,
+        ctx.sendpulseContactId,
         reply,
         resolution.tag ? { messageTag: resolution.tag } : undefined
       )
@@ -960,8 +960,8 @@ export async function fireDueTriggers(args: {
 }
 
 async function loadContext(db: any, conversationId: string, contactId: string) {
-  // ... load last inbound time, inro_contact_id, contact tags, runtime vars
-  return { lastInboundAt: null as Date | null, inroContactId: '' }
+  // ... load last inbound time, sendpulse_contact_id, contact tags, runtime vars
+  return { lastInboundAt: null as Date | null, sendpulseContactId: '' }
 }
 
 async function renderBlockReply(

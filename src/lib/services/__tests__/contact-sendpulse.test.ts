@@ -121,12 +121,12 @@ describe('upsertSendPulseContact', () => {
     )
   })
 
-  it('links to existing Inro contact by handle', async () => {
+  it('links to an existing contact by handle', async () => {
     // Not found by sendpulse_contact_id
     client.maybeSingle.mockResolvedValueOnce({ data: null, error: null })
     // Found by handle
     const byHandle = {
-      id: 'inro-id',
+      id: 'existing-id',
       name: null,
       profile_picture_url: null,
       tags: [],

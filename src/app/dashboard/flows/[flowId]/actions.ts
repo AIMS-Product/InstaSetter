@@ -1,5 +1,6 @@
 'use server'
 
+import { z } from 'zod'
 import {
   countConversationsStartedSince,
   getConversation,
@@ -14,6 +15,51 @@ import {
   type SaveFlowDraftArgs,
 } from '@/lib/services/flow-drafts'
 import type { PersistedFlowDraft } from './draft-persistence'
+
+const nonEmptyString = z.string().trim().min(1).max(200)
+const looseObject = z.record(z.string(), z.unknown())
+
+const flowDraftKeySchema = z
+  .object({
+    brand: nonEmptyString,
+    flowId: nonEmptyString,
+    bookingUrl: z.string().url().optional(),
+  })
+  .strict()
+
+const persistedFlowDraftSchema = z
+  .object({
+    flow: z
+      .object({
+        id: nonEmptyString,
+        brand: nonEmptyString,
+        name: z.string(),
+        channel: z.string(),
+        draft: z.number(),
+        published: z.number(),
+        nodes: z.array(looseObject),
+      })
+      .passthrough(),
+    triggers: z.array(looseObject),
+    bot: z
+      .object({
+        name: z.string(),
+        persona: z.string(),
+        messageConstraints: z.string(),
+        forbiddenPhrases: z.array(z.string()),
+      })
+      .passthrough(),
+    variables: z.array(looseObject),
+    versions: z.array(looseObject),
+    publishedVersion: z.number().int().nonnegative(),
+    draftVersion: z.number().int().nonnegative(),
+    dirtySincePublish: z.boolean(),
+  })
+  .strict()
+
+const saveFlowDraftArgsSchema = flowDraftKeySchema.extend({
+  state: persistedFlowDraftSchema,
+})
 
 export async function fetchFlowRunsAction(
   limit: number = 50
@@ -38,11 +84,15 @@ export async function fetchTodayConversationCountAction(): Promise<number> {
 export async function loadFlowDraftAction(
   key: FlowDraftKey
 ): Promise<PersistedFlowDraft | null> {
-  return loadFlowDraft(key)
+  const parsed = flowDraftKeySchema.safeParse(key)
+  if (!parsed.success) return null
+  return loadFlowDraft(parsed.data)
 }
 
 export async function saveFlowDraftAction(
   args: SaveFlowDraftArgs
 ): Promise<boolean> {
-  return saveFlowDraft(args)
+  const parsed = saveFlowDraftArgsSchema.safeParse(args)
+  if (!parsed.success) return false
+  return saveFlowDraft(parsed.data as unknown as SaveFlowDraftArgs)
 }

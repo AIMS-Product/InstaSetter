@@ -32,7 +32,7 @@ This is not a chatbot. It is an AI-powered conversation agent that adapts in rea
 
 ### Why Now
 
-The holdco has thousands of opted-in Instagram contacts who have never been systematically followed up with. Every day without a system is lost pipeline. The ROI calculator being built by Matt's intern creates a compelling, timely lead magnet that gives us a reason to re-engage. ManyChat and Inro make the DM automation layer Meta-compliant and production-ready. The Claude API makes the conversation layer intelligent enough to replace a trained setter.
+The holdco has thousands of opted-in Instagram contacts who have never been systematically followed up with. Every day without a system is lost pipeline. The ROI calculator being built by Matt's intern creates a compelling, timely lead magnet that gives us a reason to re-engage. ManyChat and SendPulse make the DM automation layer Meta-compliant and production-ready. The Claude API makes the conversation layer intelligent enough to replace a trained setter.
 
 ---
 
@@ -62,15 +62,15 @@ Instagram DMs consistently outperform email for open and response rates. The cha
 
 ## 3 · The Solution Architecture
 
-The solution has four layers: the DM automation layer (Inro), the AI conversation layer (Claude), the orchestration layer (custom-built in-app), and the downstream systems (Close CRM, Customer.io, Slack).
+The solution has four layers: the DM automation layer (SendPulse), the AI conversation layer (Claude), the orchestration layer (custom-built in-app), and the downstream systems (Close CRM, Customer.io, Slack).
 
 ### Full Stack
 
 | Layer / Tool        | Role in the System                                                                                                                                                                                                                        |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Inro**            | Meta-compliant Instagram DM automation layer. Handles message routing, keyword triggers, and HTTP request actions to our webhook. Has its own built-in AI agent (black box) and an MCP server + private REST API for programmatic access. |
+| **SendPulse**       | Meta-compliant Instagram DM automation layer. Handles message routing, keyword triggers, and HTTP request actions to our webhook. Has its own built-in AI agent (black box) and an MCP server + private REST API for programmatic access. |
 | **Claude (Sonnet)** | AI conversation engine. Operates as a named setter persona. Qualifies leads, captures email addresses conversationally, delivers the ROI calculator, handles objections, books calls, and generates structured lead summaries.            |
-| **InstaSetter App** | Custom orchestration engine. Receives webhooks from Inro on key conversation events, manages Claude conversation state, and routes data to downstream systems. No external automation tools (n8n, Make, etc.).                            |
+| **InstaSetter App** | Custom orchestration engine. Receives webhooks from SendPulse on key conversation events, manages Claude conversation state, and routes data to downstream systems. No external automation tools (n8n, Make, etc.).                       |
 | **Supabase**        | Canonical data store. All contacts, conversations, messages, and leads live here. Single source of truth — external systems (Close CRM, Customer.io) are sync targets.                                                                    |
 | **Close CRM**       | CRM destination for qualified leads. Claude-generated conversation summaries are written as contact notes. Closers receive pre-briefed leads with full context.                                                                           |
 | **Customer.io**     | Email nurture for leads who did not book a call. Triggered by the app when email is captured but no Calendly booking is made.                                                                                                             |
@@ -87,7 +87,7 @@ The conversation flow is not a rigid bot script. It is a system prompt architect
 
 | Step                                   | What Happens                                                                                                                                                                                                                                                                                                    |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Step 1 — Trigger**                   | Contact DMs the account, comments on a post with a keyword (e.g., 'calculator', 'ROI', 'info'), or is re-engaged via a broadcast. Inro fires the Claude setter flow.                                                                                                                                            |
+| **Step 1 — Trigger**                   | Contact DMs the account, comments on a post with a keyword (e.g., 'calculator', 'ROI', 'info'), or is re-engaged via a broadcast. SendPulse fires the Claude setter flow.                                                                                                                                       |
 | **Step 2 — Opener**                    | Claude responds immediately (under 5 seconds) with a warm, human-toned message. It introduces itself by persona name, acknowledges the trigger, and asks a simple opening question to begin qualification.                                                                                                      |
 | **Step 3 — Rapport + Qualification**   | Claude asks 3–4 qualifying questions spread naturally across the conversation: current machine count, location types, how long in business, and approximate monthly revenue. It adapts based on answers — pushing toward a call for strong leads, pivoting to the email nurture track for early-stage contacts. |
 | **Step 4 — ROI Calculator Delivery**   | At a natural moment in the conversation, Claude introduces the calculator: 'Based on what you're telling me, I want to show you what your route could actually be worth. We built a calculator for this — want me to send you the link?' This creates permission, then delivers the URL.                        |
@@ -154,7 +154,7 @@ At conversation close, Claude is instructed to generate a structured JSON-format
 
 ### Build Note
 
-The system prompt should be built and tested in Claude.ai before it is deployed to Inro. Run it against at least 20 simulated DM conversations covering different lead types, objections, and edge cases. Iterate until the qualification accuracy and conversation quality meet the bar you would hold a human setter to.
+The system prompt should be built and tested in Claude.ai before it is deployed to SendPulse. Run it against at least 20 simulated DM conversations covering different lead types, objections, and edge cases. Iterate until the qualification accuracy and conversation quality meet the bar you would hold a human setter to.
 
 ---
 
@@ -217,13 +217,13 @@ When a call is booked, a Slack message fires to the designated closer channel wi
 
 ## 9 · Phased Rollout Plan
 
-| Phase       | Timeline  | Deliverables                                                                                                                                                                                                                               | Owner                                   |
-| ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| **Phase 1** | Weeks 1–2 | System prompt v1 built and tested in Claude.ai against simulated DMs. Inro account set up and connected to VendingPreneurs Instagram. App webhook + integration layer built for downstream systems. ROI calculator URL confirmed and live. | Wild Ducks                              |
-| **Phase 2** | Week 3    | Soft launch: Claude setter live for new organic DMs only. Human setter monitors conversations in parallel for first 5 days. Prompt iterated based on real conversation quality. Google Sheet populating correctly. Slack alerts tested.    | Wild Ducks / Matt's intern (calculator) |
-| **Phase 3** | Week 4    | Close CRM integration live. Broadcast campaign to existing Instagram contacts (within Meta window compliance). Human setter fully replaced for standard DM volume. Closers trained on new lead handoff format.                             | Wild Ducks / Stephen (RevOps)           |
-| **Phase 4** | Month 2   | Performance review: conversion rates, call booking rate, email capture rate, lead quality scores from closers. System prompt v2 based on learnings. Begin replication build for Brand 2 (Modern Amenities or MedPro).                      | Wild Ducks / Ben Brenner (data review)  |
-| **Phase 5** | Month 3+  | Full multi-brand deployment. Brand-specific personas, qualification criteria, and lead magnets per brand. Centralized lead log across all brands with brand source column.                                                                 | Wild Ducks / Kody (production)          |
+| Phase       | Timeline  | Deliverables                                                                                                                                                                                                                                    | Owner                                   |
+| ----------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **Phase 1** | Weeks 1–2 | System prompt v1 built and tested in Claude.ai against simulated DMs. SendPulse account set up and connected to VendingPreneurs Instagram. App webhook + integration layer built for downstream systems. ROI calculator URL confirmed and live. | Wild Ducks                              |
+| **Phase 2** | Week 3    | Soft launch: Claude setter live for new organic DMs only. Human setter monitors conversations in parallel for first 5 days. Prompt iterated based on real conversation quality. Google Sheet populating correctly. Slack alerts tested.         | Wild Ducks / Matt's intern (calculator) |
+| **Phase 3** | Week 4    | Close CRM integration live. Broadcast campaign to existing Instagram contacts (within Meta window compliance). Human setter fully replaced for standard DM volume. Closers trained on new lead handoff format.                                  | Wild Ducks / Stephen (RevOps)           |
+| **Phase 4** | Month 2   | Performance review: conversion rates, call booking rate, email capture rate, lead quality scores from closers. System prompt v2 based on learnings. Begin replication build for Brand 2 (Modern Amenities or MedPro).                           | Wild Ducks / Ben Brenner (data review)  |
+| **Phase 5** | Month 3+  | Full multi-brand deployment. Brand-specific personas, qualification criteria, and lead magnets per brand. Centralized lead log across all brands with brand source column.                                                                      | Wild Ducks / Kody (production)          |
 
 ---
 
@@ -235,7 +235,7 @@ When a call is booked, a Slack message fires to the designated closer channel wi
 - What is the setter persona name and voice? Needs to be defined before prompt build begins.
 - What are the exact qualification thresholds? Machine count floor, revenue floor, location type preferences. Needs input from the sales team.
 - Is the ROI calculator URL finalized and live? Required for Phase 1 launch.
-- Does Inro's plan tier support the conversation volume and webhook capabilities required? Confirm before committing.
+- Does SendPulse's plan tier support the conversation volume and webhook capabilities required? Confirm before committing.
 - What is the call booking workflow — Calendly directly, or does a human confirm and rebook? This affects how Claude handles the Calendly step.
 
 ### Dependencies
@@ -243,7 +243,7 @@ When a call is booked, a Slack message fires to the designated closer channel wi
 | Dependency           | Detail                                                                                                                           |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | ROI Calculator       | Matt's intern must deliver a hosted, live URL before Phase 1 launch. Calculator must output personalized results.                |
-| Inro Account         | Verify plan tier supports webhook events and Claude API integration at required volume.                                          |
+| SendPulse Account    | Verify plan tier supports webhook events and Claude API integration at required volume.                                          |
 | Close CRM API        | Confirm with Greg / Stephen that the Close API key and contact write permissions are available for the app.                      |
 | Ben Brenner Review   | Data architecture review required before any PII (email addresses) is written to external systems. Standard Wild Ducks protocol. |
 | Brand Voice Sign-Off | Persona name and tone must be approved before the system prompt is finalized. Sofia or Jeffrey for brand QA.                     |
@@ -255,7 +255,7 @@ When a call is booked, a Slack message fires to the designated closer channel wi
 
 ### Meta / Instagram Compliance
 
-All DM automation must operate through Meta-approved channels. Inro uses the official Meta Messaging API — this keeps the system compliant. The following rules govern what Claude can and cannot do:
+All DM automation must operate through Meta-approved channels. SendPulse uses the official Meta Messaging API — this keeps the system compliant. The following rules govern what Claude can and cannot do:
 
 - Broadcast messages (outbound to existing contacts) are limited to a 24-hour window for promotional content and a 7-day window for non-promotional content. The re-engagement strategy must respect this.
 - Comment-triggered DM flows (someone comments with a keyword and receives an automated DM) are fully Meta-compliant and are the recommended primary acquisition trigger.
@@ -282,9 +282,9 @@ If a contact directly asks whether they are speaking to a human or a bot, Claude
 2. Define the setter persona: name, tone, and voice. Get approval from Sofia or Jeffrey for brand alignment.
 3. Lock qualification criteria with the sales team: exact machine count floor, revenue range, location type preferences.
 4. Confirm the ROI calculator is on track for delivery and will have a hosted URL within 2 weeks.
-5. Set up the Inro account and confirm webhook and Claude API integration are available on the current plan.
+5. Set up the SendPulse account and confirm webhook and Claude API integration are available on the current plan.
 6. Route to Ben Brenner for data architecture review of the email capture → Supabase → Close → Customer.io pipeline.
-7. Begin system prompt v1 build. Run 20+ simulated conversations before connecting to live Inro flow.
+7. Begin system prompt v1 build. Run 20+ simulated conversations before connecting to live SendPulse flow.
 8. Build app integration layer for Close CRM write, Customer.io trigger, and Slack closer alert.
 9. Schedule a Wild Ducks review of the prompt and conversation quality before Phase 2 soft launch.
 

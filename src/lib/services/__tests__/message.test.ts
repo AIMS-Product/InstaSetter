@@ -59,15 +59,15 @@ describe('storeMessage', () => {
     }
   })
 
-  it('detects duplicate by inro_message_id', async () => {
-    // Dedup check: finds existing message by inro_message_id
-    mock.pushResult({ id: 'existing', inro_message_id: 'inro_1' })
+  it('detects duplicate by external_message_id', async () => {
+    // Dedup check: finds existing message by provider message ID
+    mock.pushResult({ id: 'existing', external_message_id: 'provider_1' })
 
     const result = await storeMessage(mock as never, {
       conversationId: 'c1',
       role: 'user',
       content: 'Hi',
-      inroMessageId: 'inro_1',
+      externalMessageId: 'provider_1',
       timestamp: '2026-04-09T10:00:00Z',
     })
 
@@ -96,7 +96,7 @@ describe('storeMessage', () => {
     }
   })
 
-  it('stores assistant messages without inro_message_id', async () => {
+  it('stores assistant messages without external_message_id', async () => {
     // Dedup check: no existing message
     mock.pushResult(null)
     // Insert: returns new assistant message
@@ -117,9 +117,9 @@ describe('storeMessage', () => {
       }
     }
 
-    // Verify insert was called without inro_message_id
+    // Verify insert was called without provider message ID
     const insertCall = mock.chain.insert.mock.calls[0]?.[0]
-    expect(insertCall).not.toHaveProperty('inro_message_id')
+    expect(insertCall).not.toHaveProperty('external_message_id')
   })
 
   it('returns error on insert failure (non-duplicate)', async () => {

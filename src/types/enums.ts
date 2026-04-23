@@ -40,7 +40,6 @@ export const INTEGRATION_NAMES = [
   'customerio',
   'slack',
   'calendly',
-  'inro',
   'sendpulse',
 ] as const
 export type IntegrationName = (typeof INTEGRATION_NAMES)[number]

@@ -90,8 +90,8 @@ When the migration runs, the database contains all five core domain tables with 
 
 - [ ] Migration creates `contacts`, `conversations`, `messages`, `leads`, and `integration_events` tables matching the schema in `docs/scope-plan.md` § 2
 - [ ] RLS is enabled on all five tables with a service role bypass policy on each
-- [ ] Unique constraints exist on: `contacts.inro_contact_id`, `contacts.instagram_handle`, `messages.inro_message_id`, `messages.dedup_hash`
-- [ ] Indexes exist on: `contacts.inro_contact_id`, `contacts.instagram_handle`, `messages.conversation_id`, `messages.inro_message_id`, `messages.dedup_hash`, `leads.contact_id`, `leads.conversation_id`
+- [ ] Unique constraints exist on: `contacts.sendpulse_contact_id`, `contacts.instagram_handle`, `messages.sendpulse_message_id`, `messages.dedup_hash`
+- [ ] Indexes exist on: `contacts.sendpulse_contact_id`, `contacts.instagram_handle`, `messages.conversation_id`, `messages.sendpulse_message_id`, `messages.dedup_hash`, `leads.contact_id`, `leads.conversation_id`
 - [ ] Regenerated `src/types/database.ts` includes Row/Insert/Update types for all five tables
 
 ### Test sketch
@@ -105,7 +105,9 @@ type Tables = Database['public']['Tables']
 
 describe('core domain tables exist in generated types', () => {
   it('has contacts table', () => {
-    expectTypeOf<Tables['contacts']['Row']>().toHaveProperty('inro_contact_id')
+    expectTypeOf<Tables['contacts']['Row']>().toHaveProperty(
+      'sendpulse_contact_id'
+    )
     expectTypeOf<Tables['contacts']['Row']>().toHaveProperty('instagram_handle')
     expectTypeOf<Tables['contacts']['Row']>().toHaveProperty('opted_out')
   })
@@ -174,7 +176,7 @@ When domain enums are imported, they provide exhaustive union types and constant
 - [ ] `MessageRole` union type: `'user' | 'assistant'`
 - [ ] `QualificationStatus` union type: `'hot' | 'warm' | 'cold'`
 - [ ] `ContactSource` union type: `'keyword' | 'broadcast' | 'organic_dm' | 'comment'`
-- [ ] `IntegrationName` union type: `'close_crm' | 'customerio' | 'slack' | 'calendly' | 'inro'`
+- [ ] `IntegrationName` union type: `'close_crm' | 'customerio' | 'slack' | 'calendly' | 'sendpulse'`
 - [ ] `IntegrationEventStatus` union type: `'pending' | 'success' | 'failed'`
 - [ ] `CallOutcome` union type: `'showed_up' | 'no_show' | 'closed' | 'not_qualified' | 'needs_follow_up'`
 - [ ] Constants: `PROMPT_VERSION = 'setter-v1'`, `FIRST_MESSAGE_LIMIT = 300`, `MESSAGE_LIMIT = 2000`
@@ -241,20 +243,20 @@ feature
 
 ---
 
-## Issue 4: Inro webhook payload Zod schema
+## Issue 4: SendPulse webhook payload Zod schema
 
 ### Context
 
-The `/api/webhooks/inro` endpoint receives HTTP POST requests from Inro scenario actions. We need strict Zod validation at the system boundary before any processing occurs.
+The `/api/webhooks/sendpulse` endpoint receives HTTP POST requests from SendPulse scenario actions. We need strict Zod validation at the system boundary before any processing occurs.
 
 ### Behavior to test
 
-When an Inro webhook payload is validated against the schema, valid payloads produce a typed object and invalid payloads produce descriptive Zod errors with field-level detail.
+When a SendPulse webhook payload is validated against the schema, valid payloads produce a typed object and invalid payloads produce descriptive Zod errors with field-level detail.
 
 ### Acceptance criteria
 
-- [ ] `inroWebhookSchema` validates: `contact_id` (string, required), `username` (string, required), `name` (string, optional), `email` (string email format, optional), `message` (string, required), `timestamp` (string ISO datetime, required), `source` (ContactSource enum, optional, defaults to `'organic_dm'`)
-- [ ] Inferred TypeScript type `InroWebhookPayload` is exported alongside the schema
+- [ ] `sendpulseWebhookSchema` validates: `contact_id` (string, required), `username` (string, required), `name` (string, optional), `email` (string email format, optional), `message` (string, required), `timestamp` (string ISO datetime, required), `source` (ContactSource enum, optional, defaults to `'organic_dm'`)
+- [ ] Inferred TypeScript type `SendPulseWebhookPayload` is exported alongside the schema
 - [ ] Invalid payloads (missing required fields, bad email format) produce descriptive errors
 - [ ] Extra fields are stripped
 - [ ] Missing `source` defaults to `'organic_dm'`
@@ -263,10 +265,10 @@ When an Inro webhook payload is validated against the schema, valid payloads pro
 
 ```typescript
 import { describe, it, expect } from 'vitest'
-import { inroWebhookSchema } from '@/types/inro'
+import { sendpulseWebhookSchema } from '@/types/sendpulse'
 
 const validPayload = {
-  contact_id: 'inro_abc123',
+  contact_id: 'sendpulse_abc123',
   username: 'johndoe',
   name: 'John Doe',
   email: 'john@example.com',
@@ -274,36 +276,38 @@ const validPayload = {
   timestamp: '2026-04-09T10:30:00Z',
 }
 
-describe('inroWebhookSchema', () => {
+describe('sendpulseWebhookSchema', () => {
   it('validates a complete valid payload', () => {
-    const result = inroWebhookSchema.safeParse(validPayload)
+    const result = sendpulseWebhookSchema.safeParse(validPayload)
     expect(result.success).toBe(true)
   })
 
   it('validates payload with only required fields', () => {
     const minimal = {
-      contact_id: 'inro_abc123',
+      contact_id: 'sendpulse_abc123',
       username: 'johndoe',
       message: 'Hello',
       timestamp: '2026-04-09T10:30:00Z',
     }
-    expect(inroWebhookSchema.safeParse(minimal).success).toBe(true)
+    expect(sendpulseWebhookSchema.safeParse(minimal).success).toBe(true)
   })
 
   it('rejects payload missing required contact_id', () => {
     const { contact_id, ...missing } = validPayload
-    expect(inroWebhookSchema.safeParse(missing).success).toBe(false)
+    expect(sendpulseWebhookSchema.safeParse(missing).success).toBe(false)
   })
 
   it('rejects payload with invalid email', () => {
     expect(
-      inroWebhookSchema.safeParse({ ...validPayload, email: 'not-an-email' })
-        .success
+      sendpulseWebhookSchema.safeParse({
+        ...validPayload,
+        email: 'not-an-email',
+      }).success
     ).toBe(false)
   })
 
   it('accepts payload without optional fields', () => {
-    const result = inroWebhookSchema.safeParse({
+    const result = sendpulseWebhookSchema.safeParse({
       contact_id: 'x',
       username: 'y',
       message: 'z',
@@ -316,7 +320,7 @@ describe('inroWebhookSchema', () => {
 
 ### Files
 
-- CREATE: `src/types/inro.ts` — `inroWebhookSchema` Zod schema + `InroWebhookPayload` inferred type
+- CREATE: `src/types/sendpulse.ts` — `sendpulseWebhookSchema` Zod schema + `SendPulseWebhookPayload` inferred type
 
 ### Dependencies
 
@@ -431,7 +435,7 @@ feature
 
 ### Context
 
-Inro may not provide a stable message ID on every webhook payload. As a fallback, we generate a deterministic SHA-256 hash of `scopeId + content + timestamp` to use as a dedup key in the `messages` table's unique constraint. The `scopeId` is the conversation ID (dedup is per-conversation).
+SendPulse may not provide a stable message ID on every webhook payload. As a fallback, we generate a deterministic SHA-256 hash of `scopeId + content + timestamp` to use as a dedup key in the `messages` table's unique constraint. The `scopeId` is the conversation ID (dedup is per-conversation).
 
 ### Behavior to test
 
@@ -574,11 +578,11 @@ Every incoming DM must resolve to a canonical contact before any conversation or
 
 ### Behavior to test
 
-When Inro webhook data is received, the contact record is created or updated in Supabase. If the contact exists (matched by `inro_contact_id`), only `last_message_at` and `updated_at` are updated. If new, all fields are set including `first_seen_at` and `source`.
+When SendPulse webhook data is received, the contact record is created or updated in Supabase. If the contact exists (matched by `sendpulse_contact_id`), only `last_message_at` and `updated_at` are updated. If new, all fields are set including `first_seen_at` and `source`.
 
 ### Acceptance criteria
 
-- [ ] Creates a new contact when `inro_contact_id` does not exist
+- [ ] Creates a new contact when `sendpulse_contact_id` does not exist
 - [ ] Sets `first_seen_at`, `last_message_at`, `source` on create (source from webhook payload, defaults to `'organic_dm'`)
 - [ ] Updates `last_message_at` and `updated_at` when contact already exists
 - [ ] Does NOT overwrite `first_seen_at` or `source` on update
@@ -597,11 +601,11 @@ describe('upsertContact', () => {
     const client = createMockClient()
     client.maybeSingle.mockResolvedValueOnce({ data: null, error: null })
     client.single.mockResolvedValueOnce({
-      data: { id: 'uuid-1', inro_contact_id: 'inro_123' },
+      data: { id: 'uuid-1', sendpulse_contact_id: 'sendpulse_123' },
       error: null,
     })
     const result = await upsertContact(client, {
-      contact_id: 'inro_123',
+      contact_id: 'sendpulse_123',
       username: 'test',
       message: 'hi',
       timestamp: '2026-04-09T10:00:00Z',
@@ -620,7 +624,7 @@ describe('upsertContact', () => {
       error: null,
     })
     const result = await upsertContact(client, {
-      contact_id: 'inro_123',
+      contact_id: 'sendpulse_123',
       username: 'test',
       message: 'hi',
       timestamp: '2026-04-09T10:00:00Z',
@@ -652,7 +656,7 @@ describe('upsertContact', () => {
 
 ### Dependencies
 
-- Blocked by: Issue 3 (enums), Issue 4 (Inro schema), Issue 7 (service role client)
+- Blocked by: Issue 3 (enums), Issue 4 (SendPulse schema), Issue 7 (service role client)
 - Blocks: Issue 18
 
 ### Type
@@ -829,19 +833,19 @@ feature
 
 ### Context
 
-Every incoming DM and every Claude reply must be stored in the `messages` table. Inro may retry webhook deliveries, so we need deduplication via `inro_message_id` or content-based `dedup_hash`.
+Every incoming DM and every Claude reply must be stored in the `messages` table. SendPulse may retry webhook deliveries, so we need deduplication via `sendpulse_message_id` or content-based `dedup_hash`.
 
 ### Behavior to test
 
-When a message is stored, duplicates are detected by `inro_message_id` or content hash and skipped. New messages are inserted normally.
+When a message is stored, duplicates are detected by `sendpulse_message_id` or content hash and skipped. New messages are inserted normally.
 
 ### Acceptance criteria
 
 - [ ] Inserts a new message when no duplicate exists
 - [ ] Generates `dedup_hash` using `generateDedupHash` from Issue 6
-- [ ] Detects duplicate by `inro_message_id` and returns `{ success: true, isDuplicate: true }`
+- [ ] Detects duplicate by `sendpulse_message_id` and returns `{ success: true, isDuplicate: true }`
 - [ ] Detects duplicate by `dedup_hash` and returns `{ success: true, isDuplicate: true }`
-- [ ] Stores assistant messages without `inro_message_id`
+- [ ] Stores assistant messages without `sendpulse_message_id`
 - [ ] Returns `{ success: true, data: Message }` on successful insert
 - [ ] Handles Postgres unique violation (code `23505`) gracefully as duplicate
 
@@ -869,7 +873,7 @@ describe('storeMessage', () => {
     expect(result.isDuplicate).toBeFalsy()
   })
 
-  it('detects duplicate by inro_message_id', async () => {
+  it('detects duplicate by sendpulse_message_id', async () => {
     const client = createMockClient()
     client.maybeSingle.mockResolvedValueOnce({
       data: { id: 'existing' },
@@ -879,7 +883,7 @@ describe('storeMessage', () => {
       conversationId: 'c1',
       role: 'user',
       content: 'Hi',
-      inroMessageId: 'inro_1',
+      sendpulseMessageId: 'sendpulse_1',
     })
     expect(result.success).toBe(true)
     expect(result.isDuplicate).toBe(true)
@@ -1408,16 +1412,16 @@ feature
 
 ### Context
 
-The `/api/webhooks/inro` route handler is the entry point for all incoming Instagram DMs forwarded by Inro. It validates, deduplicates, checks opt-out, and delegates to the conversation engine.
+The `/api/webhooks/sendpulse` route handler is the entry point for all incoming Instagram DMs forwarded by SendPulse. It validates, deduplicates, checks opt-out, and delegates to the conversation engine.
 
 ### Behavior to test
 
-When POST /api/webhooks/inro receives a request, invalid payloads return 400, duplicates and opted-out contacts return 200 with skip reason, valid new messages are processed and return 200 with the reply, and internal errors return 500 with a generic message.
+When POST /api/webhooks/sendpulse receives a request, invalid payloads return 400, duplicates and opted-out contacts return 200 with skip reason, valid new messages are processed and return 200 with the reply, and internal errors return 500 with a generic message.
 
 ### Acceptance criteria
 
 - [ ] POST handler exported from route file
-- [ ] Validates with `inroWebhookSchema` — 400 on failure
+- [ ] Validates with `sendpulseWebhookSchema` — 400 on failure
 - [ ] Malformed JSON returns 400 without throwing
 - [ ] Creates service role Supabase client
 - [ ] Upserts contact, checks `opted_out` flag — 200 skip if opted out
@@ -1438,13 +1442,13 @@ vi.mock('@/lib/services/contact', () => ({ upsertContact: vi.fn() }))
 vi.mock('@/lib/services/message', () => ({ storeMessage: vi.fn() }))
 vi.mock('@/lib/services/engine', () => ({ processMessage: vi.fn() }))
 
-import { POST } from '@/app/api/webhooks/inro/route'
+import { POST } from '@/app/api/webhooks/sendpulse/route'
 import { upsertContact } from '@/lib/services/contact'
 import { processMessage } from '@/lib/services/engine'
 
-describe('POST /api/webhooks/inro', () => {
+describe('POST /api/webhooks/sendpulse', () => {
   it('returns 400 for malformed JSON', async () => {
-    const req = new Request('http://localhost/api/webhooks/inro', {
+    const req = new Request('http://localhost/api/webhooks/sendpulse', {
       method: 'POST',
       body: 'not json',
     })
@@ -1453,7 +1457,7 @@ describe('POST /api/webhooks/inro', () => {
   })
 
   it('returns 400 for invalid payload', async () => {
-    const req = new Request('http://localhost/api/webhooks/inro', {
+    const req = new Request('http://localhost/api/webhooks/sendpulse', {
       method: 'POST',
       body: JSON.stringify({ contact_id: 'x' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1467,7 +1471,7 @@ describe('POST /api/webhooks/inro', () => {
       success: true,
       data: { opted_out: true },
     })
-    const req = new Request('http://localhost/api/webhooks/inro', {
+    const req = new Request('http://localhost/api/webhooks/sendpulse', {
       method: 'POST',
       body: JSON.stringify({
         contact_id: 'x',
@@ -1484,7 +1488,7 @@ describe('POST /api/webhooks/inro', () => {
 
   it('returns 500 with generic message on internal error', async () => {
     vi.mocked(upsertContact).mockRejectedValue(new Error('DB down'))
-    const req = new Request('http://localhost/api/webhooks/inro', {
+    const req = new Request('http://localhost/api/webhooks/sendpulse', {
       method: 'POST',
       body: JSON.stringify({
         contact_id: 'x',
@@ -1503,7 +1507,7 @@ describe('POST /api/webhooks/inro', () => {
 
 ### Files
 
-- CREATE: `src/app/api/webhooks/inro/route.ts` — POST webhook handler [boundary: API]
+- CREATE: `src/app/api/webhooks/sendpulse/route.ts` — POST webhook handler [boundary: API]
 
 ### Dependencies
 
@@ -1866,7 +1870,7 @@ feature
 
 ### Context
 
-The existing middleware (`src/lib/supabase/proxy.ts` invoked from `src/proxy.ts`) refreshes auth sessions on every request using `getClaims()`. The webhook endpoint at `/api/webhooks/inro` receives unauthenticated POST requests from Inro — it has no session cookies. The middleware must skip webhook routes to avoid unnecessary auth processing on these requests.
+The existing middleware (`src/lib/supabase/proxy.ts` invoked from `src/proxy.ts`) refreshes auth sessions on every request using `getClaims()`. The webhook endpoint at `/api/webhooks/sendpulse` receives unauthenticated POST requests from SendPulse — it has no session cookies. The middleware must skip webhook routes to avoid unnecessary auth processing on these requests.
 
 ### Behavior to test
 
@@ -1875,7 +1879,7 @@ When a request arrives at `/api/webhooks/*`, the middleware skips session refres
 ### Acceptance criteria
 
 - [ ] Middleware matcher in `src/proxy.ts` excludes `/api/webhooks/:path*` routes
-- [ ] Requests to `/api/webhooks/inro` are not processed by `updateSession()`
+- [ ] Requests to `/api/webhooks/sendpulse` are not processed by `updateSession()`
 - [ ] Non-webhook routes (e.g., `/dashboard`, `/api/other`) still go through session refresh
 - [ ] The exclusion pattern covers all webhook routes (future-proof for additional webhooks)
 
@@ -1889,7 +1893,7 @@ const WEBHOOK_PATTERN = /^\/api\/webhooks\//
 
 describe('middleware webhook exclusion', () => {
   it('matches webhook routes', () => {
-    expect(WEBHOOK_PATTERN.test('/api/webhooks/inro')).toBe(true)
+    expect(WEBHOOK_PATTERN.test('/api/webhooks/sendpulse')).toBe(true)
     expect(WEBHOOK_PATTERN.test('/api/webhooks/stripe')).toBe(true)
   })
 

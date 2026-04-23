@@ -41,7 +41,7 @@ describe('core domain tables exist in generated types', () => {
   describe('contacts table', () => {
     it('has identity columns', () => {
       assertHasKey<ContactRow, 'id'>(true)
-      assertHasKey<ContactRow, 'inro_contact_id'>(true)
+      assertHasKey<ContactRow, 'sendpulse_contact_id'>(true)
       assertHasKey<ContactRow, 'instagram_handle'>(true)
     })
 
@@ -58,8 +58,8 @@ describe('core domain tables exist in generated types', () => {
     })
 
     it('has Insert and Update types', () => {
-      assertHasKey<ContactInsert, 'inro_contact_id'>(true)
-      assertHasKey<ContactUpdate, 'inro_contact_id'>(true)
+      assertHasKey<ContactInsert, 'sendpulse_contact_id'>(true)
+      assertHasKey<ContactUpdate, 'sendpulse_contact_id'>(true)
     })
   })
 
@@ -92,7 +92,7 @@ describe('core domain tables exist in generated types', () => {
     })
 
     it('has dedup and tracking columns', () => {
-      assertHasKey<MessageRow, 'inro_message_id'>(true)
+      assertHasKey<MessageRow, 'external_message_id'>(true)
       assertHasKey<MessageRow, 'dedup_hash'>(true)
       assertHasKey<MessageRow, 'token_count'>(true)
     })
