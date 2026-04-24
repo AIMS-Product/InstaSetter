@@ -167,7 +167,10 @@ describe('POST /api/webhooks/sendpulse', () => {
       'Hey interested',
       expect.any(String),
       expect.any(Function),
-      'sendpulse'
+      'sendpulse',
+      expect.objectContaining({
+        prepareInboundContext: expect.any(Function),
+      })
     )
     expect(sendInstagramMessage).toHaveBeenCalledWith('sp_123', 'Hey!')
   })
@@ -192,7 +195,10 @@ describe('POST /api/webhooks/sendpulse', () => {
       expect.any(String),
       expect.any(String),
       expect.any(Function),
-      'sendpulse'
+      'sendpulse',
+      expect.objectContaining({
+        prepareInboundContext: expect.any(Function),
+      })
     )
   })
 

@@ -2,7 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageCircle, Workflow, type LucideIcon } from 'lucide-react'
+import {
+  Home,
+  Megaphone,
+  MessageCircle,
+  Workflow,
+  type LucideIcon,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 
 interface NavItem {
@@ -19,6 +25,12 @@ const NAV: NavItem[] = [
     label: 'Conversations',
     Icon: MessageCircle,
     matchPrefix: '/dashboard/conversations',
+  },
+  {
+    href: '/dashboard/marketing-sources',
+    label: 'Sources',
+    Icon: Megaphone,
+    matchPrefix: '/dashboard/marketing-sources',
   },
   {
     href: '/dashboard/flows/ig-organic-dm',
@@ -46,6 +58,12 @@ function buildCrumbs(pathname: string): Crumb[] {
       { href: '/dashboard', label: 'Dashboard' },
       { href: '/dashboard/conversations', label: 'Conversations' },
       { label: 'Detail' },
+    ]
+  }
+  if (pathname === '/dashboard/marketing-sources') {
+    return [
+      { href: '/dashboard', label: 'Dashboard' },
+      { label: 'Marketing Sources' },
     ]
   }
   if (pathname.startsWith('/dashboard/flows/')) {

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getConversation, interleave } from '@/lib/services/conversation-viewer'
 import { ToolBadge } from '@/components/tool-badge'
+import { formatAttributionLabel } from '@/lib/services/marketing-attribution'
 
 export const revalidate = 0
 
@@ -127,6 +128,55 @@ export default async function ConversationDetailPage({ params }: Params) {
             {conversation.summary}
           </div>
         )}
+
+        <section
+          style={{
+            padding: 14,
+            background: 'white',
+            border: '1px solid #EEEFF3',
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#4B4A5E',
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10.5,
+              fontWeight: 800,
+              letterSpacing: 0.7,
+              textTransform: 'uppercase',
+              marginBottom: 6,
+              color: '#6B6A7E',
+            }}
+          >
+            Lead source
+          </div>
+          <div style={{ fontWeight: 700, color: '#161528', marginBottom: 6 }}>
+            {formatAttributionLabel(
+              conversation.attribution && {
+                sourceKey: conversation.attribution.source_key ?? undefined,
+                channel: conversation.attribution.channel ?? undefined,
+                campaign: conversation.attribution.campaign ?? undefined,
+                material: conversation.attribution.material ?? undefined,
+                entryAction: conversation.attribution.entry_action ?? undefined,
+                triggerLabel:
+                  conversation.attribution.trigger_label ?? undefined,
+              }
+            )}
+          </div>
+          {conversation.attribution ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              <span>Campaign: {conversation.attribution.campaign ?? '—'}</span>
+              <span>Material: {conversation.attribution.material ?? '—'}</span>
+              <span>
+                Trigger: {conversation.attribution.trigger_label ?? '—'}
+              </span>
+            </div>
+          ) : (
+            <div>Unknown source for this conversation.</div>
+          )}
+        </section>
 
         <div
           style={{

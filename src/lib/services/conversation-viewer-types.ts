@@ -12,11 +12,22 @@ export interface ConversationListItem {
   event_tool_names: string[]
   last_message_at: string | null
   last_message_preview: string | null
+  attribution: ConversationAttribution | null
   contact: {
     id: string
     instagram_handle: string
     name: string | null
   }
+}
+
+export interface ConversationAttribution {
+  source_id: string | null
+  source_key: string | null
+  channel: string | null
+  campaign: string | null
+  material: string | null
+  entry_action: string | null
+  trigger_label: string | null
 }
 
 export interface ConversationMessage {
@@ -48,6 +59,7 @@ export interface ConversationDetail {
     name: string | null
     email: string | null
   }
+  attribution: ConversationAttribution | null
   messages: ConversationMessage[]
   events: ConversationEvent[]
 }

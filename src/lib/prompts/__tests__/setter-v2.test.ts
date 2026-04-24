@@ -320,4 +320,23 @@ describe('setter-v2 buildSystemPrompt', () => {
     })
     expect(prompt).not.toMatch(/returning contact/i)
   })
+
+  it('adds private lead source context only when provided', () => {
+    const prompt = buildSystemPrompt({
+      brandName: 'VP',
+      leadSourceContext: {
+        channel: 'Instagram',
+        campaign: 'Free Masterclass',
+        material: 'Masterclass Reel',
+        entryAction: 'Comment Reply',
+        triggerLabel: 'apr24_comment',
+      },
+    })
+
+    expect(prompt).toContain('Lead Source Context')
+    expect(prompt).toContain('Material: Masterclass Reel')
+    expect(prompt).toMatch(/short affirmative/i)
+    expect(prompt).toMatch(/Do not quote raw tags, variables, IDs/i)
+    expect(buildSystemPrompt(DEFAULT_OPTS)).not.toContain('Lead Source Context')
+  })
 })

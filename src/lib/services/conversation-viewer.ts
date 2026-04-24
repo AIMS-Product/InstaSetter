@@ -63,6 +63,13 @@ export async function listConversations(
       .in('conversation_id', conversationIds),
   ])
 
+  const { data: attributions } = await client
+    .from('conversation_attributions')
+    .select(
+      'conversation_id, source_id, source_key, channel, campaign, material, entry_action, trigger_label'
+    )
+    .in('conversation_id', conversationIds)
+
   const messagesByConv = new Map<
     string,
     { content: string; created_at: string; count: number }
@@ -99,6 +106,10 @@ export async function listConversations(
     }
   }
 
+  const attributionByConv = new Map(
+    (attributions ?? []).map((row) => [row.conversation_id, row])
+  )
+
   return convs.map((c) => {
     const lastMsg = messagesByConv.get(c.id)
     const contact = Array.isArray(c.contacts) ? c.contacts[0] : c.contacts
@@ -113,6 +124,7 @@ export async function listConversations(
       event_tool_names: Array.from(eventToolsByConv.get(c.id) ?? []),
       last_message_at: lastMsg?.created_at ?? null,
       last_message_preview: lastMsg?.content.slice(0, 120) ?? null,
+      attribution: attributionByConv.get(c.id) ?? null,
       contact: {
         id: contact?.id ?? '',
         instagram_handle: contact?.instagram_handle ?? 'unknown',
@@ -172,6 +184,14 @@ export async function getConversation(
       .limit(eventLimit),
   ])
 
+  const { data: attribution } = await client
+    .from('conversation_attributions')
+    .select(
+      'source_id, source_key, channel, campaign, material, entry_action, trigger_label'
+    )
+    .eq('conversation_id', conversationId)
+    .maybeSingle()
+
   const contact = Array.isArray(conv.contacts)
     ? conv.contacts[0]
     : conv.contacts
@@ -189,6 +209,7 @@ export async function getConversation(
       name: contact?.name ?? null,
       email: contact?.email ?? null,
     },
+    attribution: attribution ?? null,
     // Re-sort ascending so callers receive chronological order — the desc
     // + limit query above is just a "keep the latest N" optimisation.
     messages: (messagesRes.data ?? [])

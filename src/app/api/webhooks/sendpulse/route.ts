@@ -7,6 +7,11 @@ import { getServerConfig, getSendPulseConfig, isBotEnabled } from '@/lib/config'
 import { upsertSendPulseContact } from '@/lib/services/contact'
 import { processMessage } from '@/lib/services/engine'
 import { sendInstagramMessage, pauseAutomation } from '@/lib/services/sendpulse'
+import {
+  extractSendPulseAttribution,
+  persistSendPulseAttribution,
+} from '@/lib/services/marketing-attribution'
+import type { Json } from '@/types/database'
 
 async function handleEvent(
   event: SendPulseWebhookPayload,
@@ -36,18 +41,36 @@ async function handleEvent(
   const timestamp = new Date(event.date * 1000).toISOString()
   const messageContent = event.contact.last_message
   const anthropic = new Anthropic({ apiKey: anthropicApiKey })
+  const rawMessageId = extractSendPulseAttribution(event).rawMessageId
 
   const result = await processMessage(
     client,
     contactResult.data,
-    undefined,
+    rawMessageId ?? undefined,
     messageContent,
     timestamp,
     (req) =>
       anthropic.messages.create(
         req as Anthropic.Messages.MessageCreateParamsNonStreaming
       ),
-    'sendpulse'
+    'sendpulse',
+    {
+      prepareInboundContext: async ({ conversationId }) => {
+        const attribution = await persistSendPulseAttribution(client, {
+          event,
+          contactId: contactResult.data.id,
+          conversationId,
+        })
+
+        return {
+          leadSourceContext: attribution.leadSourceContext,
+          inboundMetadata: {
+            webhook_event_id: attribution.webhookEventId,
+            sendpulse_raw_event: event as unknown as Json,
+          },
+        }
+      },
+    }
   )
 
   if (!result.success) {

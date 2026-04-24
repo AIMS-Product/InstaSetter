@@ -40,6 +40,7 @@ export function createTableAwareMockClient() {
     const chain: Record<string, ReturnType<typeof vi.fn>> = {
       select: vi.fn(() => chain),
       insert: vi.fn(() => chain),
+      upsert: vi.fn(() => chain),
       update: vi.fn(() => chain),
       delete: vi.fn(() => chain),
       eq: vi.fn(() => chain),

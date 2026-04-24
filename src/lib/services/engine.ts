@@ -18,6 +18,8 @@ import { leadSummarySchema } from '@/types/lead'
 import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
 import { getServerConfig } from '@/lib/config'
 import { setContactTags } from '@/lib/services/sendpulse'
+import type { Json } from '@/types/database'
+import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
 type ClaudeCallFn = (
   request: ReturnType<typeof buildClaudeRequest>
@@ -40,6 +42,14 @@ type ContactInput = {
   sendpulse_contact_id?: string | null
 }
 
+type ProcessMessageOptions = {
+  leadSourceContext?: LeadSourceContext
+  inboundMetadata?: Json
+  prepareInboundContext?: (input: {
+    conversationId: string
+  }) => Promise<ProcessMessageOptions>
+}
+
 export async function processMessage(
   client: SupabaseClient<Database>,
   contact: ContactInput,
@@ -47,7 +57,8 @@ export async function processMessage(
   content: string,
   timestamp: string,
   callClaude: ClaudeCallFn,
-  integration: string = 'sendpulse'
+  integration: string = 'sendpulse',
+  options: ProcessMessageOptions = {}
 ): Promise<ServiceResult<ProcessMessageResult>> {
   const { BRAND_NAME, BOOKING_URL } = getServerConfig()
 
@@ -57,6 +68,14 @@ export async function processMessage(
     return { success: false, error: convResult.error }
   }
   const conversationId = convResult.data.id
+
+  const preparedContext = options.prepareInboundContext
+    ? await options.prepareInboundContext({ conversationId })
+    : {}
+  const leadSourceContext =
+    preparedContext.leadSourceContext ?? options.leadSourceContext
+  const inboundMetadata =
+    preparedContext.inboundMetadata ?? options.inboundMetadata
 
   // Step 1b: If a stale conversation was closed, generate its summary async
   if (convResult.data.staleConversationId) {
@@ -86,6 +105,7 @@ export async function processMessage(
     content,
     timestamp,
     externalMessageId,
+    metadata: inboundMetadata,
   })
 
   if (!storeResult.success) {
@@ -105,6 +125,7 @@ export async function processMessage(
     isReturningContact,
     priorSummaries,
     contactContext,
+    leadSourceContext,
   })
 
   // Step 5: Assemble message history

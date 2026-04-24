@@ -276,6 +276,114 @@ export type Database = {
           },
         ]
       }
+      marketing_sources: {
+        Row: {
+          ad_id: string | null
+          campaign: string
+          channel: string
+          created_at: string
+          entry_action: string
+          id: string
+          label: string
+          material: string
+          notes: string | null
+          post_url: string | null
+          source_key: string
+          status: string
+          trigger_label: string
+          updated_at: string
+        }
+        Insert: {
+          ad_id?: string | null
+          campaign: string
+          channel: string
+          created_at?: string
+          entry_action: string
+          id?: string
+          label: string
+          material: string
+          notes?: string | null
+          post_url?: string | null
+          source_key: string
+          status?: string
+          trigger_label: string
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string | null
+          campaign?: string
+          channel?: string
+          created_at?: string
+          entry_action?: string
+          id?: string
+          label?: string
+          material?: string
+          notes?: string | null
+          post_url?: string | null
+          source_key?: string
+          status?: string
+          trigger_label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversation_attributions: {
+        Row: {
+          campaign: string | null
+          channel: string | null
+          conversation_id: string
+          created_at: string
+          entry_action: string | null
+          material: string | null
+          raw_message_id: string | null
+          source_id: string | null
+          source_key: string | null
+          trigger_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign?: string | null
+          channel?: string | null
+          conversation_id: string
+          created_at?: string
+          entry_action?: string | null
+          material?: string | null
+          raw_message_id?: string | null
+          source_id?: string | null
+          source_key?: string | null
+          trigger_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign?: string | null
+          channel?: string | null
+          conversation_id?: string
+          created_at?: string
+          entry_action?: string | null
+          material?: string | null
+          raw_message_id?: string | null
+          source_id?: string | null
+          source_key?: string | null
+          trigger_label?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'conversation_attributions_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: true
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'conversation_attributions_source_id_fkey'
+            columns: ['source_id']
+            isOneToOne: false
+            referencedRelation: 'marketing_sources'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       leads: {
         Row: {
           calculator_sent: boolean

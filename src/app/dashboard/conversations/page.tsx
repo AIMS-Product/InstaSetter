@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { listConversations } from '@/lib/services/conversation-viewer'
+import { formatAttributionLabel } from '@/lib/services/marketing-attribution'
 
 export const revalidate = 0
 
@@ -115,7 +116,7 @@ export default async function ConversationsPage() {
                   style={{
                     display: 'grid',
                     gridTemplateColumns:
-                      'minmax(180px, 1fr) minmax(200px, 2fr) 80px 70px 90px',
+                      'minmax(160px, 1fr) minmax(200px, 2fr) minmax(160px, 1.2fr) 80px 70px 90px',
                     gap: 16,
                     alignItems: 'center',
                     padding: '14px 18px',
@@ -148,6 +149,26 @@ export default async function ConversationsPage() {
                       >
                         {c.contact.instagram_handle}
                       </div>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: c.attribution ? '#3B2E72' : '#8A8A9B',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {formatAttributionLabel(
+                      c.attribution && {
+                        sourceKey: c.attribution.source_key ?? undefined,
+                        channel: c.attribution.channel ?? undefined,
+                        campaign: c.attribution.campaign ?? undefined,
+                        material: c.attribution.material ?? undefined,
+                        entryAction: c.attribution.entry_action ?? undefined,
+                        triggerLabel: c.attribution.trigger_label ?? undefined,
+                      }
                     )}
                   </div>
                   <div
