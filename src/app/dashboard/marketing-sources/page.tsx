@@ -1,5 +1,12 @@
 import Link from 'next/link'
-import { Archive, CheckCircle2, Copy, Plus, Sparkles } from 'lucide-react'
+import {
+  AlertCircle,
+  Archive,
+  CheckCircle2,
+  HelpCircle,
+  Plus,
+  Sparkles,
+} from 'lucide-react'
 import type { CSSProperties } from 'react'
 import {
   buildSourceSetupValues,
@@ -9,6 +16,7 @@ import {
   archiveMarketingSourceAction,
   createMarketingSourceAction,
 } from './actions'
+import { SetupCopyPanel } from './setup-copy-panel'
 
 export const revalidate = 0
 
@@ -36,14 +44,18 @@ function Field({
   label,
   required,
   placeholder,
+  help,
+  example,
 }: {
   name: string
   label: string
   required?: boolean
   placeholder?: string
+  help?: string
+  example?: string
 }) {
   return (
-    <label
+    <div
       style={{
         display: 'grid',
         gridTemplateRows: '18px 42px',
@@ -51,16 +63,47 @@ function Field({
         minWidth: 0,
       }}
     >
-      <span style={{ fontSize: 11.5, fontWeight: 800, color: '#4B4A5E' }}>
-        {label}
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          minWidth: 0,
+          fontSize: 11.5,
+          fontWeight: 800,
+          color: '#4B4A5E',
+        }}
+      >
+        <label htmlFor={name}>{label}</label>
+        {help && <HelpTip text={help} example={example} />}
       </span>
       <input
+        id={name}
         name={name}
         required={required}
         placeholder={placeholder}
         style={inputStyle}
       />
-    </label>
+    </div>
+  )
+}
+
+function HelpTip({ text, example }: { text: string; example?: string }) {
+  const label = example ? `${text} Example: ${example}` : text
+
+  return (
+    <span
+      className="source-help-tip"
+      tabIndex={0}
+      aria-label={label}
+      title={label}
+    >
+      <HelpCircle aria-hidden size={13} strokeWidth={2} />
+      <span className="source-help-tip__bubble" role="tooltip">
+        <span>{text}</span>
+        {example && <strong>Example: {example}</strong>}
+      </span>
+    </span>
   )
 }
 
@@ -110,7 +153,8 @@ function WorkflowStep({
 }
 
 export default async function MarketingSourcesPage() {
-  const sources = await listMarketingSources()
+  const sourceResult = await listMarketingSources()
+  const sources = sourceResult.sources
 
   return (
     <main
@@ -308,36 +352,48 @@ export default async function MarketingSourcesPage() {
                     name="label"
                     label="Dashboard label"
                     placeholder="Masterclass Reel"
+                    help="The friendly name your team will see on this page."
+                    example="Masterclass Reel"
                   />
                   <Field
                     name="channel"
-                    label="Lead source"
+                    label="Where it came from"
                     required
                     placeholder="Instagram"
+                    help="The broad channel where the chat started."
+                    example="Instagram"
                   />
                   <Field
                     name="campaign"
                     label="Campaign"
                     required
                     placeholder="Free Masterclass"
+                    help="The promotion, launch, or offer this entry point belongs to."
+                    example="Free Masterclass"
                   />
                   <Field
                     name="material"
                     label="Post, reel, ad, or keyword"
                     required
                     placeholder="April 24 reel: startup mistakes"
+                    help="The exact content or keyword the person responded to."
+                    example="April 24 reel: startup mistakes"
                   />
                   <Field
                     name="entryAction"
-                    label="Entry action"
+                    label="What the user did"
                     required
                     placeholder="Comment reply"
+                    help="The action that started the SendPulse flow."
+                    example="Comment reply"
                   />
                   <Field
                     name="triggerLabel"
-                    label="SendPulse trigger"
+                    label="Keyword/trigger in SendPulse"
                     required
                     placeholder="comment keyword: info"
+                    help="The SendPulse trigger or keyword your automation listens for."
+                    example="comment keyword: info"
                   />
                 </div>
 
@@ -362,12 +418,22 @@ export default async function MarketingSourcesPage() {
                       name="postUrl"
                       label="Post URL"
                       placeholder="https://..."
+                      help="A link back to the source content for later review."
+                      example="The Instagram reel URL"
                     />
-                    <Field name="adId" label="Ad ID" placeholder="Optional" />
+                    <Field
+                      name="adId"
+                      label="Ad ID"
+                      placeholder="Optional"
+                      help="The paid ad identifier if this came from Ads Manager."
+                      example="Meta campaign or ad ID"
+                    />
                     <Field
                       name="notes"
                       label="Notes"
                       placeholder="Internal setup notes"
+                      help="Any reminder that helps another operator understand the setup."
+                      example="Uses the info keyword in the masterclass flow"
                     />
                   </div>
                 </div>
@@ -481,6 +547,46 @@ export default async function MarketingSourcesPage() {
           </form>
         </section>
 
+        {!sourceResult.success && (
+          <section
+            role="alert"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '20px 1fr',
+              gap: 10,
+              alignItems: 'start',
+              background: '#FFF7ED',
+              border: '1px solid #FDBA74',
+              borderRadius: 8,
+              padding: 14,
+              marginBottom: 18,
+              color: '#7C2D12',
+            }}
+          >
+            <AlertCircle aria-hidden size={18} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>
+                Sources could not be loaded
+              </div>
+              <div style={{ marginTop: 3, fontSize: 12.5, lineHeight: 1.45 }}>
+                The Sources table is unavailable right now, so the list below is
+                not a real empty state. Apply the marketing sources migration or
+                refresh the database schema, then reload this page.
+              </div>
+              <code
+                style={{
+                  display: 'block',
+                  marginTop: 8,
+                  color: '#9A3412',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {sourceResult.error}
+              </code>
+            </div>
+          </section>
+        )}
+
         <div
           style={{
             display: 'flex',
@@ -494,14 +600,15 @@ export default async function MarketingSourcesPage() {
               Step 2: copy setup into SendPulse
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#6B6A7E' }}>
-              {sources.length} configured. Archived sources stay available for
-              historical conversations.
+              {sourceResult.success
+                ? `${sources.length} configured. Archived sources stay available for historical conversations.`
+                : 'Sources are unavailable until the database is ready.'}
             </p>
           </div>
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          {sources.length === 0 && (
+          {sourceResult.success && sources.length === 0 && (
             <section
               style={{
                 background: 'white',
@@ -616,47 +723,7 @@ export default async function MarketingSourcesPage() {
                   )}
                 </div>
 
-                <div
-                  style={{
-                    borderLeft: '1px solid #EEEFF3',
-                    paddingLeft: 18,
-                    display: 'grid',
-                    gap: 10,
-                    fontSize: 12,
-                    color: '#4B4A5E',
-                  }}
-                >
-                  <div style={{ fontWeight: 800, color: '#161528' }}>
-                    <Copy aria-hidden size={13} style={{ marginRight: 6 }} />
-                    Copy these into SendPulse
-                  </div>
-                  <div>
-                    In the matching SendPulse flow, add an action to set these
-                    variable values:
-                  </div>
-                  <pre
-                    style={{
-                      margin: 0,
-                      padding: 10,
-                      borderRadius: 8,
-                      background: '#F7F7FA',
-                      overflow: 'auto',
-                    }}
-                  >
-                    {JSON.stringify(setup.variables, null, 2)}
-                  </pre>
-                  <div>
-                    Add a second action to apply this tag:{' '}
-                    <code>{setup.tag}</code>
-                  </div>
-                  <div>
-                    Confirm global incoming message webhooks are enabled.
-                  </div>
-                  <div>
-                    API capability check: manual flow trigger setup required for
-                    v1.
-                  </div>
-                </div>
+                <SetupCopyPanel variables={setup.variables} tag={setup.tag} />
               </section>
             )
           })}

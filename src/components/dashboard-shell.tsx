@@ -28,7 +28,7 @@ const NAV: NavItem[] = [
   },
   {
     href: '/dashboard/marketing-sources',
-    label: 'Sources',
+    label: 'Lead Sources',
     Icon: Megaphone,
     matchPrefix: '/dashboard/marketing-sources',
   },

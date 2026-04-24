@@ -62,6 +62,51 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
+.source-help-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #6b6a7e;
+  cursor: help;
+}
+
+.source-help-tip__bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  width: min(260px, 80vw);
+  transform: translateX(-50%) translateY(4px);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  border: 1px solid #d9dae5;
+  border-radius: 8px;
+  background: #161528;
+  color: #fafafb;
+  padding: 9px 10px;
+  box-shadow: 0 10px 30px rgba(22, 21, 40, 0.16);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.source-help-tip__bubble strong {
+  display: block;
+  margin-top: 5px;
+  color: #dcd8ff;
+  font-weight: 700;
+}
+
+.source-help-tip:hover .source-help-tip__bubble,
+.source-help-tip:focus-visible .source-help-tip__bubble {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* Skip link — visible only when focused. Lets keyboard users jump past nav. */
 .skip-link {
   position: absolute;

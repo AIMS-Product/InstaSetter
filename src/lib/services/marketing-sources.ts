@@ -8,6 +8,10 @@ export type MarketingSource =
     conversation_count?: number
   }
 
+export type MarketingSourcesListResult =
+  | { success: true; sources: MarketingSource[] }
+  | { success: false; sources: []; error: string }
+
 export function buildSourceSetupValues(
   source: Pick<
     MarketingSource,
@@ -32,7 +36,7 @@ export function buildSourceSetupValues(
   }
 }
 
-export async function listMarketingSources(): Promise<MarketingSource[]> {
+export async function listMarketingSources(): Promise<MarketingSourcesListResult> {
   const client = createServiceRoleClient()
   const [{ data: sources, error }, { data: attributions }] = await Promise.all([
     client
@@ -44,7 +48,13 @@ export async function listMarketingSources(): Promise<MarketingSource[]> {
 
   if (error || !sources) {
     console.error('listMarketingSources failed', error)
-    return []
+    return {
+      success: false,
+      sources: [],
+      error:
+        error?.message ??
+        'Sources could not be loaded. Check the database connection.',
+    }
   }
 
   const counts = new Map<string, number>()
@@ -53,10 +63,13 @@ export async function listMarketingSources(): Promise<MarketingSource[]> {
     counts.set(row.source_id, (counts.get(row.source_id) ?? 0) + 1)
   }
 
-  return sources.map((source) => ({
-    ...source,
-    conversation_count: counts.get(source.id) ?? 0,
-  }))
+  return {
+    success: true,
+    sources: sources.map((source) => ({
+      ...source,
+      conversation_count: counts.get(source.id) ?? 0,
+    })),
+  }
 }
 
 export async function createMarketingSource(input: {
