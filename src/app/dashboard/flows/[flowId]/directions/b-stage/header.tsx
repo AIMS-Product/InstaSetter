@@ -4,6 +4,7 @@ import { MessageSquareText } from 'lucide-react'
 import { useFlowState } from '../../store'
 import {
   StatusBadge,
+  getDraftSaveStatus,
   getDraftWorkspaceStatus,
   getLiveRuntimeStatus,
 } from '../../surface-status'
@@ -29,7 +30,14 @@ export default function BHeader({
 }) {
   const state = useFlowState()
   const draftStatus = getDraftWorkspaceStatus(state.dirtySincePublish)
+  const saveStatus = getDraftSaveStatus(state.draftSyncStatus)
   const liveStatus = getLiveRuntimeStatus()
+  const saveTone =
+    state.draftSyncStatus === 'error'
+      ? 'danger'
+      : state.draftSyncStatus === 'saved'
+        ? 'success'
+        : 'info'
 
   return (
     <div
@@ -118,6 +126,7 @@ export default function BHeader({
           label={draftStatus.label}
           tone={state.dirtySincePublish ? 'warning' : 'neutral'}
         />
+        <StatusBadge p={B} label={saveStatus.label} tone={saveTone} />
         <StatusBadge p={B} label={liveStatus.label} tone="success" />
       </div>
       <div style={{ flex: 1 }} />

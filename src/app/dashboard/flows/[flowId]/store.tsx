@@ -29,6 +29,40 @@ import type {
   Variable,
 } from './types'
 
+export type DraftSyncStatus =
+  | 'loading'
+  | 'saved'
+  | 'pending'
+  | 'saving'
+  | 'error'
+
+export interface FlowToast {
+  message: string
+  action?: 'undo-delete'
+  actionLabel?: string
+}
+
+type InspectorTab = 'design' | 'routing' | 'triggers' | 'data'
+type BranchSelection = { fromId: BlockType; branchId: string }
+
+interface UndoSnapshot {
+  label: string
+  state: {
+    flow: Flow
+    triggers: AmbientTrigger[]
+    bot: BotSettings
+    variables: Variable[]
+    versions: VersionEntry[]
+    publishedVersion: number
+    draftVersion: number
+    dirtySincePublish: boolean
+    selectedId: BlockType | null
+    selectedBranch: BranchSelection | null
+    activeTab: InspectorTab
+    paletteOpen: boolean
+  }
+}
+
 export interface FlowState {
   flow: Flow
   triggers: AmbientTrigger[]
@@ -40,21 +74,21 @@ export interface FlowState {
   versions: VersionEntry[]
   publishedVersion: number
   draftVersion: number
-  toast: string | null
+  toast: FlowToast | null
   selectedId: BlockType | null
-  selectedBranch: { fromId: BlockType; branchId: string } | null
-  activeTab: 'design' | 'routing' | 'triggers' | 'data'
+  selectedBranch: BranchSelection | null
+  activeTab: InspectorTab
   paletteOpen: boolean
   dirtySincePublish: boolean
+  draftSyncStatus: DraftSyncStatus
+  undo: UndoSnapshot | null
 }
 
 type Action =
   | { type: 'select_block'; id: BlockType | null }
-  | {
-      type: 'select_branch'
-      selection: { fromId: BlockType; branchId: string } | null
-    }
+  | { type: 'select_branch'; selection: BranchSelection | null }
   | { type: 'set_tab'; tab: FlowState['activeTab'] }
+  | { type: 'set_draft_sync_status'; status: DraftSyncStatus }
   | {
       type: 'update_block_field'
       id: BlockType
@@ -84,7 +118,8 @@ type Action =
   | { type: 'sim_set_active'; id: BlockType | null }
   | { type: 'publish' }
   | { type: 'rollback'; v: number }
-  | { type: 'toast'; msg: string | null }
+  | { type: 'toast'; toast: FlowToast | null }
+  | { type: 'undo_last_delete' }
   | { type: 'update_bot'; patch: Partial<BotSettings> }
   | { type: 'add_trigger'; trigger: AmbientTrigger }
   | { type: 'edit_trigger'; id: string; patch: Partial<AmbientTrigger> }
@@ -261,6 +296,8 @@ export function buildInitialState(
     activeTab: 'design',
     paletteOpen: false,
     dirtySincePublish: false,
+    draftSyncStatus: 'loading',
+    undo: null,
   } satisfies Omit<FlowState, 'versions'>
 
   return {
@@ -362,6 +399,34 @@ function withDraftSnapshot(state: FlowState): FlowState {
   }
 }
 
+function makeUndoSnapshot(label: string, state: FlowState): UndoSnapshot {
+  return {
+    label,
+    state: deepCopy({
+      flow: state.flow,
+      triggers: state.triggers,
+      bot: state.bot,
+      variables: state.variables,
+      versions: state.versions,
+      publishedVersion: state.publishedVersion,
+      draftVersion: state.draftVersion,
+      dirtySincePublish: state.dirtySincePublish,
+      selectedId: state.selectedId,
+      selectedBranch: state.selectedBranch,
+      activeTab: state.activeTab,
+      paletteOpen: state.paletteOpen,
+    }),
+  }
+}
+
+function undoToast(label: string): FlowToast {
+  return {
+    message: `Deleted ${label}.`,
+    action: 'undo-delete',
+    actionLabel: 'Undo',
+  }
+}
+
 function replaceNode(
   state: FlowState,
   id: BlockType,
@@ -379,18 +444,29 @@ export function reducer(state: FlowState, action: Action): FlowState {
       return {
         ...state,
         selectedId: action.id,
-        selectedBranch: action.id ? null : state.selectedBranch,
+        selectedBranch: null,
         activeTab: action.id ? state.activeTab : 'design',
         paletteOpen: action.id ? false : state.paletteOpen,
       }
     case 'select_branch':
-      return {
-        ...state,
-        selectedBranch: action.selection,
-        selectedId: action.selection ? null : state.selectedId,
-      }
+      return action.selection
+        ? {
+            ...state,
+            selectedBranch: action.selection,
+            selectedId: action.selection.fromId,
+            activeTab: 'routing',
+            paletteOpen: false,
+          }
+        : {
+            ...state,
+            selectedBranch: null,
+          }
     case 'set_tab':
       return { ...state, activeTab: action.tab }
+    case 'set_draft_sync_status':
+      return state.draftSyncStatus === action.status
+        ? state
+        : { ...state, draftSyncStatus: action.status }
     case 'update_block_field':
       return replaceNode(state, action.id, (n) => ({
         ...n,
@@ -436,6 +512,8 @@ export function reducer(state: FlowState, action: Action): FlowState {
         ),
       }))
     case 'delete_branch': {
+      const source = state.flow.nodes.find((n) => n.id === action.id)
+      const branch = source?.branches.find((b) => b.id === action.branchId)
       const next = replaceNode(state, action.id, (n) => ({
         ...n,
         branches: n.branches.filter((b) => b.id !== action.branchId),
@@ -443,10 +521,22 @@ export function reducer(state: FlowState, action: Action): FlowState {
       const wasSelected =
         state.selectedBranch?.fromId === action.id &&
         state.selectedBranch?.branchId === action.branchId
-      return wasSelected ? { ...next, selectedBranch: null } : next
+      const label = branch?.label
+        ? `route "${branch.label}"`
+        : `route from ${source?.name ?? action.id}`
+      return {
+        ...(wasSelected ? { ...next, selectedBranch: null } : next),
+        undo: makeUndoSnapshot(label, state),
+        toast: undoToast(label),
+      }
     }
-    case 'move_node':
+    case 'move_node': {
+      const node = state.flow.nodes.find((n) => n.id === action.id)
+      if (node && node.pos.x === action.pos.x && node.pos.y === action.pos.y) {
+        return state
+      }
       return replaceNode(state, action.id, (n) => ({ ...n, pos: action.pos }))
+    }
     case 'add_node':
       return {
         ...withFlow(state, {
@@ -456,7 +546,9 @@ export function reducer(state: FlowState, action: Action): FlowState {
         selectedId: action.node.id,
         paletteOpen: false,
       }
-    case 'delete_node':
+    case 'delete_node': {
+      const node = state.flow.nodes.find((n) => n.id === action.id)
+      const label = node ? `block "${node.name}"` : `block ${action.id}`
       return {
         ...withFlow(state, {
           ...state.flow,
@@ -474,7 +566,11 @@ export function reducer(state: FlowState, action: Action): FlowState {
             trigger.whenBlock !== action.id && trigger.target !== action.id
         ),
         selectedId: state.selectedId === action.id ? null : state.selectedId,
+        selectedBranch: null,
+        undo: makeUndoSnapshot(label, state),
+        toast: undoToast(label),
       }
+    }
     case 'sim_reset':
       return {
         ...state,
@@ -524,7 +620,7 @@ export function reducer(state: FlowState, action: Action): FlowState {
               x.status === 'live' ? { ...x, status: 'archived' as const } : x
             ),
         ],
-        toast: `Published v${state.draftVersion}`,
+        toast: { message: `Published v${state.draftVersion}` },
         dirtySincePublish: false,
       }
     }
@@ -563,12 +659,21 @@ export function reducer(state: FlowState, action: Action): FlowState {
               ? { ...version, status: 'archived' as const }
               : version
           }),
-          toast: `Rolled back to v${action.v}`,
+          toast: { message: `Rolled back to v${action.v}` },
           dirtySincePublish: false,
         }
       })()
     case 'toast':
-      return { ...state, toast: action.msg }
+      return { ...state, toast: action.toast }
+    case 'undo_last_delete':
+      return state.undo
+        ? {
+            ...state,
+            ...state.undo.state,
+            undo: null,
+            toast: { message: `Restored ${state.undo.label}.` },
+          }
+        : state
     case 'update_bot':
       return { ...state, bot: { ...state.bot, ...action.patch } }
     case 'add_trigger':
@@ -709,9 +814,16 @@ export function useFlowActions() {
         dispatch({ type: 'sim_set_mode', mode }),
       simSetActive: (id: BlockType | null) =>
         dispatch({ type: 'sim_set_active', id }),
+      setDraftSyncStatus: (status: DraftSyncStatus) =>
+        dispatch({ type: 'set_draft_sync_status', status }),
       publish: () => dispatch({ type: 'publish' }),
       rollback: (v: number) => dispatch({ type: 'rollback', v }),
-      toast: (msg: string | null) => dispatch({ type: 'toast', msg }),
+      toast: (message: string | null) =>
+        dispatch({
+          type: 'toast',
+          toast: message === null ? null : { message },
+        }),
+      undoLastDelete: () => dispatch({ type: 'undo_last_delete' }),
       updateBot: (patch: Partial<BotSettings>) =>
         dispatch({ type: 'update_bot', patch }),
       addTrigger: (trigger: AmbientTrigger) =>

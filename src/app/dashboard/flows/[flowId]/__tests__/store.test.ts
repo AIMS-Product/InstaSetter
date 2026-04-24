@@ -77,6 +77,76 @@ describe('store reducer integrity', () => {
     expect(added.paletteOpen).toBe(false)
   })
 
+  it('does not dirty the draft when a node move is a no-op', () => {
+    const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
+    const opening = getNode(state, 'opening')
+
+    const next = dirtyTrackingReducer(state, {
+      type: 'move_node',
+      id: 'opening',
+      pos: { ...opening.pos },
+    })
+
+    expect(next).toBe(state)
+    expect(next.dirtySincePublish).toBe(false)
+  })
+
+  it('tracks save status separately from content dirtiness', () => {
+    const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
+
+    const next = dirtyTrackingReducer(state, {
+      type: 'set_draft_sync_status',
+      status: 'saved',
+    })
+
+    expect(next.draftSyncStatus).toBe('saved')
+    expect(next.dirtySincePublish).toBe(false)
+  })
+
+  it('opens the source block routing tab when selecting a branch', () => {
+    const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
+    const branch = getNode(state, 'opening').branches[0]!
+
+    const next = reducer(state, {
+      type: 'select_branch',
+      selection: { fromId: 'opening', branchId: branch.id },
+    })
+
+    expect(next.selectedId).toBe('opening')
+    expect(next.selectedBranch).toEqual({
+      fromId: 'opening',
+      branchId: branch.id,
+    })
+    expect(next.activeTab).toBe('routing')
+  })
+
+  it('can undo a deleted route', () => {
+    const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
+    const branch = getNode(state, 'opening').branches[0]!
+
+    const deleted = dirtyTrackingReducer(state, {
+      type: 'delete_branch',
+      id: 'opening',
+      branchId: branch.id,
+    })
+
+    expect(
+      getNode(deleted, 'opening').branches.some(
+        (candidate) => candidate.id === branch.id
+      )
+    ).toBe(false)
+    expect(deleted.toast?.action).toBe('undo-delete')
+
+    const restored = reducer(deleted, { type: 'undo_last_delete' })
+
+    expect(
+      getNode(restored, 'opening').branches.some(
+        (candidate) => candidate.id === branch.id
+      )
+    ).toBe(true)
+    expect(restored.toast?.message).toContain('Restored')
+  })
+
   it('removes inbound branches and triggers when deleting a node', () => {
     const state = buildInitialState(BRAND, BOOKING_URL, FLOW_ID)
     const next = reducer(

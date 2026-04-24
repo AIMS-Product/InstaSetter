@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { loadFlowDraftAction, saveFlowDraftAction } from './actions'
 import { extractPersistedFlowDraft } from './draft-persistence'
 import {
@@ -23,7 +23,29 @@ export default function FlowDraftSync({
   const bootReadyRef = useRef(false)
   const lastSavedJsonRef = useRef<string | null>(null)
   const saveErrorShownRef = useRef(false)
-  const draft = extractPersistedFlowDraft(state)
+  const draft = useMemo(
+    () =>
+      extractPersistedFlowDraft({
+        flow: state.flow,
+        triggers: state.triggers,
+        bot: state.bot,
+        variables: state.variables,
+        versions: state.versions,
+        publishedVersion: state.publishedVersion,
+        draftVersion: state.draftVersion,
+        dirtySincePublish: state.dirtySincePublish,
+      }),
+    [
+      state.bot,
+      state.dirtySincePublish,
+      state.draftVersion,
+      state.flow,
+      state.publishedVersion,
+      state.triggers,
+      state.variables,
+      state.versions,
+    ]
+  )
   const serializedDraft = JSON.stringify(draft)
 
   useEffect(() => {
@@ -36,6 +58,7 @@ export default function FlowDraftSync({
     bootReadyRef.current = false
     lastSavedJsonRef.current = null
     saveErrorShownRef.current = false
+    actions.setDraftSyncStatus('loading')
 
     async function bootstrap() {
       try {
@@ -47,6 +70,7 @@ export default function FlowDraftSync({
           actions.hydrate(remote)
           clearLegacyLocalFlowDraft({ brand, flowId })
           bootReadyRef.current = true
+          actions.setDraftSyncStatus('saved')
           return
         }
 
@@ -69,8 +93,10 @@ export default function FlowDraftSync({
 
           if (saved) {
             clearLegacyLocalFlowDraft({ brand, flowId })
+            actions.setDraftSyncStatus('saved')
           } else {
             actions.toast('Could not sync this draft to Supabase yet.')
+            actions.setDraftSyncStatus('error')
             saveErrorShownRef.current = true
           }
 
@@ -84,6 +110,7 @@ export default function FlowDraftSync({
       if (!alive) return
       lastSavedJsonRef.current = seedDraftJson
       bootReadyRef.current = true
+      actions.setDraftSyncStatus('saved')
     }
 
     void bootstrap()
@@ -96,8 +123,10 @@ export default function FlowDraftSync({
   useEffect(() => {
     if (!bootReadyRef.current) return
     if (serializedDraft === lastSavedJsonRef.current) return
+    actions.setDraftSyncStatus('pending')
 
     const timer = window.setTimeout(() => {
+      actions.setDraftSyncStatus('saving')
       void saveFlowDraftAction({
         brand,
         flowId,
@@ -110,14 +139,17 @@ export default function FlowDraftSync({
               actions.toast('Could not sync this draft to Supabase yet.')
               saveErrorShownRef.current = true
             }
+            actions.setDraftSyncStatus('error')
             return
           }
 
           lastSavedJsonRef.current = serializedDraft
           saveErrorShownRef.current = false
+          actions.setDraftSyncStatus('saved')
         })
         .catch((error) => {
           console.error('Flow draft save failed', error)
+          actions.setDraftSyncStatus('error')
           if (!saveErrorShownRef.current) {
             actions.toast('Could not sync this draft to Supabase yet.')
             saveErrorShownRef.current = true

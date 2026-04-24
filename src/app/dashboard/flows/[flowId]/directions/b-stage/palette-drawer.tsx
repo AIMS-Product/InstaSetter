@@ -1,18 +1,106 @@
 'use client'
 
-import { PanelLeftClose, Plus } from 'lucide-react'
+import { PanelLeftClose, Plus, PlusCircle } from 'lucide-react'
 import { BLOCK_CATALOG, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
-import type { BlockType } from '../../types'
+import type { BlockCatalogEntry, BlockType, FlowNode } from '../../types'
 import { B } from './palette'
+
+const GRID_STEP = { x: 1, y: 0 }
 
 export default function PaletteDrawer() {
   const state = useFlowState()
   const actions = useFlowActions()
+  const selectedNode = state.selectedId
+    ? (state.flow.nodes.find((node) => node.id === state.selectedId) ?? null)
+    : null
 
-  const onDragStart = (e: React.DragEvent<HTMLDivElement>, type: BlockType) => {
+  const onDragStart = (e: React.DragEvent<HTMLElement>, type: BlockType) => {
     e.dataTransfer.setData('application/x-block-type', type)
     e.dataTransfer.effectAllowed = 'copy'
+  }
+
+  const nextUniqueId = (type: BlockType): BlockType => {
+    const existingIds = new Set(state.flow.nodes.map((node) => node.id))
+    let id = type
+    let suffix = 2
+    while (existingIds.has(id)) {
+      id = `${type}_${suffix}` as BlockType
+      suffix += 1
+    }
+    return id
+  }
+
+  const nextOpenPosition = (base: FlowNode['pos']) => {
+    const occupied = new Set(
+      state.flow.nodes.map((node) => `${node.pos.x}:${node.pos.y}`)
+    )
+    let pos = { ...base }
+    while (occupied.has(`${pos.x}:${pos.y}`)) {
+      pos = { x: pos.x + GRID_STEP.x, y: pos.y + GRID_STEP.y }
+      if (pos.x > 5) pos = { x: 0, y: pos.y + 1 }
+    }
+    return pos
+  }
+
+  const nextBranchId = (fromId: BlockType, toId: BlockType): string => {
+    const existingIds = new Set(
+      state.flow.nodes.flatMap((node) =>
+        node.branches.map((branch) => branch.id)
+      )
+    )
+    let id = `br_${fromId}_${toId}`
+    let suffix = 2
+    while (existingIds.has(id)) {
+      id = `br_${fromId}_${toId}_${suffix}`
+      suffix += 1
+    }
+    return id
+  }
+
+  const addBlock = (entry: BlockCatalogEntry) => {
+    const id = nextUniqueId(entry.type)
+    const pos = nextOpenPosition(
+      selectedNode
+        ? { x: selectedNode.pos.x + 1, y: selectedNode.pos.y }
+        : {
+            x:
+              Math.max(
+                0,
+                ...state.flow.nodes.map((node) => Math.floor(node.pos.x))
+              ) + 1,
+            y: 0,
+          }
+    )
+
+    const idParts = String(id).split('_')
+    const duplicateSuffix = idParts[idParts.length - 1]
+
+    actions.addNode({
+      id,
+      type: entry.type,
+      name:
+        id === entry.type ? entry.label : `${entry.label} ${duplicateSuffix}`,
+      goal: entry.blurb,
+      guidance: '',
+      examples: [],
+      captures: [],
+      branches: [],
+      pos,
+    })
+
+    if (selectedNode) {
+      actions.addBranch(selectedNode.id, {
+        id: nextBranchId(selectedNode.id, id),
+        label: entry.label,
+        when: 'next step',
+        target: id,
+      })
+      actions.toast(`Added ${entry.label} after ${selectedNode.name}.`)
+      return
+    }
+
+    actions.toast(`Added ${entry.label}.`)
   }
 
   return (
@@ -77,22 +165,48 @@ export default function PaletteDrawer() {
               padding: '2px 8px 8px',
             }}
           >
-            Drag onto canvas
+            Block library
           </div>
-          {BLOCK_CATALOG.map((b) => (
+          {selectedNode && (
             <div
+              style={{
+                margin: '0 8px 8px',
+                padding: '7px 9px',
+                borderRadius: 8,
+                background: B.accentSoft,
+                color: B.accentInk,
+                fontSize: 11,
+                fontWeight: 600,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+              title={`Target: ${selectedNode.name}`}
+            >
+              Target: {selectedNode.name}
+            </div>
+          )}
+          {BLOCK_CATALOG.map((b) => (
+            <button
               key={b.type}
+              type="button"
               draggable
               onDragStart={(e) => onDragStart(e, b.type)}
+              onClick={() => addBlock(b)}
               style={{
+                width: '100%',
                 padding: '7px 8px',
                 borderRadius: 8,
+                border: 'none',
+                background: 'transparent',
                 marginBottom: 2,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 9,
-                cursor: 'grab',
+                cursor: 'pointer',
                 transition: 'background .12s',
+                fontFamily: 'inherit',
+                textAlign: 'left',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = B.lineSoft
@@ -125,7 +239,13 @@ export default function PaletteDrawer() {
                   {b.blurb}
                 </div>
               </div>
-            </div>
+              <PlusCircle
+                aria-hidden
+                size={14}
+                strokeWidth={1.8}
+                color={B.ink3}
+              />
+            </button>
           ))}
         </div>
       )}

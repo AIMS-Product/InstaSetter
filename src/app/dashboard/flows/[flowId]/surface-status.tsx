@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
+import type { DraftSyncStatus } from './store'
 import type { Palette } from './types'
 
-type Tone = 'neutral' | 'info' | 'warning' | 'success'
+type Tone = 'neutral' | 'info' | 'warning' | 'success' | 'danger'
 
 export interface FlowStatusMessage {
   label: string
@@ -13,15 +14,48 @@ export function getDraftWorkspaceStatus(
 ): FlowStatusMessage {
   return dirtySincePublish
     ? {
-        label: 'Draft autosaved',
+        label: 'Unpublished edits',
         detail:
-          'Changes save to the shared Supabase draft for this flow. They are not live in Instagram yet.',
+          'The shared draft has editor changes that are not live in Instagram yet.',
       }
     : {
-        label: 'No draft changes',
-        detail:
-          'The shared draft is saved and there are no unpublished editor changes right now.',
+        label: 'No unpublished edits',
+        detail: 'There are no unpublished editor changes right now.',
       }
+}
+
+export function getDraftSaveStatus(
+  syncStatus: DraftSyncStatus
+): FlowStatusMessage {
+  switch (syncStatus) {
+    case 'loading':
+      return {
+        label: 'Loading draft',
+        detail: 'Checking the shared Supabase draft for this flow.',
+      }
+    case 'pending':
+      return {
+        label: 'Save pending',
+        detail: 'A draft change is queued for Supabase sync.',
+      }
+    case 'saving':
+      return {
+        label: 'Saving draft',
+        detail: 'Writing the shared draft to Supabase.',
+      }
+    case 'error':
+      return {
+        label: 'Save failed',
+        detail:
+          'The draft changed locally, but the latest Supabase save did not complete.',
+      }
+    case 'saved':
+    default:
+      return {
+        label: 'Saved to Supabase',
+        detail: 'The shared draft is saved in Supabase.',
+      }
+  }
 }
 
 export function getLiveRuntimeStatus(): FlowStatusMessage {
@@ -89,6 +123,12 @@ function toneStyles(p: Palette, tone: Tone) {
         bg: '#E6EFE1',
         fg: '#3A5A32',
         border: '#CFE0C7',
+      }
+    case 'danger':
+      return {
+        bg: '#FBEFEF',
+        fg: '#8E2A2A',
+        border: '#F5D9D9',
       }
     case 'neutral':
     default:

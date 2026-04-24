@@ -1,7 +1,7 @@
 'use client'
 
-import { useId, useState, type ReactNode } from 'react'
-import { ChevronDown, ChevronRight, X } from 'lucide-react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, ChevronRight, Trash2, X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
@@ -413,6 +413,20 @@ function RoutingTab({ block }: { block: FlowNode }) {
   const state = useFlowState()
   const actions = useFlowActions()
   const otherNodes = state.flow.nodes.filter((n) => n.id !== block.id)
+  const selectedRouteId =
+    state.selectedBranch?.fromId === block.id
+      ? state.selectedBranch.branchId
+      : null
+  const routeRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  useEffect(() => {
+    if (!selectedRouteId) return
+    routeRefs.current[selectedRouteId]?.scrollIntoView({
+      block: 'nearest',
+      behavior: 'smooth',
+    })
+  }, [selectedRouteId])
+
   return (
     <Field
       label="Routes out"
@@ -441,15 +455,20 @@ function RoutingTab({ block }: { block: FlowNode }) {
       )}
       {block.branches.map((br) => {
         const tgt = state.flow.nodes.find((n) => n.id === br.target)
+        const selected = selectedRouteId === br.id
         return (
           <div
             key={br.id}
+            ref={(el) => {
+              routeRefs.current[br.id] = el
+            }}
             style={{
               padding: '10px 11px',
-              background: B.panel,
-              border: `1px solid ${B.line}`,
+              background: selected ? B.accentSoft : B.panel,
+              border: `1px solid ${selected ? B.accent : B.line}`,
               borderRadius: 8,
               marginBottom: 8,
+              boxShadow: selected ? '0 0 0 2px rgba(79,70,186,0.08)' : 'none',
             }}
           >
             <div
@@ -479,9 +498,21 @@ function RoutingTab({ block }: { block: FlowNode }) {
                 onClick={() => actions.deleteBranch(block.id, br.id)}
                 size={24}
                 iconSize={13}
-                style={{ color: B.ink3 }}
+                style={{ color: selected ? B.accentInk : B.ink3 }}
               />
             </div>
+            {selected && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: B.accentInk,
+                  fontWeight: 600,
+                  margin: '-2px 0 8px',
+                }}
+              >
+                Selected from canvas
+              </div>
+            )}
             <div style={{ fontSize: 11.5, color: B.ink3, marginBottom: 4 }}>
               When
             </div>
@@ -539,6 +570,67 @@ function RoutingTab({ block }: { block: FlowNode }) {
         )
       })}
     </Field>
+  )
+}
+
+function DeleteBlockPanel({ block }: { block: FlowNode }) {
+  const state = useFlowState()
+  const actions = useFlowActions()
+  const [confirming, setConfirming] = useState(false)
+  const canDelete = state.flow.nodes.length > 1
+
+  return (
+    <div
+      style={{
+        marginTop: 18,
+        paddingTop: 16,
+        borderTop: `1px solid ${B.line}`,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: B.ink3,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          marginBottom: 8,
+        }}
+      >
+        Block actions
+      </div>
+      <button
+        type="button"
+        disabled={!canDelete}
+        onClick={() => {
+          if (!confirming) {
+            setConfirming(true)
+            return
+          }
+          actions.deleteNode(block.id)
+        }}
+        style={{
+          width: '100%',
+          minHeight: 38,
+          borderRadius: 8,
+          border: `1px solid ${confirming ? '#DCAAAA' : B.line}`,
+          background: confirming ? '#FBEFEF' : B.panel,
+          color: canDelete ? '#8E2A2A' : B.ink3,
+          cursor: canDelete ? 'pointer' : 'not-allowed',
+          fontFamily: 'inherit',
+          fontSize: 12.5,
+          fontWeight: 650,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          opacity: canDelete ? 1 : 0.55,
+        }}
+      >
+        <Trash2 aria-hidden size={14} strokeWidth={1.8} />
+        {confirming ? `Confirm delete ${block.name}` : 'Delete block'}
+      </button>
+    </div>
   )
 }
 
@@ -1001,6 +1093,7 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
         {state.activeTab === 'routing' && <RoutingTab block={block} />}
         {state.activeTab === 'triggers' && <TriggersTab block={block} />}
         {state.activeTab === 'data' && <DataTab block={block} />}
+        <DeleteBlockPanel key={block.id} block={block} />
       </div>
       {reader && (
         <PromptReader

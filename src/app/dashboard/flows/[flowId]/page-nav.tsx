@@ -198,7 +198,7 @@ export default function PageNav({
           color: p.ink3,
         }}
       >
-        Use arrow keys to move between sections.
+        Shared draft workspace.
       </div>
     </div>
   )

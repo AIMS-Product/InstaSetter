@@ -48,6 +48,7 @@ export default function BSimFloat({
   const activeBlock = state.selectedId
     ? (state.flow.nodes.find((node) => node.id === state.selectedId) ?? null)
     : null
+  const dockedBesideInspector = activeBlock !== null
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -126,9 +127,10 @@ export default function BSimFloat({
     <div
       style={{
         position: 'absolute',
-        right: 20,
+        right: dockedBesideInspector ? 432 : 20,
         bottom: 20,
         width: 340,
+        maxWidth: 'calc(100% - 40px)',
         height: 460,
         background: B.panel,
         borderRadius: 14,

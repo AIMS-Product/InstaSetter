@@ -6,10 +6,11 @@ import {
   useState,
   type DragEvent as ReactDragEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
   type WheelEvent as ReactWheelEvent,
 } from 'react'
 import { Position } from '@xyflow/react'
-import { Maximize2, Minus, Plus } from 'lucide-react'
+import { GitBranch, Maximize2, Minus, Plus, Workflow } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import {
   BLOCK_BY_TYPE,
@@ -66,7 +67,7 @@ function Node({
       ref={nodeRef}
       role="button"
       tabIndex={0}
-      aria-label={`Block ${node.name}${selected ? ', selected' : ''}. Arrow keys to move, Enter to edit, Delete to remove.`}
+      aria-label={`Block ${node.name}${selected ? ', selected' : ''}. Arrow keys to move, Enter to edit.`}
       aria-pressed={selected}
       onPointerDown={(e) => {
         if (e.button !== 0) return
@@ -1126,27 +1127,6 @@ export default function BCanvas() {
     }
   }, [])
 
-  // Delete/Backspace removes the selected branch.
-  useEffect(() => {
-    const sel = state.selectedBranch
-    if (!sel) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return
-      const t = e.target as HTMLElement | null
-      if (
-        t &&
-        (t.tagName === 'INPUT' ||
-          t.tagName === 'TEXTAREA' ||
-          t.isContentEditable)
-      )
-        return
-      e.preventDefault()
-      actions.deleteBranch(sel.fromId, sel.branchId)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [state.selectedBranch, actions])
-
   const onWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
     if (!e.ctrlKey && !e.metaKey) return // only zoom on ctrl/cmd+wheel; normal wheel scrolls
     e.preventDefault()
@@ -1244,8 +1224,8 @@ export default function BCanvas() {
   const dragOverrides: Record<string, { x: number; y: number }> = {}
   if (nodeDrag) dragOverrides[nodeDrag.id] = nodeDrag.currentPx
 
-  // Keyboard node editing (WCAG 2.1.1) — arrow keys nudge, Delete removes,
-  // Tab/Shift+Tab moves between nodes via native focus order, Escape blurs.
+  // Keyboard node editing (WCAG 2.1.1) — arrow keys nudge, Tab/Shift+Tab
+  // moves between nodes via native focus order, Escape blurs.
   // Step size matches one grid-snap (0.5 of a column/row) so repeated keys
   // line up with the grid. Shift multiplies for faster moves.
   const onNodeKeyDown = (id: BlockType, e: React.KeyboardEvent) => {
@@ -1267,11 +1247,6 @@ export default function BCanvas() {
       case 'ArrowDown':
         dy = step
         break
-      case 'Delete':
-      case 'Backspace':
-        e.preventDefault()
-        actions.deleteNode(id)
-        return
       case 'Escape':
         e.preventDefault()
         ;(e.currentTarget as HTMLElement).blur()
@@ -1333,6 +1308,13 @@ export default function BCanvas() {
   }
 
   const zoomPct = Math.round(viewport.zoom * 100)
+  const selectedNode = state.selectedId
+    ? (state.flow.nodes.find((node) => node.id === state.selectedId) ?? null)
+    : null
+  const routeCount = state.flow.nodes.reduce(
+    (total, node) => total + node.branches.length,
+    0
+  )
   const fitView = () => setViewport({ x: 0, y: 0, zoom: 1 })
   const zoomIn = () =>
     setViewport((v) => ({ ...v, zoom: Math.min(2, v.zoom * 1.2) }))
@@ -1467,32 +1449,58 @@ export default function BCanvas() {
         />
       </div>
 
-      {/* hint */}
+      {/* canvas summary */}
       <div
+        aria-label="Canvas summary"
         style={{
           position: 'absolute',
           left: 72,
           top: 16,
-          padding: '8px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '7px 9px',
           background: 'rgba(255,255,255,0.78)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
           borderRadius: 12,
-          fontSize: 11,
           color: B.ink2,
           border: `1px solid ${B.line}`,
           zIndex: 5,
-          lineHeight: 1.45,
           boxShadow: '0 8px 24px rgba(22,21,40,0.06)',
         }}
       >
-        Drag blocks to reshape the flow. Hold{' '}
-        <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>Space</kbd> to
-        pan, use{' '}
-        <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>⌘/Ctrl</kbd>
-        +wheel to zoom, and focus a block then{' '}
-        <kbd style={{ fontFamily: 'inherit', fontWeight: 600 }}>↑↓←→</kbd> to
-        nudge it.
+        <CanvasPill
+          icon={<Workflow aria-hidden size={13} strokeWidth={1.8} />}
+          label={`${state.flow.nodes.length} blocks`}
+        />
+        <CanvasPill
+          icon={<GitBranch aria-hidden size={13} strokeWidth={1.8} />}
+          label={`${routeCount} routes`}
+        />
+        <span
+          style={{
+            height: 18,
+            width: 1,
+            background: B.line,
+          }}
+        />
+        <span
+          style={{
+            maxWidth: 280,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: 11.5,
+            color: selectedNode ? B.ink : B.ink3,
+            fontWeight: selectedNode ? 600 : 500,
+          }}
+          title={
+            selectedNode ? `Editing ${selectedNode.name}` : 'No block selected'
+          }
+        >
+          {selectedNode ? `Editing ${selectedNode.name}` : 'No block selected'}
+        </span>
       </div>
 
       {/* minimap */}
@@ -1541,5 +1549,28 @@ export default function BCanvas() {
         </svg>
       </div>
     </div>
+  )
+}
+
+function CanvasPill({ icon, label }: { icon: ReactNode; label: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        minHeight: 24,
+        padding: '0 8px',
+        borderRadius: 999,
+        background: B.lineSoft,
+        color: B.ink2,
+        fontSize: 11,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {icon}
+      {label}
+    </span>
   )
 }

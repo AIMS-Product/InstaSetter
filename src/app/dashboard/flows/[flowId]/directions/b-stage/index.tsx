@@ -12,6 +12,7 @@ import {
   useFlowActions,
   useFlowState,
   useFlowStore,
+  type FlowToast,
 } from '../../store'
 import type { PageId } from '../../types'
 import BHeader from './header'
@@ -126,17 +127,29 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
         )}
       </div>
       {state.toast && (
-        <Toast msg={state.toast} onDone={() => actions.toast(null)} />
+        <Toast
+          toast={state.toast}
+          onDone={() => actions.toast(null)}
+          onUndo={() => actions.undoLastDelete()}
+        />
       )}
     </main>
   )
 }
 
-function Toast({ msg, onDone }: { msg: string; onDone: () => void }) {
+function Toast({
+  toast,
+  onDone,
+  onUndo,
+}: {
+  toast: FlowToast
+  onDone: () => void
+  onUndo: () => void
+}) {
   useEffect(() => {
-    const timer = window.setTimeout(onDone, 2400)
+    const timer = window.setTimeout(onDone, toast.action ? 6000 : 2400)
     return () => window.clearTimeout(timer)
-  }, [msg, onDone])
+  }, [toast.action, toast.message, onDone])
 
   return (
     <div
@@ -153,9 +166,31 @@ function Toast({ msg, onDone }: { msg: string; onDone: () => void }) {
         fontWeight: 500,
         boxShadow: '0 10px 28px rgba(22,21,40,0.22)',
         zIndex: 200,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
       }}
     >
-      {msg}
+      <span>{toast.message}</span>
+      {toast.action === 'undo-delete' && (
+        <button
+          type="button"
+          onClick={onUndo}
+          style={{
+            border: `1px solid rgba(255,255,255,0.28)`,
+            borderRadius: 7,
+            background: 'rgba(255,255,255,0.12)',
+            color: B.panel,
+            cursor: 'pointer',
+            font: 'inherit',
+            fontSize: 12,
+            fontWeight: 650,
+            padding: '5px 9px',
+          }}
+        >
+          {toast.actionLabel ?? 'Undo'}
+        </button>
+      )}
     </div>
   )
 }
