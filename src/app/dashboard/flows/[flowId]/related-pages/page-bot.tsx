@@ -245,22 +245,10 @@ export default function PageBot({ p }: { p: Palette }) {
               lineHeight: 1.55,
             }}
           >
-            The full compiled system prompt is built in{' '}
-            <code
-              style={{
-                fontSize: 11.5,
-                padding: '2px 6px',
-                borderRadius: 4,
-                background: p.lineSoft,
-                color: p.ink,
-                fontFamily: 'var(--font-jetbrains-mono), monospace',
-              }}
-            >
-              src/lib/prompts/setter-v2.ts
-            </code>{' '}
-            from nine modular sections. Edits in this UI now save to the shared
-            Supabase draft for this flow. Runtime still follows the compiled
-            prompt until publish wiring lands.
+            The full compiled system prompt is built from nine modular source
+            sections. Edits in this UI now save to the shared draft for this
+            flow. Runtime still follows the compiled prompt until publish wiring
+            lands.
           </div>
         </SettingsSection>
       </div>

@@ -1,176 +1,110 @@
-# 09 — The Pragmatist (TOM)
+# Persona Review — Tom, "Just Get It Done" Pragmatist (50)
 
-**Who I am:** 50-year-old plumber. I run a small business. I'm on the truck all day. Someone sold me on this thing to book appointments off Instagram so I don't have to sit at my laptop answering DMs. I do not want to learn software. I want to open the app, see that it's working, see the jobs coming in, and get back to my day.
+**Background**: Plumber. Run a small business. Ten guys on the road, phone never stops. I signed up for InstaSetter because someone told me Instagram DMs were leaking leads. I don't want to learn this thing. I want to know it's running, kill it if it's stuffing up, and get back to work.
 
-**How I judge this:** Can a tradie who doesn't care about apps get in, do his thing, and get out? If I have to read a manual, you already lost me.
+## What I came here to do
 
-**Overall gut feel: 1 / 5 — Broken or hostile.**
-I opened this thing and I still don't know what it does for me. The one screen that sounded useful (Conversations) is broken. The main screen is a wall of jargon a college kid dreamed up. I'd close the tab and call my nephew.
+1. **Is the bot working?** — should be the first thing I see. It isn't.
+2. **Pause it if it's saying something dumb.** — no kill switch anywhere.
+3. **Make the bot say my business name** — there's a "Display name" box but nothing tells me what happens if I fill it in.
 
----
+That's it. That's my whole list.
 
-## Category 1: Navigation & Flow
+## Page-by-page
 
-The home page gives me two buttons: "Conversations" and "Flow Builder." One of those sounds like my inbox. The other sounds like something an engineer builds on a whiteboard. There's no menu, no "Dashboard" link, no "Appointments" link, no "Settings" link. Two buttons. That's the whole product?
+### Flow tab (the one it opens on)
 
-When I clicked Conversations — the one button that sounded like it was for me — I got "Something went wrong." Try again does nothing. Now I'm stuck. There's no back button, no nav bar, no "go home" link. I hit the browser back button like a caveman.
+I land on five boxes connected with lines: Opening, Qualifier, Objection Handler, Booking Handoff, Email Capture. Top of the page says "Edit the shared draft and sanity-check tone before anything ships." Mate, I don't know what a shared draft is. I came to check my bot, not edit anything.
 
-The Dashboard page (I had to guess the URL apparently) has exactly one link: "Open IG Organic DM." What's "IG Organic DM"? I sell plumbing. This sounds like a marketing person's label, not mine.
+Header has three coloured badges: "Unpublished edits" (orange), "Saved to Supabase" (green), "Live: setter-v2" (green). I have no idea what any mean. Is that good? Bad? I'd ask my nephew but he's at uni.
 
-Inside the Flow Builder there are five tabs (Flow, Runs, Variables, Versions, Bot) and four sub-tabs (Design, Routing, Triggers, Data). I counted nine tabs on one screen. Nine. For an app that's supposed to save me time.
+Big "Preview replies" button top right — only thing I understand. I clicked it. A panel opened with "Try a real prospect opener." Fine. That's a sandbox, useful, but it's not what I came for. **I want to see the real ones, not pretend ones.**
 
-| #   | Page                           | Category          | Finding                                                                                                                              | Severity | Persona Rationale                                                                                                                                                         |
-| --- | ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | / (Home)                       | Navigation & Flow | No persistent nav bar anywhere in the app. Once you're in, you can't get back to appointments or settings without using the browser. | Critical | TOM runs his business from his phone in the truck. If he can't see "Jobs" or "Appointments" in a menu he'll assume the app doesn't have it and call support (or give up). |
-| 2   | /dashboard/conversations       | Navigation & Flow | Error page has no way back — no home link, no nav, no breadcrumb. Only a "Try again" button that does the same broken thing.         | Critical | TOM is now trapped. He has to know to click the browser back arrow. This is the kind of thing that makes him say "this app is broken" and call the salesman.              |
-| 3   | /dashboard                     | Navigation & Flow | One link on the dashboard: "Open IG Organic DM." That's not a dashboard, that's a hallway.                                           | High     | TOM expected to see today's appointments, new leads, maybe a number. Instead he has to click into a "builder" to find anything.                                           |
-| 4   | /dashboard/flows/ig-organic-dm | Navigation & Flow | Five top tabs + four sub-tabs + symbol-only buttons (⎔ ◉ ∥ ⟳ ◐ ⤢ ⊞) on one screen.                                                   | Critical | TOM sees this and shuts the laptop. It's a cockpit. He wanted a light switch.                                                                                             |
-| 5   | /dashboard/flows/ig-organic-dm | Navigation & Flow | No way back to Dashboard from inside the flow builder — no breadcrumb, no "← Dashboard" link.                                        | High     | Classic trap screen. If TOM clicks in, he needs the browser back button to leave.                                                                                         |
+Gut: 2/5. Functional but I have no idea if my bot is working.
 
----
+### Inbox tab
 
-## Category 2: Copy & Labels
+OK now we're talking. STARTED TODAY, BOOKED, COMPLETED, STALLED — exactly what I want. **This should be the front page.** But all four are blank dashes. Page sitting on "Loading conversations..." Orange banner: "Inbox metrics and transcripts below include all VendingPreneurs conversations until flow_id lands on the conversations table."
 
-"InstaSetter — Instagram DM appointment setting automation." OK, fair, that's plain English on the home page. Good start. Then it all falls apart.
+Mate, I don't know what flow_id is. Something isn't done yet. **If the dashes are real and the bot booked nothing today, that's a five-alarm fire. If the dashes are because the page is half-built, that's a different five-alarm fire.** Either way I need to know.
 
-"Flow Builder preview. Open the prototype flow to see the split-view editor." I don't know what any of those words mean. Prototype? Split-view editor? I'm a plumber. Are you trying to sell me a product or hide it?
+Gut: 3/5 once it loads — would be 4/5 if this was the landing page.
 
-"IG Organic DM." I thought IG was Instagram. What does "Organic" have to do with anything? And "DM" — some of my older customers don't know what a DM is. Why is this named for people inside the office instead of people using it?
+### Variables tab
 
-On the flow builder screen: "Qualifier." "Objection Handler." "Post-Call Follow-up." "Escalation." "Routing." "Variables." "Versions." "Persona." "Ambient triggers." "Compiled prompt." This reads like a manual for air traffic control. I do toilets.
+I closed this in about four seconds. \"A plain-English map of what the bot remembers.\" Then `brand.brand_name`, `brand.booking_url`, `brand.timezone`. Read-only — \"Creating variables and row-level actions is not wired yet.\" **Why is this a top-level tab?**
 
-And then there are buttons that are literally just shapes — ⎔, ◉, ∥, ⟳, ◐, ⤢, ⊞. No label. No tooltip I can see. I'm supposed to click squares and diamonds and guess what they do?
+Gut: 2/5. Reference page taking up prime real estate.
 
-"Publish v13." Version 13 of what? Did I change something? Am I about to push something live to my customers' phones?
+### Release tab
 
-| #   | Page                             | Category      | Finding                                                                                                                                | Severity | Persona Rationale                                                                                                                                        |
-| --- | -------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 6   | /dashboard/flows/ig-organic-dm   | Copy & Labels | Buttons are symbol-only (⎔ ◉ ∥ ⟳ ◐ ⤢ ⊞ + ×) with no labels.                                                                            | Critical | TOM has no idea what a diamond does. He's not clicking a mystery button on a thing connected to his customers' phones.                                   |
-| 7   | /dashboard/flows/ig-organic-dm   | Copy & Labels | Jargon everywhere: Qualifier, Objection Handler, Escalation, Ambient triggers, Compiled prompt, Persona, Variables, Versions, Routing. | Critical | This is the language of the people building the tool, not the people using it. TOM books appointments. He doesn't "qualify a lead in a compiled prompt." |
-| 8   | /dashboard                       | Copy & Labels | "IG Organic DM" as the main and only action label.                                                                                     | High     | A tradie doesn't know what "organic" means in marketing context. Call it "Instagram Messages" or "Instagram Appointment Bot." Speak English.             |
-| 9   | /dashboard                       | Copy & Labels | "Flow Builder preview. Open the prototype flow to see the split-view editor."                                                          | High     | Every word in that sentence is jargon. Is this even the real product? Why is the dashboard telling me it's a "preview"?                                  |
-| 10  | /dashboard/flows/ig-organic-dm   | Copy & Labels | "Publish v13" — no explanation of what publish does, no confirm step.                                                                  | Critical | TOM thinks he might be pushing something live to customers. He's too scared to click, too scared to not click.                                           |
-| 11  | / (Home)                         | Copy & Labels | The tagline "Instagram DM appointment setting automation" is fine, but doesn't tell me what I can DO here or where to start.           | Medium   | TOM wants "See my new leads" or "Today's appointments," not a product description.                                                                       |
-| 12  | /dashboard/conversations (error) | Copy & Labels | "Something went wrong. An unexpected error occurred."                                                                                  | Critical | Useless. What went wrong? Is my data OK? Did I do something? Should I call someone? TOM gets this error and panics.                                      |
-| 13  | /404                             | Copy & Labels | "404 — Page not found." At least that's clear.                                                                                         | Low      | Fine. It tells me what happened and gives me a button home.                                                                                              |
+This one made me feel stupid. \"Compiled from src/lib/prompts/sections/\*.ts.\" \"the simulator runs the compiled setter-v2 prompt without draft overrides.\" **This entire page is for the engineers, not me.** Banner says \"Publish controls and release history are not wired yet.\"
 
----
+So what's it for? Hide it. Or label it \"Developer status\" and put it behind a settings icon.
 
-## Category 3: Forms & Input
+Gut: 1/5. Active hostility to my time.
 
-I couldn't tell what most of the inputs in the flow builder even were. There are four textareas and two text inputs on that page with no labels, no placeholders except for one that says "Type as prospect…" Who's the prospect? Me? The customer? I'm typing into a black box.
+### Bot tab
 
-The input I'd actually want — "type your business hours, your services, your address" — isn't anywhere I could find. Instead I'm supposed to edit something called a "Qualifier block" with a "Persona" and a "Rule."
+This is the page that nearly had me. \"Display name — Not named — shared team inbox\" — empty text field. **This is the one thing I wanted to do** — name my bot. But nothing tells me:
 
-| #   | Page                           | Category      | Finding                                                                             | Severity | Persona Rationale                                                                                                                    |
-| --- | ------------------------------ | ------------- | ----------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 14  | /dashboard/flows/ig-organic-dm | Forms & Input | Textareas have no labels, no placeholder text, no "required" markers.               | High     | TOM has no idea what the textarea wants. Business name? Response to a customer? A note to himself?                                   |
-| 15  | /dashboard/flows/ig-organic-dm | Forms & Input | No onboarding form for basic business info (hours, services, price range, address). | Critical | TOM expected to enter his stuff somewhere simple. Instead he's dropped into an editor for an AI prompt. The basics aren't asked for. |
-| 16  | /dashboard/flows/ig-organic-dm | Forms & Input | "Type as prospect…" placeholder — unclear whose mouth the words are coming from.    | Medium   | If TOM types "how much to unclog a drain" is he training the bot, testing the bot, or sending that to a real customer? Not clear.    |
+- Will the customer see this name?
+- Does it say \"Plumber McBot from ABC Plumbing\" on Instagram?
+- Is \"shared team inbox\" something I'm opting out of by naming it?
 
----
+So I didn't change it. I'm not going to risk something I don't understand on a Wednesday afternoon between callouts.
 
-## Category 4: Visual & Layout
+Then: Identity HARD RULES LOCKED, Voice EDITABLE, Message Length HARD LIMIT LOCKED, Affirmation Rules EDITABLE. Some I can change, some I can't. Why? **I'm paying for this. Tell me why my hands are tied.** \"LOCKED\" with no explanation makes me think the company doesn't trust me.
 
-The home page is 90% empty beige. Fine, minimal, whatever — Linear does this. But Linear also has a sidebar with everything I need. This is just blank space and two buttons. On a 1280px monitor I'm staring at 700px of nothing.
+Gut: 2/5. Closest to \"useful\" but mistitled and gated for no stated reason.
 
-The flow builder screen is the opposite: everything crammed into three columns and a modal and tabs and sub-tabs and a chat preview and a little map thing with nodes connected by lines. It looks like a flight simulator. For appointment booking.
+## Canvas interactions
 
-On mobile and tablet I have no idea if any of this even works — the screenshots look like the desktop version got squished. My guys check their phones. Not a laptop.
+Clicked Opening — right panel opens with tabs Setup/Routing/Triggers/Memory plus four buttons. Built for someone who knows what a flow block is. **I do not.**
 
-| #   | Page                           | Category        | Finding                                                                                           | Severity | Persona Rationale                                                                                                         |
-| --- | ------------------------------ | --------------- | ------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 17  | /dashboard/flows/ig-organic-dm | Visual & Layout | Severe density: graph view + config sidebar + chat simulator + tabs + sub-tabs all on one screen. | Critical | TOM can't find the one thing he wants because there are 40 things on screen. Information density is for pros, not trades. |
-| 18  | / (Home)                       | Visual & Layout | Almost entirely empty beige. Two buttons in the middle. Looks unfinished.                         | Medium   | TOM wonders if this is a real product or a demo. Where is everything?                                                     |
-| 19  | /dashboard                     | Visual & Layout | One link in the middle of a blank page. Not actually a dashboard.                                 | High     | Called "Dashboard," looks like a placeholder. TOM expected numbers, cards, a list of today's jobs.                        |
-| 20  | /dashboard/flows/ig-organic-dm | Visual & Layout | Canvas nodes use color-coded labels (pink, green, yellow tags) with no legend.                    | Medium   | What do the colors mean? TOM doesn't know and nothing tells him.                                                          |
-| 21  | All pages                      | Visual & Layout | No header/logo/persistent branding, no status bar, no "you are here" indicator.                   | High     | TOM loses track of where he is across pages.                                                                              |
+Tried Qualifier — palette drawer was in the way and my click landed on Objection or the palette title. Clicks that don't land are infuriating.
 
----
+Palette drawer opens with \"BLOCK LIBRARY\" — Opening, Qualifier, Objection, Booking, Email Capture, Follow-Up, Escalation, Summary. None of these mean anything to me.
 
-## Category 5: Feedback & State
+Zoom in/out/fit view — fine, no complaints.
 
-When I clicked "Publish v13," nothing visible changed. Did it publish? Did it fail? Is my bot now live? Am I about to text 400 customers something broken? The exploration log says the click "stayed" — meaning the page did nothing I can see. That's terrifying on a button named Publish.
+## Findings
 
-The "Try again" button on the error page does nothing I can see either. Click it, stay on the same error. No spinner. No message. Nothing.
+| #   | Page                       | Category          | Finding                                                                                                                                                                                  | Severity     | Persona Rationale                                                                                                                                                          |
+| --- | -------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | All tabs                   | Navigation & Flow | No on/off / pause / kill switch for the bot anywhere visible.                                                                                                                            | **Blocker**  | Tom's #1 reason for opening the app is \"is it running and how do I stop it.\" If the bot says something stupid mid-job, he needs to kill it from his phone in 10 seconds. |
+| T2  | Mobile gate                | Navigation & Flow | Phones and tablets see \"Flow Builder needs a desktop\" — no way to monitor or pause from mobile.                                                                                        | **Blocker**  | Tom is on a job site, not at a desk. The thing he most needs to do (pause/check) is the thing he can't do without finding a laptop.                                        |
+| T3  | Flow tab                   | Copy & Labels     | Four overlapping pieces of state jargon (\"Edit the shared draft\" / \"Live: setter-v2\" / \"Saved to Supabase\" / \"Unpublished edits\") that don't tell me whether the bot is working. | **Critical** | Zero tell Tom whether his bot is on, off, working, or broken. He needs one badge: \"Bot: Running\" or \"Bot: Paused.\"                                                     |
+| T4  | All tabs                   | Navigation & Flow | Inbox tab has the only numbers Tom cares about, but it's the second tab not the first.                                                                                                   | **Critical** | A pragmatist who opens this once a week wants \"did my bot book any jobs today\" above the fold on landing.                                                                |
+| T5  | Inbox tab                  | Feedback & State  | Banner in engineering jargon (\"flow_id lands on the conversations table\").                                                                                                             | **Critical** | Tom can't tell if dashes are \"no bookings today\" (panic) or \"page not finished yet\" (relax).                                                                           |
+| T6  | Bot tab                    | Forms & Input     | \"Display name\" field with no helper text explaining what the name does.                                                                                                                | **High**     | Tom wants to call his bot \"Plumber McBot\" but won't risk it without knowing if customers see the name on Instagram.                                                      |
+| T7  | Bot tab                    | Trust & Safety    | \"HARD RULES LOCKED\" / \"HARD LIMIT LOCKED\" with no explanation of why or how to request a change.                                                                                     | **High**     | \"LOCKED\" with no reason makes Tom feel like a tenant. Either give him a one-line reason or unlock it.                                                                    |
+| T8  | Variables tab              | Navigation & Flow | Top-level tab is read-only reference content with banner saying \"not wired yet.\"                                                                                                       | **High**     | Tab takes nav real estate for content that should live behind a Settings cog.                                                                                              |
+| T9  | Release tab                | Copy & Labels     | Engineering jargon throughout (\"Compiled from src/lib/prompts/sections/\*.ts\").                                                                                                        | **High**     | Page is for developers. Hide behind a dev menu or rewrite.                                                                                                                 |
+| T10 | Flow tab                   | Copy & Labels     | Header tagline \"Edit the shared draft and sanity-check tone\" — Tom didn't come to edit anything.                                                                                       | **High**     | Default tab assumes he's a copywriter. Default to Inbox instead.                                                                                                           |
+| T11 | Header                     | Feedback & State  | Three status badges side-by-side communicate three different states; Tom can't tell which means \"bot is alive.\"                                                                        | **High**     | Pragmatist wants one piece of headline status.                                                                                                                             |
+| T12 | Flow tab — canvas          | Forms & Input     | Clicking \"Qualifier\" while palette open intercepts on the drawer or neighbour.                                                                                                         | **High**     | Tom has 30 seconds before next callout. A click that doesn't land is a click that gets him cursing.                                                                        |
+| T13 | Flow tab                   | Copy & Labels     | Eight conceptual block names Tom needs to learn (Opening / Qualifier / Objection Handler / Booking Handoff / Email Capture).                                                             | **High**     | These are sales process / AI prompt terms. Tom thinks in plain English.                                                                                                    |
+| T14 | Bot tab                    | Visual & Layout   | EDITABLE/LOCKED pills with caret expanders mixed in same accordion.                                                                                                                      | **Medium**   | Looks like settings but is read-only viewer for some, editor for others. Group editable up top.                                                                            |
+| T15 | All pages                  | Visual & Layout   | Sidebar nav makes 5 features look equally weighted.                                                                                                                                      | **Medium**   | Inbox and Bot matter to Tom; Variables, Release, Flow canvas don't. Visual hierarchy lies to him.                                                                          |
+| T16 | Header                     | Trust & Safety    | \"Preview replies\" button in header but no \"Pause bot\" beside it.                                                                                                                     | **Critical** | The number-one panic action has no front-door affordance.                                                                                                                  |
+| T17 | Flow tab                   | Trust & Safety    | \"Publish\" not visible; status pills imply changes are queued without saying how to ship them.                                                                                          | **Medium**   | If Tom edited something, he wouldn't know how to make it go live.                                                                                                          |
+| T18 | All pages                  | Visual & Layout   | \"Shared draft workspace.\" footer text.                                                                                                                                                 | **Low**      | Worth removing or expanding.                                                                                                                                               |
+| T19 | Flow tab                   | Visual & Layout   | Block reads \"OPENING / Opening / Greet warmly...\" — category and name say same word.                                                                                                   | **Low**      | Cosmetic.                                                                                                                                                                  |
+| T20 | Flow tab — Preview replies | Feedback & State  | \"Send\" disabled; the action is on \"Run\" instead.                                                                                                                                     | **Medium**   | Pragmatist sees Send, types, clicks Send, nothing happens. Looks broken.                                                                                                   |
 
-Hover/focus feedback — I can't tell from the screenshots, but given the rest of the polish I'm not holding my breath.
+## Gut feel — overall
 
-| #   | Page                           | Category         | Finding                                                                                      | Severity | Persona Rationale                                                                                                                                                                                     |
-| --- | ------------------------------ | ---------------- | -------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 22  | /dashboard/flows/ig-organic-dm | Feedback & State | "Publish v13" button shows no loading, success, or confirmation state after clicking.        | Blocker  | This is the single scariest button in the app. It says "Publish" — that means it goes live to customers. TOM clicks it and nothing happens. Did it work? Did it break my bot? There's no way to tell. |
-| 23  | /dashboard/conversations       | Feedback & State | "Try again" on the error page doesn't retry anything visible — no spinner, no status change. | Critical | TOM clicks it twice, thinks the app is frozen, closes the tab.                                                                                                                                        |
-| 24  | All pages                      | Feedback & State | No loading states visible during navigation.                                                 | Medium   | When a page is slow, TOM thinks the app hung.                                                                                                                                                         |
-| 25  | /dashboard/flows/ig-organic-dm | Feedback & State | No indicator of whether the bot is currently ON or OFF.                                      | Critical | The single most important piece of info TOM needs is "Is my bot answering my customers right now, yes or no?" I couldn't find it.                                                                     |
+**1.5/5.**
 
----
+Functional under the hood, I assume. But every page is built for the person who built it. The two questions a paying customer cares about — \"is it on\" and \"how do I turn it off\" — have no front-door answer. The whole thing reads like an internal tool that someone has accidentally shown to a customer.
 
-## Category 6: Trust & Safety
+If a competitor offered \"see my bookings, pause my bot, name my bot\" in three taps on my phone, I'd switch this afternoon.
 
-Here's where I really get nervous. This app talks to my customers. My real customers. Through my real Instagram account. And:
+## Top 3 things to fix before Tom comes back
 
-- Nothing tells me the bot is on or off. If I mess with the flow builder, am I live? Am I in draft? No idea.
-- "Publish v13" has no confirm dialog. Click and go. On a button that sends AI-generated messages to my customers.
-- There's no human takeover button visible. If the bot says something dumb to a big client, how do I jump in? Is there even a "pause bot" switch?
-- The conversations screen is broken. I literally cannot see what the bot is saying to my customers right now. That's the main thing a plumber would want to know.
-- No pricing, no plan, no "this is what you're paying for" anywhere. Feels like a demo dressed as a product.
-- Console errors about a missing `ANTHROPIC_API_KEY` throwing ZodErrors. I don't know what that is, but I see "error" and I get nervous.
+1. **One global control: \"Bot: ON\" toggle in the header**, on every tab, every screen size. With confirmation.
+2. **Default tab = Inbox**, with the four numbers at the top, in real numbers.
+3. **Bot tab: rename to \"Settings\"**, put \"Display name\" at the top with one sentence of helper text, and either remove LOCKED sections or replace LOCKED with a tooltip explaining why.
 
-| #   | Page                               | Category       | Finding                                                                           | Severity | Persona Rationale                                                                                                                         |
-| --- | ---------------------------------- | -------------- | --------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 26  | /dashboard/flows/ig-organic-dm     | Trust & Safety | "Publish v13" has no confirmation dialog before pushing to production.            | Critical | TOM is one accidental click from sending broken AI responses to real paying customers. A plumber would sue.                               |
-| 27  | /dashboard/conversations           | Trust & Safety | Can't see what the bot is saying to customers — the conversations page is broken. | Blocker  | This is the single most critical trust feature. TOM needs to see every message the bot sends. If he can't, he can't trust the bot exists. |
-| 28  | All pages                          | Trust & Safety | No visible "pause bot" / "turn off bot" kill switch.                              | Blocker  | If the bot goes rogue and insults a customer, TOM needs a big red button. Not a tab called "Routing."                                     |
-| 29  | All pages                          | Trust & Safety | No pricing, no billing, no plan info visible.                                     | High     | TOM wants to know what this costs and what he's signed up for before he trusts his account to it.                                         |
-| 30  | / (Home), /dashboard/conversations | Trust & Safety | Console errors on load (ZodError on `ANTHROPIC_API_KEY`).                         | High     | I don't know what Zod is, but I know "error on my homepage" means the thing is broken. Smells like a half-built product.                  |
-| 31  | /dashboard/flows/ig-organic-dm     | Trust & Safety | No undo visible after editing a block.                                            | High     | TOM edits something, realizes he broke it, panics. No Ctrl-Z he can trust.                                                                |
-
----
-
-## Category 7: Accessibility
-
-I'm 50. I wear readers for anything under 14pt. And:
-
-- The symbol-only buttons (⎔ ◉ ∥ ⟳ ◐) have no text, no tooltips visible. Screen readers would read these as Unicode code points. Useless.
-- The flow builder on a 1280 screen has tiny text in the canvas labels. On a phone in a truck, forget it.
-- Contrast seems OK on the home page (black on beige). Inside the flow builder there's dim grey sub-text on beige that I'd struggle with.
-- Tabs use small icons + small text stacked vertically. Tap targets for thumbs? Doesn't look like it.
-
-| #   | Page                           | Category      | Finding                                                    | Severity | Persona Rationale                                                                          |
-| --- | ------------------------------ | ------------- | ---------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| 32  | /dashboard/flows/ig-organic-dm | Accessibility | Symbol-only buttons have no aria-label or visible tooltip. | High     | TOM can't figure out what they do visually. Someone on a screen reader can't either.       |
-| 33  | /dashboard/flows/ig-organic-dm | Accessibility | Node labels inside the graph are tiny.                     | High     | TOM squints. Someone with low vision can't use it at all.                                  |
-| 34  | All pages                      | Accessibility | Low-contrast secondary text (grey on beige).               | Medium   | TOM needs his readers.                                                                     |
-| 35  | /dashboard/flows/ig-organic-dm | Accessibility | Tap targets on tabs and close (×) buttons look small.      | Medium   | TOM has thick fingers and is often wet. He's not tapping a 20px × on a phone in the field. |
-
----
-
-## Category 8: Gut Feel (per page)
-
-| Page                           | Score | Why                                                                                                            |
-| ------------------------------ | ----- | -------------------------------------------------------------------------------------------------------------- |
-| / (Home)                       | 2 / 5 | Clean and plain, but only gives me two buttons and no sense of what the product actually does for me.          |
-| /dashboard                     | 1 / 5 | One link on a blank page with jargon for a label. That's not a dashboard.                                      |
-| /dashboard/conversations       | 1 / 5 | Broken. Useless error. Dead end. This is the page I came for and it doesn't work.                              |
-| /dashboard/flows/ig-organic-dm | 1 / 5 | Cockpit for a tool I wanted to be a light switch. Jargon, symbols, no kill switch, no confirmation on Publish. |
-| /404                           | 3 / 5 | Does the job. Clear, has a button home. Fine.                                                                  |
-
-**Overall: 1 / 5.** The one thing I actually wanted to do (see my customer conversations) is broken. The main screen is an editor for engineers. There's no nav, no ON/OFF switch, no confirmation on the scariest button in the app, and the labels are in a language I don't speak. This isn't a product for tradies — this is a product for the people who build bots. I'd uninstall it and go back to answering DMs myself.
-
----
-
-## The bottom line from TOM
-
-If you want my money, here's what needs to change before I'd use this:
-
-1. **A big ON/OFF toggle at the top of every page.** Is my bot talking to customers right now? Yes or no. That's the first thing I want to know.
-2. **The word "Conversations" should go to a working list of my customer chats.** With the bot's messages and theirs. Not an error screen.
-3. **Plain English everywhere.** "Qualifier" → "Ask the customer questions." "Objection Handler" → "When they say no." "Escalation" → "Send to me." "Publish" → "Save and go live (confirm first)." "IG Organic DM" → "Instagram Messages."
-4. **Rename or delete "Flow Builder."** 99% of tradies don't want to build flows. Give me a setup wizard: "What do you do? What are your hours? What's your address?" Three questions. Let the bot do the rest.
-5. **Confirmation dialog on Publish.** "Go live with these changes? Your customers will see this. [Cancel] [Yes, publish]."
-6. **A proper dashboard with today's leads and today's bookings on it.** Numbers. Times. Names. Not a link to an editor.
-7. **Nav bar on every page.** Home / Appointments / Conversations / Settings. Like every other app on earth.
-8. **Kill the symbol-only buttons.** Put labels on everything or throw it out.
-9. **Fix the console errors.** If your homepage throws errors in the browser on load, your product isn't ready.
-
-I don't need features. I need the app to answer one question: "Is it working, and are my customers being taken care of?" Right now I can't tell. And when I can't tell, I don't trust it. And when I don't trust it, I'm not using it.
+— Tom

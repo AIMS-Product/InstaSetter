@@ -31,38 +31,38 @@ export function getDraftSaveStatus(
     case 'loading':
       return {
         label: 'Loading draft',
-        detail: 'Checking the shared Supabase draft for this flow.',
+        detail: 'Checking for the latest shared draft for this flow.',
       }
     case 'pending':
       return {
         label: 'Save pending',
-        detail: 'A draft change is queued for Supabase sync.',
+        detail: 'A draft change is queued and will sync in a moment.',
       }
     case 'saving':
       return {
         label: 'Saving draft',
-        detail: 'Writing the shared draft to Supabase.',
+        detail: 'Saving the shared draft now.',
       }
     case 'error':
       return {
         label: 'Save failed',
         detail:
-          'The draft changed locally, but the latest Supabase save did not complete.',
+          'The draft changed locally, but the most recent save did not complete.',
       }
     case 'saved':
     default:
       return {
-        label: 'Saved to Supabase',
-        detail: 'The shared draft is saved in Supabase.',
+        label: 'Saved',
+        detail: 'All shared draft changes are saved.',
       }
   }
 }
 
 export function getLiveRuntimeStatus(): FlowStatusMessage {
   return {
-    label: 'Live: setter-v2',
+    label: 'Live',
     detail:
-      'New conversations still use the compiled setter-v2 prompt until publish wiring lands.',
+      'New conversations are using the current production prompt until publish wiring lands.',
   }
 }
 
@@ -76,14 +76,14 @@ export function getSimulatorStatus(compileEnabled: boolean): FlowStatusMessage {
     : {
         label: 'Live prompt only',
         detail:
-          'In this environment, the simulator runs the compiled setter-v2 prompt without draft overrides.',
+          'In this environment, the simulator runs the current production prompt without draft overrides.',
       }
 }
 
 export const BRAND_INBOX_STATUS: FlowStatusMessage = {
-  label: 'Brand-wide only',
+  label: 'All flows',
   detail:
-    'Inbox metrics and transcripts below include all VendingPreneurs conversations until flow_id lands on the conversations table.',
+    "Right now we show all of VendingPreneurs' conversations together. Per-flow filtering is coming soon.",
 }
 
 export const VARIABLE_REFERENCE_STATUS: FlowStatusMessage = {

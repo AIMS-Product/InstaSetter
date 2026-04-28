@@ -70,8 +70,7 @@ export default function PageVersions({ p }: { p: Palette }) {
               tone={state.dirtySincePublish ? 'warning' : 'neutral'}
             >
               <CardMeta p={p}>
-                Flow draft v{state.draftVersion} stored in the shared Supabase
-                draft.
+                Flow draft v{state.draftVersion} stored in the shared draft.
               </CardMeta>
             </StatusCard>
 
@@ -91,8 +90,8 @@ export default function PageVersions({ p }: { p: Palette }) {
             <StatusCard
               p={p}
               eyebrow="Prompt source"
-              title="Compiled from src/lib/prompts/sections/*.ts"
-              detail="Prompt Reader shows the live source sections that feed setter-v2 today."
+              title="Compiled from prompt source files"
+              detail="Prompt Reader shows the live source sections that feed the current production prompt today."
               tone="info"
             >
               <CardMeta p={p}>

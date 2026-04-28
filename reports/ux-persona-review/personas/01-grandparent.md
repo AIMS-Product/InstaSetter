@@ -1,125 +1,166 @@
 # Persona Review: Betty — Tech-Illiterate Grandparent
 
+_I am 78. I taught 4th grade for 36 years. My grandson Alex set up my email and my Facebook on this iPad. I asked him what "Instagram" was last Christmas and he said "it's like Facebook for pictures." He uses words like "DM" and "bot" and I just nod. I am very afraid of pressing the wrong button because last March I deleted all my photos from a vacation and Alex had to drive over to fix it. I am only looking at this because someone asked me to. I want to do a good job. I will read every word._
+
 ## Summary
 
-- Pages reviewed: 5
-- Issues found: 41
-- Blockers: 3
+- Pages reviewed: 8
+- Issues found: 47
+- Blockers: 6
 - Overall gut feel: 1/5
 
-I am not going to lie to you, dear. I sat at this iPad for ten minutes and I still have no idea what this thing is for. I was afraid to touch most of the buttons because they had those little symbols on them — I don't know what a diamond shape means or what a half-moon means. My grandson would have to come over and sit with me. I would not dare use this on my own.
+I do not know what this is. I do not know what most of the words mean. I am afraid to click anything because I cannot find a place that tells me what will happen if I click it, or how to undo it if I make a mistake. There is no Help button anywhere. There is no place I can see that tells me what this app actually does in plain language. The very first words I see — "Instagram DM Flow," "Unpublished edits," "Saved to Supabase," "Live: setter-v2" — I do not understand a single one. I am sitting here for ten minutes and I have not pressed anything yet.
 
 ## Page-by-Page Review
 
-### / (Home)
+### Flow tab (canvas)
 
-**Gut feel: 2/5** — "It's pretty and quiet, but I don't know what 'InstaSetter' is or who it's for — nobody told me what this thing does."
+**Gut feel: 1/5** — "It looks like a diagram from one of my grandson's computer classes and I genuinely don't know what I'm meant to do with it."
 
-| #   | Category          | Finding                                                                                                                                                                                | Severity | Why this matters to me (Betty)                                                                                                     |
-| --- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Copy & Labels     | The word "InstaSetter" means nothing to me. I thought this was something about Instagram photos, but then it says "appointment setting automation" and I have no idea what that means. | High     | My grandson said Instagram is for photos. I don't know what a "setter" or an "automation" is. I'd close the tab and not come back. |
-| 2   | Copy & Labels     | "Instagram DM appointment setting automation" — every single word except "Instagram" is unfamiliar or strung together in a way I can't parse.                                          | Critical | I read every word on my screen carefully, and this sentence gave me nothing. There's no "this is what it does" in plain English.   |
-| 3   | Navigation & Flow | I only have two buttons, "Conversations" and "Flow Builder". I don't know which one I'm supposed to press first, or what will happen if I press the wrong one.                         | High     | When I sit at my iPad I want to be told where to start. "Welcome, start here" would calm me right down.                            |
-| 4   | Copy & Labels     | "Flow Builder" — what is a "flow" and why would I want to build one? That sounds like a plumber's tool.                                                                                | High     | Jargon. My brain just skips over words I don't know and I don't click them.                                                        |
-| 5   | Visual & Layout   | The whole screen is almost empty. There is no logo, no little picture, no "hello" at the top. I am not sure I'm on the right website.                                                  | Medium   | When a page is this empty I worry something hasn't loaded properly and I'll press the wrong button.                                |
-| 6   | Visual & Layout   | The little arrow "→" after each button is small and I'm not sure if I'm meant to press the arrow or the word.                                                                          | Low      | My fingers shake a bit. When there are two pressable parts side by side, I worry I'll press the wrong one.                         |
-| 7   | Trust & Safety    | There is no "About" or "Help" or "Who made this" link anywhere. I don't know whose website this is.                                                                                    | Medium   | My grandson told me to always look for a company name before I trust a website. I can't find one here.                             |
-| 8   | Feedback & State  | No welcome message, no "hello Betty," no instructions. I feel like I've walked into an empty shop.                                                                                     | Medium   | I like to know someone is home before I start touching things.                                                                     |
+| #   | Category          | Finding                                                                                              | Severity | Why this matters to me                                                                                        |
+| --- | ----------------- | ---------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| 1   | Copy & Labels     | Page title says "Instagram DM Flow." I don't know what a "Flow" is or what "DM" abbreviates.         | Blocker  | When you don't define your words, students get lost on the first sentence. I am lost on the first sentence.   |
+| 2   | Copy & Labels     | Three pills "Unpublished edits," "Saved to Supabase," "Live: setter-v2" with no explanation.         | Critical | The orange dot looks like a warning. I can't tell which one I'm supposed to act on. Did I do something wrong? |
+| 3   | Copy & Labels     | Sidebar items: Flow / Inbox / Variables / Release / Bot. Tiny subtitles helpful but tabs unfamiliar. | Critical | I don't know if these are five different pages, five steps, or five settings. Where do I start?               |
+| 4   | Navigation & Flow | No "Start here" or welcome message anywhere.                                                         | Critical | Like opening a textbook to a random page in the middle. I don't know where to begin.                          |
+| 5   | Copy & Labels     | Block names "OPENING," "QUALIFIER," "OBJECTION HANDLER," "BOOKING," "EMAIL CAPTURE."                 | Critical | "Qualifier" sounds like a school exam. "Objection Handler" sounds like court. Not from my world.              |
+| 6   | Copy & Labels     | "3 exits" / "2 exits" — exits like a movie theater?                                                  | High     | I don't know what "exits" means in a computer drawing.                                                        |
+| 7   | Visual & Layout   | Boxes connected by thin colored lines that loop.                                                     | High     | I don't know which way to read it — left to right? Top to bottom? Following the lines?                        |
+| 8   | Copy & Labels     | Tiny gray "Shared draft workspace" footer.                                                           | Medium   | If important, why is it the smallest text? If not, why is it there?                                           |
+| 9   | Copy & Labels     | "8 blocks · 14 routes · No block selected."                                                          | High     | I don't know what "block" or "route" is. "No block selected" sounds like I should have selected something.    |
+| 10  | Visual & Layout   | Tiny zoom in/out/fit/plus icons with no words.                                                       | Critical | I had to squint to see them. Every button should have a word.                                                 |
+| 11  | Trust & Safety    | "Preview replies" button has no description.                                                         | Critical | Will it send a real message? Cost money? I won't press without a "this is just a sample" line.                |
+| 12  | Copy & Labels     | "VendingPreneurs" + "DEV" badge top right.                                                           | High     | "DEV" looks like an alarm code. I worry it's "danger mode."                                                   |
+| 13  | Visual & Layout   | Two purple "i" squares near the top.                                                                 | Low      | Made me think I was seeing double.                                                                            |
+| 14  | Feedback & State  | Page just appears with no spinner or feedback.                                                       | Medium   | When my email loads it shows a spinning circle. Here I can't tell if it's done loading.                       |
+| 15  | Trust & Safety    | "Unpublished edits" pill — am I losing work? Did someone else change something?                      | Critical | I have lost work many times. Fear of losing work is the biggest reason I move slowly.                         |
 
-### /dashboard
+### Inbox tab — "Brand inbox"
 
-**Gut feel: 1/5** — "It tells me there's a 'preview' and a 'prototype' and a 'split-view editor' and I have no idea what any of those words mean."
+**Gut feel: 2/5** — "More familiar (inbox), but 'Brand-wide only' has me convinced I've broken something."
 
-| #   | Category          | Finding                                                                                                                                                                      | Severity | Why this matters to me (Betty)                                                                                                                                                        |
-| --- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 9   | Copy & Labels     | "Flow Builder preview. Open the prototype flow to see the split-view editor." — Four words I don't know in one sentence.                                                     | Critical | "Preview", "prototype", "split-view", "editor" — this is not English to me. I would stop reading and close the browser.                                                               |
-| 10  | Copy & Labels     | "Open IG Organic DM" — What is "IG"? What is "Organic"? What is "DM"? These are letters and code words, not words.                                                           | Critical | I thought "organic" was for vegetables. "DM" I've heard my granddaughter say but I don't know what it stands for. I cannot press a button when I don't know what's on the other side. |
-| 11  | Navigation & Flow | There is only ONE thing to click on this whole "dashboard" page and I don't understand what it is. That feels wrong — a "dashboard" in a car has lots of things you can see. | High     | My grandson showed me how to use my bank dashboard and it shows my balance and recent purchases. This one shows me one mystery button.                                                |
-| 12  | Visual & Layout   | The text "Flow Builder preview" is just floating in the middle of a big empty screen. There is no heading that says "Dashboard" or breadcrumb to tell me where I am.         | High     | I need to know where I am so I can find my way back. Big empty pages make me feel lost.                                                                                               |
-| 13  | Navigation & Flow | I don't see a "Home" button or a logo I can press to get back to where I started. If I got stuck here I wouldn't know how to escape.                                         | Critical | I am very careful never to get stuck. If there's no way back I will refuse to go in.                                                                                                  |
-| 14  | Copy & Labels     | The word "Dashboard" itself isn't written anywhere on the page. The URL says /dashboard but I don't read URLs.                                                               | Medium   | I rely on the headline at the top of the page to tell me what page I'm on. There isn't one.                                                                                           |
+| #   | Category         | Finding                                                                                                                                                         | Severity | Why this matters to me                                                                                    |
+| --- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| 16  | Copy & Labels    | "Use this inbox to spot reply quality issues, stalled leads, and booking events while per-flow attribution is still being wired into the conversation records." | Critical | Every word except "Use," "this," "and" is jargon. "Wired into" makes me think there are wires in my iPad. |
+| 17  | Copy & Labels    | Orange banner: "BRAND-WIDE ONLY" with "flow_id lands on the conversations table."                                                                               | Blocker  | "flow_id" with underscore is computer code. The orange color makes me think I caused a problem.           |
+| 18  | Copy & Labels    | Empty stat boxes show "—" instead of "None yet."                                                                                                                | High     | A dash isn't a number. Is it zero? Loading? Broken?                                                       |
+| 19  | Feedback & State | "Loading conversations…" with no time estimate.                                                                                                                 | Medium   | After 10 seconds I'd assume it's broken and close it.                                                     |
+| 20  | Visual & Layout  | "Select a conversation to view the transcript."                                                                                                                 | High     | "Transcript" sounds like court or school. They mean messages but I had to guess.                          |
+| 21  | Copy & Labels    | "16h," "22 msg · 3 evt" — abbreviations without context.                                                                                                        | High     | "evt" I cannot guess. "16h" took me a moment.                                                             |
+| 22  | Trust & Safety   | Real-looking customer names (U LOVETT, Bryan Parson) with no privacy banner.                                                                                    | Critical | I'd want a "These are real customer messages — handle carefully" warning.                                 |
 
-### /dashboard/conversations
+### Variables tab
 
-**Gut feel: 1/5** — "It says 'Something went wrong' — did I break it? Was it my fault? I don't want to touch it again."
+**Gut feel: 1/5** — "Variables is from algebra. The page is full of code with dots in the middle of words."
 
-| #   | Category          | Finding                                                                                                                                               | Severity | Why this matters to me (Betty)                                                                                                                            |
-| --- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 15  | Feedback & State  | "Something went wrong. An unexpected error occurred." — My heart sank. Did I break it? Is it something I did?                                         | Blocker  | This is exactly the kind of message I dread. My grandson warned me about error messages. I would shut the iPad lid and call him before touching it again. |
-| 16  | Trust & Safety    | The error doesn't tell me what went wrong, what I can do, or whether I should worry about my information.                                             | Critical | When an airline website does this I cancel my booking. I don't trust anything after a vague error.                                                        |
-| 17  | Copy & Labels     | "Try again" — try again at what? I don't know what I was trying to do in the first place. I only pressed "Conversations" — are my conversations lost? | Critical | If my email did this and said "try again" I would think my emails got deleted. "Conversations" sounds like something important I can't afford to lose.    |
-| 18  | Feedback & State  | There is no "contact support" or "call us" link, no phone number, no email. I have no way to ask a real person for help.                              | Critical | When things break I need a human number to call. My bank has one. This doesn't.                                                                           |
-| 19  | Navigation & Flow | I don't see a "Back" or "Cancel" or "Never mind" button to get me out of the error. Only "Try again" — which I am afraid to press.                    | High     | Afraid to press the only button on the screen is a very bad place to be.                                                                                  |
-| 20  | Trust & Safety    | The page loaded as a Blocker for me. I came here hoping to see my "conversations" (whatever those are) and now I'm scared I've lost them.             | Blocker  | Any normal person trying the product for the first time would think the product is broken. First impression ruined.                                       |
+| #   | Category        | Finding                                                                         | Severity | Why this matters to me                                                                     |
+| --- | --------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| 23  | Copy & Labels   | Page title "Variables."                                                         | Critical | Variables means math. I don't know what variables have to do with Instagram.               |
+| 24  | Copy & Labels   | "A plain-English map of what the bot remembers" — but isn't plain.              | High     | "Bot," "values," "captured" — not plain English unless you're a programmer.                |
+| 25  | Copy & Labels   | `brand.brand_name`, `contact.location`, `conversation.last_objection` examples. | Critical | Dots in the middle of words. That's computer code. I can read English but not code.        |
+| 26  | Copy & Labels   | Banner: "Creating variables and row-level actions is not wired yet."            | Critical | "Not wired yet" tells me a feature is broken. Why am I being shown things that don't work? |
+| 27  | Visual & Layout | Database-style table with columns NAME / DRAFT VALUE / TYPE / CAPTURED BY.      | High     | "Captured by" — I don't know what that means. "Set manually" sounds clinical.              |
+| 28  | Copy & Labels   | Row says "not set" italic gray with "Set manually."                             | High     | If I'm supposed to do something, please put a button. Don't describe a missing thing.      |
 
-### /dashboard/flows/ig-organic-dm (Flow Builder)
+### Release tab
 
-**Gut feel: 1/5** — "I felt like I'd been dropped into a pilot's cockpit — colours, symbols, tabs, tiny text, boxes and lines everywhere. I closed my eyes."
+**Gut feel: 1/5** — "Six different colored status labels and I don't know what any mean."
 
-| #   | Category          | Finding                                                                                                                                                                                                                     | Severity | Why this matters to me (Betty)                                                                                                                                                                                                                |
-| --- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 21  | Visual & Layout   | There is just TOO MUCH on the screen. Coloured boxes, little dots, lines between things, tabs, columns — I counted and I couldn't even tell where I should look first.                                                      | Critical | My eyes are 78 years old. When everything shouts at once my brain gives up.                                                                                                                                                                   |
-| 22  | Copy & Labels     | The tabs across the top use little symbols — a diamond "⎔", a circle "◉", two vertical lines "∥", a round arrow "⟳", a half-moon "◐" — and I have no idea what ANY of those mean.                                           | Blocker  | I cannot click buttons with symbols I don't recognise. I don't know if I'll delete something. The words next to them ("Flow", "Runs", "Variables", "Versions", "Bot") are all jargon too.                                                     |
-| 23  | Copy & Labels     | "Publish v13" — what is "v13"? Am I going to publish something to the whole internet? To Instagram? That sounds permanent and scary.                                                                                        | Blocker  | "Publish" to me means putting something in the newspaper where everyone can see. I would NEVER press this without knowing exactly what it does.                                                                                               |
-| 24  | Trust & Safety    | The "Publish v13" button is bright and sitting in the top right where my eye naturally goes. I am afraid my finger will slip onto it.                                                                                       | Critical | A destructive-sounding button in a prominent spot with no confirmation pop-up is terrifying.                                                                                                                                                  |
-| 25  | Copy & Labels     | "Simulator" — is that like a flight simulator? I thought this was for Instagram?                                                                                                                                            | High     | I don't connect "simulator" to anything I understand about messages or appointments.                                                                                                                                                          |
-| 26  | Copy & Labels     | "Draft v13" tag at the top — "draft" I understand (like an email draft), but the "v13" has me worried there are 12 other versions I don't know about, and maybe the one I'm looking at is the wrong one.                    | High     | I'm always careful with "versions" of things. I once deleted the wrong version of a Word document and cried for an hour.                                                                                                                      |
-| 27  | Copy & Labels     | The boxes in the middle are called "Opening", "Qualifier", "Objection Handler", "Booking Handoff", "Post-Call Follow-up", "Escalation", "Summary". These sound like lawyer words or sales words, not anything I understand. | Critical | If I can't understand what these boxes are, I can't understand the whole diagram.                                                                                                                                                             |
-| 28  | Copy & Labels     | Tags on the boxes say "Raises objection", "Handed off", "Price", "Price + post-call", "Positive" — am I supposed to do something with these? Or are they just labels?                                                       | High     | I can't tell what is information and what is a button I'm meant to press.                                                                                                                                                                     |
-| 29  | Visual & Layout   | The coloured lines connecting the boxes (pink, green, red) look like a map, but I don't know where they're leading or what the colours mean. There's no key or legend.                                                      | High     | I love a nice legend on a map. Without one I'm just staring at spaghetti.                                                                                                                                                                     |
-| 30  | Feedback & State  | On the right side there's a panel that says "Qualifier" and has tabs "Design", "Routing", "Triggers", "Data" — every single word is unfamiliar.                                                                             | Critical | This is the area where I'd be expected to do work, and every label scares me off.                                                                                                                                                             |
-| 31  | Copy & Labels     | "GOAL", "HOW IT SHOULD SOUND", "GOOD EXAMPLES", "CAPTURE", "inherits tone from the Persona section" — I don't know what a "Persona" is. I thought that was a car.                                                           | Critical | Tech words used as if everyone knows them. I wouldn't touch any of these fields.                                                                                                                                                              |
-| 32  | Visual & Layout   | The text is tiny. I had to lean close to my iPad and squint. I usually read at arm's length.                                                                                                                                | Critical | At 78 with glasses, if I can't read the words from arm's length I can't use the software. Full stop.                                                                                                                                          |
-| 33  | Forms & Input     | There are text boxes I could type into but I don't know what's required vs optional. No little red stars, no "must fill this in" notes.                                                                                     | High     | I'd fill something in, press save, and something would tell me I got it wrong and I'd feel silly.                                                                                                                                             |
-| 34  | Navigation & Flow | The exploration log says the testing robot couldn't even click some buttons because something invisible was covering them. I tried to press "Design" and nothing happened — I thought my iPad had frozen.                   | Blocker  | I would assume the whole app was broken and close it. A button that looks like a button but doesn't press is the most frustrating thing in the world.                                                                                         |
-| 35  | Copy & Labels     | Little "×" buttons next to fields — those usually delete things. There are at least four of them on one panel and no "Are you sure?" pop-up.                                                                                | Critical | I am TERRIFIED of X buttons. Every time my finger gets near one my grandson says "careful Grandma, that deletes it".                                                                                                                          |
-| 36  | Copy & Labels     | "+ add" and "+ rule" buttons — add WHAT? A rule for what?                                                                                                                                                                   | High     | Ambiguous verbs with no object. Whenever I see "+" I worry about adding something I didn't mean to.                                                                                                                                           |
-| 37  | Accessibility     | The little minus and plus buttons (for zooming, I think?) are tiny. I'd miss them with a shaky finger.                                                                                                                      | High     | Click targets under about the size of my fingernail are impossible for me.                                                                                                                                                                    |
-| 38  | Accessibility     | The arrow symbols (⤢, ⊞, ↗) are drawn so thin I couldn't even tell what shape they were without squinting.                                                                                                                  | High     | Icon-only buttons that have no hover tooltip and no word label are a dead end for me.                                                                                                                                                         |
-| 39  | Feedback & State  | There's a chat panel that says "Analyst - Live creatives activated", "Sending for a minute", "Hello" — I don't know if that's a real person chatting or if it's pretending.                                                 | Critical | I don't know who or what is talking to me. That gives me the creeps.                                                                                                                                                                          |
-| 40  | Trust & Safety    | Bottom says "Live on v12 · 42 convos today". "Live" means this is talking to real people on Instagram? Already? Right now? My finger could change something real??                                                          | Blocker  | If this is already connected to real people and I'm looking at a tool that edits what it says — I would not touch a single button in case I said something to a real stranger. This needs a giant "SANDBOX" or "PREVIEW" label if it is safe. |
-| 41  | Navigation & Flow | I have no idea how to get back to the home page. No Home button I can see, no menu, no logo-click.                                                                                                                          | Critical | Getting stuck in a scary screen with no exit is my number one iPad fear.                                                                                                                                                                      |
+| #   | Category        | Finding                                                                   | Severity | Why this matters to me                                                                                                                                          |
+| --- | --------------- | ------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 29  | Copy & Labels   | "Release status" — I think of music albums being released.                | High     | The word doesn't fit my world.                                                                                                                                  |
+| 30  | Copy & Labels   | DRAFT WORKSPACE / LIVE RUNTIME / PROMPT SOURCE / SIMULATOR.               | Critical | "Runtime"? "Prompt"? "Simulator"? Airplane and computer words. I'd close this page.                                                                             |
+| 31  | Copy & Labels   | "Compiled from src/lib/prompts/sections/\*.ts"                            | Blocker  | This is the kind of thing my grandson types in his black computer window. Should not be on a page meant for me.                                                 |
+| 32  | Copy & Labels   | Banner: "Publish controls and release history are not wired yet."         | Blocker  | If controls aren't there, what am I supposed to do here?                                                                                                        |
+| 33  | Copy & Labels   | "Recommended workflow today" with bullet instructions to use other tools. | High     | "Open Prompt Reader" — what's that? Where is the "Flow Builder"? I'm in the Flow Builder but the bullet says "in" the Flow Builder like it's a different place. |
+| 34  | Visual & Layout | Six different colored dots with no labels.                                | Medium   | I cannot tell what's a warning, what's good, what's neutral. Words next to dots would help.                                                                     |
 
-### /this-route-does-not-exist (404)
+### Bot tab — "Appointment Setter"
 
-**Gut feel: 4/5** — "This was actually the kindest page in the whole app. It said what went wrong in a way I understood and gave me one clear button."
+**Gut feel: 1/5** — "HARD RULES and HARD LIMIT in capital letters means I'll break something."
 
-| #   | Category        | Finding                                                                                        | Severity | Why this matters to me (Betty)                                                                                          |
-| --- | --------------- | ---------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 42  | Copy & Labels   | "Page not found" — I understand this! And "Go home" is a lovely clear button.                  | Low      | Notice that this is the only page in the whole app that spoke to me like a human. The rest should learn from this page. |
-| 43  | Visual & Layout | Plenty of white space, one clear action, no jargon. I was relieved.                            | Low      | I know this is meant to be a sad page, but for me it was the calmest page of the visit.                                 |
-| 44  | Copy & Labels   | "404" is a code — I don't know what it means but "Page not found" right underneath rescues it. | Low      | The plain-English line did its job. Keep that pattern.                                                                  |
+| #   | Category         | Finding                                                                                  | Severity | Why this matters to me                                                                                                                     |
+| --- | ---------------- | ---------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 35  | Copy & Labels    | "Bot" + "Appointment Setter" — bot scheduling appointments with whom?                    | High     | Took 3 reads to realize this is rules for a robot pretending to be a person. Strange and slightly upsetting; I'd want it explained gently. |
+| 36  | Copy & Labels    | "Display name" + "Not named — shared team inbox" + "Flow scope: Instagram DM Flow" pill. | Critical | Three new words at once: "Display name," "scope," "shared team inbox."                                                                     |
+| 37  | Copy & Labels    | "Identity — HARD RULES" / "Message Length — HARD LIMIT" with padlocks and LOCKED.        | Critical | Capital letters and "HARD" make me feel like I'll trigger something serious.                                                               |
+| 38  | Copy & Labels    | "Tone is customisable per brand. Peer-mentor beats salesperson 3:1."                     | Critical | Reads like sports commentary. I don't know the score.                                                                                      |
+| 39  | Copy & Labels    | "No em dashes. Use short sentences."                                                     | Low      | Clear but I don't know if these are rules for me or for the bot.                                                                           |
+| 40  | Trust & Safety   | HARD RULES showing "Never state your own name. Do not say 'I'm Mike,' 'I'm Anthony'…"    | Critical | The bot pretends to be people and I'm seeing the secret rules. Unsettling.                                                                 |
+| 41  | Visual & Layout  | Multiple expand/collapse arrows; some sections LOCKED, some EDITABLE.                    | Medium   | Expanding made me worry I'd toggled something on or off.                                                                                   |
+| 42  | Feedback & State | Tiny "i" symbols at the right of each section.                                           | Medium   | I think those are help buttons but they're so small.                                                                                       |
+| 43  | Copy & Labels    | Status pill changed from "Saved to Supabase" to "Save pending" between tabs.             | High     | It changed and I don't know why. Did I cause it?                                                                                           |
+
+### Simulator (Preview replies)
+
+**Gut feel: 2/5** — "Small chat box but words around it like 'real prospect opener' and 'Run' make me hesitant."
+
+| #   | Category         | Finding                                                                   | Severity | Why this matters to me                                                       |
+| --- | ---------------- | ------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| 44  | Copy & Labels    | "Simulator · Live preview" + "Try a real prospect opener" + "Run" button. | Critical | "Prospect" is mining. "Opener" is kitchen drawer. "Run" — run away?          |
+| 45  | Copy & Labels    | "Side stories" / "Price concern" buttons.                                 | High     | Will the bot pretend to have a price concern? Or am I telling it I have one? |
+| 46  | Feedback & State | "Send" button grayed out (disabled).                                      | High     | I typed but the button stayed gray. I'd assume it's broken.                  |
+| 47  | Copy & Labels    | "Run" instead of "Send."                                                  | High     | On Facebook the button is called "Send." Different word, different feeling.  |
+| 48  | Trust & Safety   | No reassurance like "this is a test, no real person will see this."       | Critical | I will not type. I'll worry I'm sending to a real person.                    |
+| 49  | Visual & Layout  | Panel sits on top of canvas; canvas visible behind.                       | Medium   | Hard to focus. Eyes go between panel and boxes.                              |
+| 50  | Feedback & State | "Hide preview" rather than "Close."                                       | Low      | At least there's a way out, but the wording is strange.                      |
+
+### Palette (Block library) drawer
+
+**Gut feel: 1/5** — "Single words in combinations I've never seen."
+
+| #   | Category          | Finding                                                                                                   | Severity | Why this matters to me                                                           |
+| --- | ----------------- | --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| 51  | Copy & Labels     | "Block library" — like a children's toy box?                                                              | High     | Are these toy blocks? Computer blocks? Building blocks?                          |
+| 52  | Copy & Labels     | Single-word items: Opening, Qualifier, Objection, Booking, Email Capture, Follow-up, Escalation, Summary. | Critical | No way to guess what they do. "Escalation" sounds serious.                       |
+| 53  | Trust & Safety    | Items are draggable. I don't know how to drag on iPad.                                                    | Blocker  | If dragging adds a piece to the diagram, I want a confirmation before it sticks. |
+| 54  | Navigation & Flow | I cannot see how to close the drawer.                                                                     | High     | I'd feel trapped.                                                                |
+| 55  | Copy & Labels     | Heading "BLOCK LIBRARY" with no category labels.                                                          | Medium   | If categories exist, label them.                                                 |
+
+### Mobile gate (iPad portrait / phone)
+
+**Gut feel: 4/5** — "Best-written page in the whole app. Big text, simple words, one button, clear next step."
+
+| #   | Category       | Finding                                                                        | Severity     | Why this matters to me                                                   |
+| --- | -------------- | ------------------------------------------------------------------------------ | ------------ | ------------------------------------------------------------------------ |
+| 56  | Copy & Labels  | "Flow Builder needs a desktop" — clear, plain, no jargon.                      | n/a (praise) | This is what every page should sound like.                               |
+| 57  | Copy & Labels  | "1024px wide" mention.                                                         | Medium       | I don't know what "px" is. "A regular computer screen" would be clearer. |
+| 58  | Copy & Labels  | "You can still monitor live conversations on your phone. Open conversations →" | n/a (praise) | A friendly button I can read. The only place I'd press a button.         |
+| 59  | Trust & Safety | Even with nice copy, my iPad is my computer. Being kept out hurts.             | High         | I would likely give up here.                                             |
+
+### General / app-wide
+
+| #   | Category        | Finding                                                                                                     | Severity | Why this matters to me                                                                  |
+| --- | --------------- | ----------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------- |
+| 60  | Trust & Safety  | No "Help" or "?" link anywhere.                                                                             | Blocker  | Every program my grandson installed has Help. Without it I'm stuck.                     |
+| 61  | Trust & Safety  | No "Undo" anywhere.                                                                                         | Blocker  | "Unpublished edits" implies I CAN edit, but I don't see how to take it back.            |
+| 62  | Copy & Labels   | Compile, wire, publish, scope, runtime, draft, live, block, route, exit, captured all used interchangeably. | Critical | Each page has 4-5 new words. By the third page I close my iPad.                         |
+| 63  | Visual & Layout | Page felt jittery (the "Maximum update depth exceeded" errors).                                             | High     | Things moved while I was reading. Made me think I'd pressed something.                  |
+| 64  | Trust & Safety  | No "you are signed in as \_\_\_" anywhere.                                                                  | High     | I don't know whose account this is. Mine? My grandson's?                                |
+| 65  | Accessibility   | Body text grey-on-light-grey is hard to read.                                                               | High     | I have to lean forward with my reading glasses.                                         |
+| 66  | Accessibility   | Tiny gray icons (zoom, fit, plus) same color as background.                                                 | Critical | I cannot reliably press a button I cannot find.                                         |
+| 67  | Copy & Labels   | Nowhere explains what InstaSetter actually does.                                                            | Blocker  | I'm not sure if it sends Instagram messages, schedules appointments, or something else. |
 
 ## Blockers
 
-- **"Something went wrong" on Conversations page** — First thing I tried and it exploded. I cannot proceed. This would be where I close the iPad and call my grandson.
-- **"Publish v13" button with no safeguard** — Looks like it would make something public and permanent. I won't click anywhere near it. I wouldn't even breathe near it.
-- **"Live on v12 · 42 convos today" message in the Flow Builder** — If this tool is already talking to real strangers on Instagram right now, I can't be trusted to experiment. There is no clear "you are in a practice room" vs "this is live" separation.
-- **Tabs that are just symbols (⎔, ◉, ∥, ⟳, ◐)** — I cannot navigate this page. Every tab is unreadable to me.
-- **Buttons that don't respond when pressed (the layout bug)** — If the testing robot couldn't click them neither can I. I'd think the whole app is broken and give up.
+- **No way to know what this app does.** No welcome page, description, or "Start here."
+- **Code-language jargon all over.** "Supabase," "setter-v2," `src/lib/prompts/sections/*.ts`, "flow_id," "compiled."
+- **Pages explicitly say "not wired yet."** Variables and Release tabs both. Makes me think the app is broken.
+- **No Help button. No Undo. No way to recover.** Confidence is zero.
+- **Block palette items are draggable single words with no description.**
+- **Status pills change unexpectedly.** I think I'm losing or breaking work.
 
-## My Top 10 Issues
+## My Top 10 Issues (in order of how much they bother Betty)
 
-1. **The Conversations page shows "Something went wrong" as a first impression.** That is a Blocker. Your product cannot be sold, demonstrated, or trusted when the very first link people click dies on them. I'd stop here and not come back.
+1. **No clear answer to "What is this app and what am I supposed to do here?"** — There's no welcome screen anywhere.
+2. **No Help button anywhere.** — Where do I turn when stuck?
+3. **No Undo and no confirmation before things change.** — "Unpublished edits" worries me.
+4. **Computer code on screen.** — Supabase, setter-v2, src/lib/prompts/sections/\*.ts, brand.brand_name, flow_id.
+5. **Words in serious-sounding capital letters.** — HARD RULES, HARD LIMIT, BRAND-WIDE ONLY, REFERENCE ONLY, RELEASE STATUS, DEV.
+6. **Pages that admit they are "not wired yet."** — Why show me a tab that doesn't work?
+7. **Tiny icons with no labels.** — Zoom-in, zoom-out, fit, plus.
+8. **Colored dots without labels.** — Six different colors with different meanings.
+9. **The diagram itself.** — Boxes connected by lines that loop. I don't know which way to read.
+10. **Simulator's "Run" button instead of "Send."** — On Facebook I press "Send." "Run" sounds like starting a machine.
 
-2. **"Publish v13" is a big prominent button and I have no idea what it publishes or where.** "Publish" sounds permanent and public. Put a confirmation dialog on it. Better, rename it something gentler like "Save changes" or "Send these changes to the bot".
-
-3. **The word "InstaSetter" and the tagline "Instagram DM appointment setting automation" tell me nothing.** If I'm a grandma looking at this over my grandson's shoulder, there's no "welcome, here's what this does" for me. One friendly sentence would save the whole app.
-
-4. **Every tab label in the Flow Builder is either a symbol I don't recognise (⎔, ◉, ∥, ⟳, ◐) or a jargon word (Flow, Runs, Variables, Versions, Bot, Routing, Triggers, Data, Simulator, Prompt, Persona).** This is not a UI, it's a foreign language. Plain words like "Steps", "History", "Settings", "Test chat", "Edit tone" would be better.
-
-5. **I cannot tell what's safe to click and what might break something or send a message to a real stranger.** "Live on v12 · 42 convos today" terrified me. Separate the safe practice area from the live one and label them enormously.
-
-6. **The X (×) and + buttons everywhere are small and unexplained.** My shaky fingers will hit the wrong one. Every X needs a "Are you sure?" box, and every + should say what it's adding.
-
-7. **The "Something went wrong" error gives no information, no next step beyond "Try again", and no phone number.** If it's broken, tell me what broke, what I can do, and who to call. Add a contact-support link at minimum.
-
-8. **No visible "Home" button anywhere in the Flow Builder.** If I wander in there I can't find my way out. Put a logo at the top-left that goes home, and a breadcrumb.
-
-9. **Text is too small and buttons are too small for older eyes and shaky hands.** Everything in the Flow Builder right panel needs to be about twice as big. Target sizes under about 44 pixels are too small for me to reliably press.
-
-10. **The buttons that don't actually work when pressed (the "intercepts pointer events" bug) is the single most frustrating thing on a computer.** I tried to press Design, Routing, Triggers, and nothing happened. I assumed my iPad was frozen and gave up. Fix the invisible overlay immediately — this turns a confusing page into a broken one.
-
----
-
-_Betty, 78, retired teacher, sitting at her iPad in the kitchen with a cup of tea, wondering when her grandson is coming back._
+— Betty

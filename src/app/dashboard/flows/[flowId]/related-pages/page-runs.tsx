@@ -129,7 +129,7 @@ export default function PageRuns({ p }: { p: Palette }) {
         p={p}
         eyebrow="Brand-wide data"
         title="Brand inbox"
-        description="Use this inbox to spot reply quality issues, stalled leads, and booking events while per-flow attribution is still being wired into the conversation records."
+        description="Spot reply quality issues, stalled leads, and bookings as they happen. Per-flow filtering is coming soon."
         right={
           <div
             style={{

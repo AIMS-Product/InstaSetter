@@ -95,7 +95,7 @@ export default function FlowDraftSync({
             clearLegacyLocalFlowDraft({ brand, flowId })
             actions.setDraftSyncStatus('saved')
           } else {
-            actions.toast('Could not sync this draft to Supabase yet.')
+            actions.toast('Could not save this draft yet — we will retry.')
             actions.setDraftSyncStatus('error')
             saveErrorShownRef.current = true
           }
@@ -136,7 +136,7 @@ export default function FlowDraftSync({
         .then((saved) => {
           if (!saved) {
             if (!saveErrorShownRef.current) {
-              actions.toast('Could not sync this draft to Supabase yet.')
+              actions.toast('Could not save this draft yet — we will retry.')
               saveErrorShownRef.current = true
             }
             actions.setDraftSyncStatus('error')
@@ -151,7 +151,7 @@ export default function FlowDraftSync({
           console.error('Flow draft save failed', error)
           actions.setDraftSyncStatus('error')
           if (!saveErrorShownRef.current) {
-            actions.toast('Could not sync this draft to Supabase yet.')
+            actions.toast('Could not save this draft yet — we will retry.')
             saveErrorShownRef.current = true
           }
         })

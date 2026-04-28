@@ -1,65 +1,64 @@
-# Route Map
+# Route Map — Flow Builder Section
 
-Discovered: 2026-04-20
-App: InstaSetter (Next.js 16 App Router)
-Base URL: http://localhost:3000
-Total pages: 5 + 404
-Total API routes: 2 (server-to-server webhooks, not user-facing)
-Auth: none (no login/signup/middleware)
+Discovered: 2026-04-28
+Scope: `/dashboard/flows/*` only (per user: "on our flow builder section")
+Prior whole-app review archived in `_archive-2026-04-20/`.
 
 ## Pages
 
-| Route                           | File                                          | Auth Required? | Dynamic? | Notes                                                                |
-| ------------------------------- | --------------------------------------------- | -------------- | -------- | -------------------------------------------------------------------- |
-| `/`                             | src/app/page.tsx                              | No             | No       | Marketing landing, 2 CTAs                                            |
-| `/dashboard`                    | src/app/dashboard/page.tsx                    | No             | No       | Dashboard index, 1 CTA to flow                                       |
-| `/dashboard/conversations`      | src/app/dashboard/conversations/page.tsx      | No             | No       | Conversations list, 100 newest-first, revalidate=0                   |
-| `/dashboard/conversations/[id]` | src/app/dashboard/conversations/[id]/page.tsx | No             | Yes      | Timeline of messages + tool events (resolve ID at runtime from list) |
-| `/dashboard/flows/[flowId]`     | src/app/dashboard/flows/[flowId]/page.tsx     | No             | Yes      | Flow Builder: Flow / Runs / Variables / Versions / Bot tabs          |
-| `/not-found-placeholder`        | src/app/not-found.tsx                         | No             | No       | Renders on any unknown route                                         |
+| Route                     | File                                  | Auth Required?     | Dynamic?       | Notes                                                           |
+| ------------------------- | ------------------------------------- | ------------------ | -------------- | --------------------------------------------------------------- |
+| /dashboard/flows/[flowId] | app/dashboard/flows/[flowId]/page.tsx | No (no middleware) | Yes ([flowId]) | Routes: any flowId. Mobile gate < 1024px. Desktop: full builder |
+| /dashboard/flows          | (none)                                | —                  | —              | Returns 404 — no index page; flows are accessed by direct ID    |
 
-## Navigation Targets (from code)
+## In-Page Sub-Views (tabs, no URL change)
 
-| Target                             | Source                          | Mechanism                                          |
-| ---------------------------------- | ------------------------------- | -------------------------------------------------- |
-| `/dashboard/conversations`         | `/`                             | `<Link>` "Conversations →"                         |
-| `/dashboard/flows/ig-organic-dm`   | `/`, `/dashboard`               | `<Link>` "Flow Builder →" / "Open IG Organic DM →" |
-| `/dashboard`                       | `/dashboard/conversations`      | `<Link>` "← Dashboard"                             |
-| `/dashboard/conversations/${c.id}` | `/dashboard/conversations`      | `<Link>` per row                                   |
-| `/dashboard/conversations`         | `/dashboard/conversations/[id]` | `<Link>` "← All conversations"                     |
-| `/`                                | `/not-found`                    | `<Link>` "Go home"                                 |
+The flow builder is a single page with five tabs rendered via state, not routes:
 
-No `router.push` / `router.replace` / `redirect()` found in src/app.
+| Tab            | File                             | Component                                        |
+| -------------- | -------------------------------- | ------------------------------------------------ |
+| flow (default) | directions/b-stage/index.tsx     | BCanvas + PaletteDrawer + BInspector + BSimFloat |
+| runs           | related-pages/page-runs.tsx      | PageRuns                                         |
+| variables      | related-pages/page-variables.tsx | PageVariables                                    |
+| versions       | related-pages/page-versions.tsx  | PageVersions                                     |
+| bot            | related-pages/page-bot.tsx       | PageBot                                          |
 
-## API Routes (excluded from exploration)
+## Key components inside the canvas
 
-| Endpoint                  | File                                    | Kind             |
-| ------------------------- | --------------------------------------- | ---------------- |
-| `/api/webhooks/sendpulse` | src/app/api/webhooks/sendpulse/route.ts | External webhook |
+- `BCanvas` — visual graph editor (uses @xyflow/react)
+- `PaletteDrawer` — block palette (drag in new blocks)
+- `BInspector` — right-side block details panel
+- `BSimFloat` — floating simulator for replies
+- `BHeader` — header with Publish, brand, simulator toggle
+- `Toast` — bottom toast for confirmations + undo
 
-## Flow Builder internal navigation (state-based, not URL)
+## Test Flow IDs
 
-PageNav sidebar on `/dashboard/flows/[flowId]` switches view via `onChange`:
+Any string works (no validation). Will use `ig-organic-dm` (the canonical seed) and a random string `unknown-flow-test`.
 
-- Flow (default)
-- Runs
-- Variables
-- Versions
-- Bot
+## Screen-size Gating
 
-All five must be clicked during exploration.
+- `< 1024px` viewport → Mobile Gate (custom screen with link to /dashboard/conversations)
+- `>= 1024px` → Full Flow Builder canvas
 
 ## Routes to test
 
-1. `/`
-2. `/dashboard`
-3. `/dashboard/conversations`
-4. `/dashboard/conversations/{first-real-id}` (fetched from list at runtime)
-5. `/dashboard/flows/ig-organic-dm` (known slug)
-6. `/some-bogus-path-to-trigger-404` (verifies not-found.tsx)
+1. `/dashboard/flows/ig-organic-dm` — main canvas (default tab: flow)
+2. `/dashboard/flows/ig-organic-dm` switching tab to runs
+3. `/dashboard/flows/ig-organic-dm` switching tab to variables
+4. `/dashboard/flows/ig-organic-dm` switching tab to versions
+5. `/dashboard/flows/ig-organic-dm` switching tab to bot
+6. `/dashboard/flows/unknown-flow-test` — verify dynamic route handling
 
-## Destructive / external action inventory
+## Out of scope (other dashboard areas)
 
-None observed in source. No create/delete/logout/payment flows. The
-destructive-action policy has no applicable targets for this run — exploration
-is effectively read-only.
+- /, /dashboard, /dashboard/conversations, /dashboard/marketing-sources — not flow builder
+- API routes — server-only
+
+## Destructive / external actions
+
+Per the architecture, `Publish` writes to a live runtime. Per safety policy:
+
+- Do NOT click `Publish` (mutates production prompt)
+- DO screenshot it for visual review
+- Block deletes inside canvas: only safe if the persona created the block this session — but the canvas seeds with prior-existing blocks. Use undo/cancel patterns; do not click Delete on seeded blocks.

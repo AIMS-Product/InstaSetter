@@ -1,110 +1,434 @@
-# Persona 05 — YUKI (Non-Native English Speaker)
+### Persona
 
-**Who I am:** Yuki, 31, software engineer from Japan. I read English well for code
-and documentation, but I translate mentally for UI copy. Idioms, slang, cultural
-references, and abbreviations slow me down. Vague error messages scare me —
-I need to know exactly what went wrong, because my first instinct is "did I
-misunderstand the English?" before "the system is broken."
+Yuki, 31, Japanese software engineer. I read English well — I read English documentation every day at work. But idioms, slang, and culture-specific words slow me down. I translate in my head. When a word can mean two things, I pause. When I pause too many times, I lose the meaning of the whole sentence.
 
-**My lens:** Is the copy clear for someone whose first language is not English?
-Are abbreviations expanded on first use? Are idioms avoided? Do errors explain
-the problem specifically, so I don't have to guess?
+I am the user this app is not designed for. The product is for English-native marketers in the US and Canada. But I speak for every reader who is not from those places — junior staff at agencies, a brand owner in Quebec whose first language is French, anyone outside the bubble. If the words are clear for me, they will be clear for them too.
+
+I will tell you exactly which words made me stop, and why.
 
 ---
 
-## Gut Feel Per Page
+### First impression of `/dashboard/flows/ig-organic-dm`
 
-| Page                           | Score (1–5) | One-sentence justification                                                                                                                                                                                 |
-| ------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| / (Home)                       | 3           | "InstaSetter" and "DM" are not defined anywhere; I can guess "Instagram" from context but "DM" and "Setter" make me stop and translate.                                                                    |
-| /dashboard                     | 2           | "IG Organic DM" is a wall of abbreviations and jargon — four unexplained terms in four words.                                                                                                              |
-| /dashboard/conversations       | 1           | "Something went wrong / An unexpected error occurred / Try again" tells me nothing — I cannot tell if it is my English, my network, my permissions, or a broken server.                                    |
-| /dashboard/flows/ig-organic-dm | 2           | The tabs are single English words I can read ("Design", "Routing", "Triggers", "Data", "Bot", "Runs", "Versions") but I do not know which one to start with, and some labels use symbols instead of words. |
-| Simulator panel                | 3           | "Type as prospect…" — "prospect" is a business idiom I do not use daily; "as" is ambiguous (am I being the prospect, or writing to the prospect?).                                                         |
-| View prompt panel              | 2           | "READ-ONLY", "Flow Builder editing ships in Week 7", "Qualification Criteria" — dense vocabulary, and "ships in Week 7" is English idiom for "will be released" which I do not recognise immediately.      |
-| 404                            | 4           | Short, plain English, no idioms. "Page not found" translates cleanly. The clearest page in the product.                                                                                                    |
+I open the page. The header says **"Instagram DM Flow"**. Good — I know Instagram, I know DM (direct message). "Flow" — okay, this is the canvas word, like in software diagrams. I can guess.
 
-**Overall: 2/5** — The product assumes the reader is a native English speaker
-familiar with US marketing/sales jargon ("setter", "prospect", "handoff",
-"qualifier", "DM", "IG"). Error messages give no specific information. Idioms
-like "ships in Week 7" and "weave the question naturally" do not translate.
+Then below: **"Edit the shared draft and sanity-check tone before anything ships."**
+
+Three idioms in one sentence. I have to stop.
+
+1. **"sanity-check"** — what is sanity? Mental health? In English-native engineering culture I have heard "sanity check" but it is jargon. A direct translation in Japanese would be "正気チェック" — this sounds rude, like "are you crazy?". Replace with "double-check" or simply "check".
+2. **"before anything ships"** — ships? Like a boat? I know in English-native software this means "to release", but the verb "ship" is a metaphor. For a non-native reader the literal meaning (a boat) is the dictionary's first definition. Replace with "before publishing" or "before it goes live".
+3. **"shared draft"** — shared with whom? My team? Other brands? The bot? I cannot tell from the words alone.
+
+This is one subtitle. I have not even started. Already three things to translate.
 
 ---
 
-## Findings
+### The status pills
 
-| #   | Page                                                 | Category          | Finding                                                                                                                                                                                                                                                                                           | Severity     | Persona Rationale                                                                                                                                                                                                                                                                                                         |
-| --- | ---------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | / (Home)                                             | Copy & Labels     | The tagline "Instagram DM appointment setting automation" contains the abbreviation "DM" with no expansion, and the noun phrase "appointment setting" is US sales jargon. A non-native reader parsing word-by-word reads five nouns in a row with no verb.                                        | High         | I had to Google "appointment setting" to confirm it means "booking meetings" — this is not ESL-friendly. "DM" should be "direct message (DM)" on first use.                                                                                                                                                               |
-| 2   | / (Home)                                             | Copy & Labels     | The product name "InstaSetter" is a portmanteau of "Instagram" and "Setter" — "Setter" by itself is ambiguous (a dog breed, a volleyball position, a person who sets tables). Without the tagline, a non-native reader cannot guess the meaning.                                                  | Medium       | When I saw "InstaSetter" I first thought of the Irish Setter dog. The product name itself teaches me nothing.                                                                                                                                                                                                             |
-| 3   | / (Home)                                             | Copy & Labels     | "Flow Builder" — "Flow" is a metaphor that is fine in English, but for a non-native reader it is ambiguous: water flow, cash flow, work flow? The word alone does not tell me what I will build.                                                                                                  | Medium       | "Conversation flow builder" or "Chat flow builder" would be unambiguous.                                                                                                                                                                                                                                                  |
-| 4   | / (Home)                                             | Navigation & Flow | The home page has no spoken-language indicator, no "English (US)" hint, no language switcher. A non-native reader has no way to know if Japanese/Spanish/etc. is supported.                                                                                                                       | Low          | I would appreciate knowing this product is English-only up front.                                                                                                                                                                                                                                                         |
-| 5   | /dashboard                                           | Copy & Labels     | "Open IG Organic DM →" uses three unexplained terms: "IG" (Instagram), "Organic" (not paid advertising — marketing jargon), and "DM" (direct message). Four words, three of which require cultural or industry context.                                                                           | Critical     | "IG" is the hardest — "Organic" as a marketing term is culturally specific; in Japanese the literal translation "有機" means "organic chemistry / organic food" and has no marketing meaning.                                                                                                                             |
-| 6   | /dashboard                                           | Copy & Labels     | "Flow Builder preview. Open the prototype flow to see the split-view editor." uses four unfamiliar nouns in two sentences: "preview", "prototype flow", "split-view", "editor". No glossary, no tooltips.                                                                                         | High         | "Prototype" + "flow" + "split-view" + "editor" — I can translate each word but the combination is unclear. Is "prototype flow" a noun phrase or "flow" modifying something else?                                                                                                                                          |
-| 7   | /dashboard/conversations                             | Copy & Labels     | Error state shows "Something went wrong / An unexpected error occurred / Try again." No error code, no details, no context about which conversation, no indication whether this is a network problem, a permission problem, or a server problem.                                                  | **Blocker**  | This is the worst kind of error for a non-native reader. I cannot tell if my English comprehension is wrong, my network is down, or the server is broken. "Try again" is cheap — I need to know _what_ to try. Include an error code, a one-line cause (e.g. "Could not reach conversation service"), and a contact path. |
-| 8   | /dashboard/conversations                             | Copy & Labels     | "Something went wrong" is a soft English idiom. Literal translation to Japanese ("何かがおかしくなった") is grammatical but uninformative. A more literal form like "Failed to load conversations" is clearer.                                                                                    | High         | Idioms that soften error messages help native speakers feel calm but leave non-native speakers guessing. Prefer the direct form.                                                                                                                                                                                          |
-| 9   | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | The primary tabs — "Design", "Routing", "Triggers", "Data" — are each single words with technical meanings I cannot infer. "Routing" in networking means packet routing; here it means something else. "Triggers" is ambiguous (gun trigger? database trigger? event trigger?).                   | Critical     | I clicked "Design" expecting visual design tools. I got a goal-setting form. Each tab should have a one-line description on hover.                                                                                                                                                                                        |
-| 10  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | The secondary tabs — "Flow", "Runs", "Variables", "Versions", "Bot" — are prefixed with single-character symbols (⎔ ◉ ∥ ⟳ ◐) that are not standard, are not labelled, and do not appear on any keyboard I use.                                                                                    | High         | Icons that are not universally recognised (e.g. "Bot" uses ◐ which means "half-moon" to me) force me to read the label and ignore the icon. They add visual noise without helping.                                                                                                                                        |
-| 11  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "Runs" as a noun is unclear. Does it mean "executions"? "Test runs"? "The bot is running"? The English word "run" has ~40 dictionary meanings.                                                                                                                                                    | High         | "Runs" should be "Execution history" or "Past conversations" — something that unambiguously states what I will see.                                                                                                                                                                                                       |
-| 12  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "Bot" tab — "bot" is fine as a word but in this context I do not know if it means "the AI persona settings", "the live deployment status", or "the LLM model configuration".                                                                                                                      | Medium       | More specific: "AI persona", "Agent config", or "Model settings".                                                                                                                                                                                                                                                         |
-| 13  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | The block name "Qualifier" is US sales jargon for "a question that screens a prospect". In Japanese sales ("営業の見込み判定") this concept exists but the English loan-word "qualifier" is not in common use.                                                                                    | High         | "Screening questions" or "Lead screening" would translate. "Qualifier" alone assumes US sales training.                                                                                                                                                                                                                   |
-| 14  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Block names "Opening", "Objection Handler", "Booking Handoff", "Post-Call Follow-up", "Escalation", "Summary" — several of these are idioms from US sales culture. "Handoff" (from American football) means "transfer to another person". "Escalation" means "move to a higher level of support". | High         | A non-native reader without US sales training cannot guess "Handoff" means "pass the conversation to a human". Spell it out: "Transfer to human".                                                                                                                                                                         |
-| 15  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | The sidebar description "Send link, confirm booked" uses telegraphic English (subject-dropped, article-dropped) that is common in US app UI but hard for ESL users to parse — "Send [the] link [and] confirm [that the meeting is] booked".                                                       | Medium       | Full sentences are kinder to non-native readers. "Send the booking link and confirm the meeting."                                                                                                                                                                                                                         |
-| 16  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "48h silence check, re-engage" — "48h" is fine (h = hour is international). "silence check" is a compound noun that does not exist in dictionaries; the reader must infer it. "re-engage" is marketing jargon.                                                                                    | Medium       | "If the prospect goes quiet for 48 hours, send a follow-up message" — longer but unambiguous.                                                                                                                                                                                                                             |
-| 17  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Simulator placeholder "Type as prospect…" — grammatically ambiguous. "As" could mean "in the role of" (impersonate) or "while you are" (concurrent action). "Prospect" is US sales jargon.                                                                                                        | High         | "Pretend you are the customer. Type a message." — clear, no idiom, no jargon.                                                                                                                                                                                                                                             |
-| 18  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | The simulator system message "Simulator is running in safe mode. Backed by… creates deterministic replies…" uses three technical terms — "safe mode" (gaming/OS idiom), "backed by" (informal), "deterministic" (CS jargon).                                                                      | High         | A non-native reader cannot decode "safe mode" without IT context, and "deterministic" requires computer-science vocabulary. State the meaning: "The simulator uses real message patterns but does not send to Instagram."                                                                                                 |
-| 19  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "GOAL", "HOW IT SHOULD SOUND", "GOOD EXAMPLES", "CAPTURE" — these section headings in the editor panel are good (full words, uppercase), BUT: "HOW IT SHOULD SOUND" is an English construction that does not translate word-for-word ("how should it sound" / "in what voice").                   | Medium       | "Tone and voice" or "Writing style" would be cleaner.                                                                                                                                                                                                                                                                     |
-| 20  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Hint text "Weave the question naturally. Never ask budget before value." — "Weave" is a metaphor (a weaver making cloth). "Never ask budget before value" is telegraphic ("ask about budget before establishing value"). Hard for ESL readers.                                                    | High         | "Ask the question in a natural, conversational way. Do not ask about the price/budget until the customer understands the value."                                                                                                                                                                                          |
-| 21  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Example question "What caught your attention about vending — side hustle or full-time move?" — "side hustle" is 2010s US slang for "secondary income work"; no direct translation. "full-time move" is also US casual register.                                                                   | High         | Examples should model clean English. Or add an explainer: "'Side hustle' means part-time work for extra income."                                                                                                                                                                                                          |
-| 22  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Button labels "+ add" and "+ rule" are lowercase telegraphic fragments. In a button, "Add example" or "Add rule" would be clearer.                                                                                                                                                                | Low          | Lowercase button text looks unfinished; an ESL reader may wonder if this is placeholder text.                                                                                                                                                                                                                             |
-| 23  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Top-right badge: "Live on v12 · 42 convos today" — "convos" is English slang abbreviation of "conversations". Not in dictionaries.                                                                                                                                                                | High         | I had to translate "convos" by guessing from "convo→conversation". "42 conversations today" would take 4 extra characters and remove the guess.                                                                                                                                                                           |
-| 24  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "Draft v13" / "Publish v13" — "v13" is version 13. Fine for developers. "Draft" is unambiguous. But "Publish v13" is telegraphic; longer form "Publish version 13" would be friendlier.                                                                                                           | Low          | Minor polish issue.                                                                                                                                                                                                                                                                                                       |
-| 25  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "Blocks" sidebar header with "DRAG ONTO CANVAS" instruction — "canvas" is a metaphor (a painter's canvas → an empty visual workspace). Familiar to designers, not to ESL general users.                                                                                                           | Medium       | "Drag a block into the workspace" is plainer.                                                                                                                                                                                                                                                                             |
-| 26  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | The zoom hint "⌘/Ctrl+wheel to zoom" is fine but assumes I know "wheel" means "mouse scroll wheel". On a Mac trackpad the gesture is pinch.                                                                                                                                                       | Low          | "Ctrl/⌘ + scroll to zoom" would be slightly clearer; mentioning trackpad pinch would help Mac users.                                                                                                                                                                                                                      |
-| 27  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | Tag pills on blocks — "Raises objection", "Handed off", "Price + post-call", "Positive", "Handled", "Booked" — these are past participles used as labels. "Handed off" requires knowing the verb "hand off" (US football idiom).                                                                  | High         | "Objection raised", "Transferred", "Price discussed after call", "Positive response", "Objection handled", "Meeting booked" — full phrases remove the guesswork.                                                                                                                                                          |
-| 28  | /dashboard/flows/ig-organic-dm (View prompt)         | Copy & Labels     | "Flow Builder editing ships in Week 7" — "ships" is English verb idiom for "will be released / deployed". Literally it means boats going to sea. A non-native reader parses this as "Flow Builder editing ships [plural noun] in Week 7".                                                         | High         | "Flow Builder editing will be available in Week 7" removes the idiom entirely.                                                                                                                                                                                                                                            |
-| 29  | /dashboard/flows/ig-organic-dm (View prompt)         | Copy & Labels     | "Zero qualification attempted in many conversations that died at value delivery" — "died at value delivery" is an extended business metaphor (conversation = living thing, "value delivery" = point in a sales process). Very hard for ESL.                                                       | Critical     | A paying marketer from Tokyo who reads this would not understand what was wrong. Rewrite plainly: "In many past conversations, the bot sent the booking link without first asking qualifying questions, and the customer stopped responding."                                                                             |
-| 30  | /dashboard/flows/ig-organic-dm (View prompt)         | Copy & Labels     | "Volunteered hesitations ('money and time') were ignored as signals" — "volunteered" as a verb (offered without being asked), "signals" as marketing term. Three levels of jargon.                                                                                                                | High         | "When the customer said 'I am worried about money or time', the bot ignored these concerns."                                                                                                                                                                                                                              |
-| 31  | /dashboard/flows/ig-organic-dm (View prompt)         | Copy & Labels     | "Minimum 2 qualifiers before booking link prevents calendar flooding" — telegraphic + jargon + compound metaphor. "Calendar flooding" is a coined phrase.                                                                                                                                         | High         | "Ask at least 2 screening questions before sending the booking link. This prevents too many low-quality meetings."                                                                                                                                                                                                        |
-| 32  | /dashboard/flows/ig-organic-dm (View prompt)         | Copy & Labels     | "Whereabouts are you located?" — shown as an example question. "Whereabouts" is informal British/Australian English; American English and ESL readers more often use "Where".                                                                                                                     | Low          | Fine in context but worth noting as a register shift.                                                                                                                                                                                                                                                                     |
-| 33  | /dashboard/flows/ig-organic-dm (View prompt)         | Copy & Labels     | "the highest-rapport qualifier" — "rapport" is a loan-word in English from French; fine for educated native speakers. "highest-rapport" as a compound adjective is unusual.                                                                                                                       | Medium       | "The most relationship-building question" is clearer.                                                                                                                                                                                                                                                                     |
-| 34  | /dashboard/conversations                             | Feedback & State  | The error page has no error code, no timestamp, no "Contact support" link, no email/Slack, no link to a status page. An ESL user who cannot self-diagnose has no escape route.                                                                                                                    | Critical     | In Japanese products I expect an error code (例: E-1023) I can copy and send to support. This page gives me nothing to paste.                                                                                                                                                                                             |
-| 35  | / (Home) and all pages                               | Trust & Safety    | No visible copyright notice, company name, privacy policy, or terms of service. For an ESL business user evaluating a paid tool, these signals establish legitimacy.                                                                                                                              | High         | When I evaluate a Western SaaS, I look for company address, ABN/EIN, privacy policy. The InstaSetter home page is one sentence and two buttons — no trust signals.                                                                                                                                                        |
-| 36  | / (Home) and /dashboard                              | Navigation & Flow | There is no top-level navigation bar, no logo that links home, no breadcrumbs. A non-native reader who gets lost has no visible "where am I?" anchor.                                                                                                                                             | High         | On /dashboard I cannot tell if I am one level deep or five levels deep. URLs like `/dashboard/flows/ig-organic-dm` are not shown in the UI.                                                                                                                                                                               |
-| 37  | /dashboard/flows/ig-organic-dm                       | Accessibility     | Icon-only buttons "−", "+", "⤢", "⊞", "×" have no visible text labels and (per the exploration log listing them as a bare character) appear to have no aria-labels either. A screen reader or auto-translation tool will speak "minus", "plus", "unicode character U+2922".                       | Critical     | I cannot tell what "⤢" does without clicking. For a non-native reader, icon-only buttons without tooltips or aria-labels are a dead end — my brain translates the icon to a concept, but these icons are not the standard ones (the magnifier glass, the X for close, etc. are OK; ⊞ ⤢ ◐ ∥ ⎔ ◉ are not).                  |
-| 38  | /dashboard/flows/ig-organic-dm                       | Visual & Layout   | Multiple panels overlap and intercept pointer events (per exploration log — tab clicks on "Design", "Routing", "Triggers", "Data", "Bot", "Runs", etc. all failed with "element is covered by another element").                                                                                  | **Blocker**  | Even if my English were perfect I could not click these tabs. For a non-native user this is doubly bad: I cannot tell if the button is disabled, if I am clicking in the wrong place, or if I do not have permission. No feedback at all.                                                                                 |
-| 39  | /dashboard/flows/ig-organic-dm                       | Feedback & State  | "Publish v13" button — clicking it did nothing visible (exploration log: "stayed — no navigation or state change"). No toast, no confirmation, no error. For a non-native reader, silence is the worst feedback.                                                                                  | Critical     | In a product where I am about to publish a production automation, I need a confirmation dialog: "You are about to publish version 13. This will send messages to real customers. [Cancel] [Yes, publish]." A silent click on "Publish" is terrifying.                                                                     |
-| 40  | /dashboard/conversations                             | Copy & Labels     | The word "Conversations" in the URL and the nav ("→ Conversations") is clear, but the page shows an error with no hint that the empty state might be intended (e.g. "No conversations yet"). I cannot tell if the system is broken or if there simply are no conversations.                       | High         | Empty state and error state look the same to me. The copy should distinguish: "No conversations yet" vs "Failed to load conversations".                                                                                                                                                                                   |
-| 41  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "↗ View Persona" button — "persona" is a loan-word (Latin→English) meaning "character mask". In marketing it means "target customer profile", in AI/LLM work it means "system prompt character". Without context I cannot guess which.                                                            | Medium       | "View AI character settings" or "View target customer profile" would disambiguate.                                                                                                                                                                                                                                        |
-| 42  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "Email Capture — Pair email ask with booking link" — "Pair" as imperative, "email ask" as noun phrase (verb-as-noun), "booking link" — three compressions in one line.                                                                                                                            | High         | "When you send the booking link, also ask for the customer's email address."                                                                                                                                                                                                                                              |
-| 43  | /dashboard/flows/ig-organic-dm                       | Copy & Labels     | "Summary — End-of-conversation write to leads" — "write to leads" is telegraphic marketing-ops jargon ("write data to the Leads table"). A non-native reader reads it as "write [something] to [the] leads" and is confused about who is writing what to whom.                                    | High         | "At the end of the conversation, save the customer's details to the leads database."                                                                                                                                                                                                                                      |
-| 44  | 404 page                                             | Copy & Labels     | "Page not found / Go home" — this is the clearest page in the product. Short, plain, no idioms.                                                                                                                                                                                                   | — (strength) | Good baseline. The rest of the product should match this register.                                                                                                                                                                                                                                                        |
-| 45  | All pages                                            | Copy & Labels     | No internationalisation (i18n) visible. No lang attribute on the body that I could identify, no language switcher, no currency selector, no date-format hints.                                                                                                                                    | Medium       | For a bot operating on Instagram (a global platform), supporting only US English is a big restriction. Even if the bot itself replies in English, the operator UI could be localised.                                                                                                                                     |
-| 46  | / (Home), /dashboard, /dashboard/flows/ig-organic-dm | Copy & Labels     | The arrow-right character "→" (U+2192) is used as a "call to action" indicator. Fine for native speakers, but in East Asian vertical-text reading order it is unusual. Not a problem in horizontal English layout — just a note.                                                                  | Low          | No action needed — merely observing that Western reading cues are used.                                                                                                                                                                                                                                                   |
+Three small pills on the right of the header:
+
+- **"Unpublished edits"** (orange dot)
+- **"Saved to Supabase"** (green dot)
+- **"Live: setter-v2"** (green dot)
+
+Each pill uses a different word for the same idea (state of saved-ness):
+
+- "Unpublished" — okay, I understand.
+- "Saved" — okay.
+- "Live" — three meanings in English: alive, live broadcast, currently active. Which one? Here it must mean "currently running in production". But I had to think.
+
+These three pills together create more confusion than they solve. The reader has to assemble: "draft is saved to a database called Supabase, but the live version is still the previous one called setter-v2, and there are unpublished changes." That is one sentence to think about. The user has to combine three different vocabulary words to understand the same concept (release state).
+
+Also: **"Supabase"** is a brand name. Most marketing users do not know what it is. Why do I, a marketer reviewing a flow, need to know which database the company uses? This is a leak from the engineering team into the user-facing copy. Internal vocabulary should not appear in marketer UI.
+
+**"setter-v2"** — what is "setter"? I went and read the README. Setter = "appointment setter" = person who books appointments. So the bot is the person who sets the appointment. In Japanese business culture we do not have this exact role; the closest term is 営業アシスタント (sales assistant). A first-time user has no chance of guessing what "setter" means. The product is named **InstaSetter** so the word is everywhere. It needs an explainer somewhere on the dashboard the first time someone arrives.
 
 ---
 
-## Summary of Top Issues for YUKI (Ranked)
+### Brand name: VendingPreneurs
 
-1. **Blocker — Error messages with zero specificity.** "Something went wrong / An unexpected error occurred / Try again" with no code, no cause, no support path. As a non-native reader I cannot distinguish a bug from my own misunderstanding.
-2. **Blocker — Tabs and buttons that cannot be clicked due to overlapping DOM.** Silent failure is the worst kind for anyone, but especially for non-native users who cannot read between the lines.
-3. **Critical — Unexpanded abbreviations everywhere.** "IG", "DM", "convos", "v12/v13" — define on first use, use full forms in headings.
-4. **Critical — US sales jargon as primary UI vocabulary.** "Setter", "Qualifier", "Handoff", "Escalation", "Post-Call", "prospect", "organic", "pair", "ask" (as noun) — each assumes US sales training. Translate to plain English.
-5. **Critical — Icon-only buttons without tooltips or aria-labels.** "⊞ ⤢ ◐ ∥ ⎔ ◉" are not universally recognised glyphs; they are a translation puzzle.
-6. **Critical — No confirmation on destructive/consequential actions.** Clicking "Publish v13" with no confirmation dialog is dangerous, and silence is the worst feedback for an ESL user.
-7. **High — Idioms and metaphors in copy.** "ships in Week 7", "died at value delivery", "calendar flooding", "weave the question", "side hustle", "hand off". Each of these needs a plain-English equivalent.
-8. **High — Telegraphic copy (dropped articles, dropped verbs).** "Send link, confirm booked", "Pair email ask with booking link", "End-of-conversation write to leads". Full sentences cost a few words and remove all ambiguity.
-9. **High — No glossary or tooltips.** For a product this dense with domain terms, a glossary or on-hover definitions would change the onboarding experience for any non-native reader.
-10. **Medium — No language switcher, no lang indicator.** ESL users need to know the product is English-only before investing time.
+Top-right of the screen: **"VendingPreneurs"**. This is a compound word: "vending" (machines that sell things) + "entrepreneurs" (people who start businesses). I had to read it three times — the second half of the word is hidden until you parse the first half. This is the user's brand, not the product's choice, so it cannot be changed. But the dashboard does not need to render it in a small grey label with no spacing — let it breathe. Right now it sits next to a yellow "DEV" badge and looks like part of the brand name.
 
 ---
 
-## What Would Make YUKI Love This Product
+### Left navigation: the five workspace items
 
-- Every abbreviation expanded on first use: "Instagram direct message (DM)" then "DM" is fine afterwards.
-- Full sentences in help text, no idioms, no metaphors.
-- Error messages with an error code, a specific cause, and a "Contact support" link.
-- Tooltips on every icon-only button with a 3–7 word description.
-- A glossary page linked from the footer explaining "qualifier", "handoff", "escalation", "prospect", "organic DM" in plain English.
-- Confirmation dialogs before publish/delete actions.
-- A language/region dropdown in the top navigation, even if only "English (US)" is supported today — so I know what I am getting.
+This is the part that hurt the most. The navigation is:
+
+| Label     | Subtitle          |
+| --------- | ----------------- |
+| Flow      | Edit the draft    |
+| Inbox     | Review real chats |
+| Variables | Check memory      |
+| Release   | What's live       |
+| Bot       | Global rules      |
+
+Each label is a single English word and each carries multiple meanings. A non-native reader has to disambiguate every one.
+
+1. **Flow** — water flow? Process flow? Cash flow? Here it is the conversation diagram. Okay.
+2. **Inbox** — email inbox? Yes I understand, email is universal.
+3. **Variables** — math variables? Programming variables? Both fit here. The subtitle "Check memory" is itself confusing — whose memory? The bot's? Mine? "Memory" in Japanese (記憶) is a person's memory. A computer's memory is RAM, also called メモリ. Here it means "what the bot remembers about a person", but that meaning is not obvious until you click in. Use "Stored values" or "Saved info" instead.
+4. **Release** — three meanings: (a) release someone from prison, (b) release a movie/album, (c) release software. Without a subtitle I do not know which. The subtitle "What's live" then introduces a fourth ambiguous word: "live" again. Two ambiguous words stacked together = no signal. Use **"Live version"** or **"Current release"**.
+5. **Bot** — okay.
+
+Across the five items, the subtitles use four different verbs ("Edit", "Review", "Check", "What's"), one missing verb ("Bot — Global rules"), and one of the subtitles itself contains an idiom-prone word ("memory"). Inconsistent grammar and inconsistent vocabulary make this hard to scan even for me, an engineer. A baker in Iowa with English as her first language will scan it fine. A French-Canadian brand owner won't.
+
+---
+
+### Footer of left nav: "Shared draft workspace."
+
+Bottom of the left rail. **"Shared draft workspace."** with a period at the end, as if it is a complete sentence, but it is actually a label.
+
+- "Shared" — with whom?
+- "Draft" — what kind of draft?
+- "Workspace" — Slack uses this word, Notion uses this word. Each app means something different by it.
+
+Three words, no anchor. I think this is supposed to mean "this is the team's editing area, not the live version". But the words alone do not communicate that. Even my native-speaker husband, who works in software in Australia, said "Shared draft workspace" — "shared with whom?".
+
+---
+
+### Canvas: block titles and descriptions
+
+Open the **Flow** tab. There are eight blocks. Reading them in order:
+
+#### 1. OPENING → Opening
+
+> "Greet warmly, detect initial interest, and ask for location as the first qualifier."
+
+- **"qualifier"** — in English grammar, a qualifier modifies a word. In sales English, a "qualifier" is something that decides if a person is a good prospect. A non-native sales reader does not know the second meaning. Suggest: **"qualifying question"**.
+
+#### 2. QUALIFIER → Qualifier
+
+> "Collect at least two of five qualifiers through natural conversation — location first, budget last."
+
+Same word "qualifier" repeated. Now I am sure it is sales jargon, but new readers learning the app meet "qualifier" for the first time on this canvas with no definition. There should be a tooltip or a short glossary.
+
+#### 3. OBJECTION → Objection Handler
+
+> "Acknowledge → probe → respond. Never skip to resolution."
+
+Three things wrong:
+
+- **"probe"** — in English-native sales training this is a technical term. In Japanese business "probe" translates as 探る (to feel out), which carries a slightly invasive feeling. Suggest: **"ask follow-up questions"**.
+- **"skip to resolution"** — "resolution" has two meanings (high-resolution image, OR an answer). A non-native reader hits both at once. Also "skip to" is a phrasal verb. Suggest: **"do not jump straight to the answer"**.
+- The arrow notation `→` is universal, that part is fine.
+
+#### 4. BOOKING → Booking Handoff
+
+> "Mirror back what you know, drop the booking link, and ask for email in the same message."
+
+This is the worst sentence on the page. Three idioms in one line:
+
+- **"Booking Handoff"** — handoff from whom to whom? Football term (American football) where the ball is passed between players. Japanese business uses 引き継ぎ (literally "take over") which is closer to "transition". Suggest: **"Booking transition"** or simply **"Booking step"**.
+- **"Mirror back"** — what does this mean? In Japanese, 鏡のように映す (reflect like a mirror) is a figurative phrase that does not appear in business contexts. Here it must mean "summarise what you've heard". Suggest: **"Summarise what you've heard"**.
+- **"drop the booking link"** — drop? Drop what? Drop the link on the floor? In English-native casual speech "drop a link" = "send the link". For a non-native reader the literal meaning (drop = let fall) is the first meaning. Suggest: **"send the booking link"**.
+
+I read this sentence four times. Each idiom has to be unpicked separately, and only after I understand all three can I assemble the full meaning.
+
+---
+
+### Inspector panel (after clicking Opening block)
+
+Right panel shows tabs: **Design / Routing / Triggers / Live**.
+
+- **"Routing"** — networking term. For a marketer, "what comes next" or "next step" is clearer.
+- **"Triggers"** — what triggers what? "Activates" is more universal.
+- **"Live"** — fourth time we've seen this word in the UI, with potentially a different meaning here.
+
+Below the tabs: **"Watch the prospect's energy. Don't interrogate. Ask one question — start with area. For the location gate (US/CA) just confirm city and state."**
+
+- **"Watch the prospect's energy"** — how do you watch someone's energy in a written DM? "Energy" here is a Western pop-psychology word (vibe, mood). For a non-native reader, "energy" means electrical energy or stamina. Suggest: **"Read the prospect's mood"** or **"Match how engaged they are"**.
+- **"interrogate"** — police interrogation. Heavy word. Suggest: **"don't ask too many questions in a row"**.
+- **"location gate"** — gate as in fence/door. In software English a "gate" is a check that blocks something. For a non-native reader, the first meaning is the literal one. Suggest: **"location check"**.
+
+Then on the right: a list — **"Why This Exists / Examples / Data Capture / Runtime Details"**.
+
+- **"Why This Exists"** — okay, that is clear.
+- **"Data Capture"** — capture is a strong word, like capture a soldier. Most non-native readers would understand "Captured info" or "What is collected".
+- **"Runtime Details"** — runtime is a software-engineering term. For marketers it means nothing. Suggest: **"How it runs"** or hide this from non-engineering users entirely.
+
+---
+
+### Simulator (after clicking "Preview replies")
+
+A small panel pops up titled **"Simulator — Live preview"**. There are two modes: **"Edit mode"** and **"Run mode"**, plus a button **"Ready to test"**.
+
+Wait. The button on send was disabled and labelled **"Send"**, but pressing the visible **"Run"** button worked. Two verbs for the same action ("send" vs "run") in the same widget. Pick one.
+
+Above the input field: **"Try a real prospect opener"**.
+
+- **"prospect"** — sales jargon for "potential customer". Non-native readers know "future prospect = future possibility". The sales meaning is a US-business specific shortening.
+- **"opener"** — first message. This is a word from improv comedy, dating apps, and stand-up comedy. Not a word a global business user would recognise. Suggest: **"Try a sample first message"**.
+
+---
+
+### Block library (palette drawer)
+
+Opening the palette shows the categories: **"Opening / Qualifier / Objection / Booking / Email Capture / Follow-Up / Escalation / Summary"**.
+
+- **"Escalation"** — climb up? Escalating a conflict? In support-team jargon "escalation" = pass to a senior. For a non-native reader, escalation is most often associated with conflict (an argument escalating). Suggest: **"Hand off to human"**.
+- **"Follow-Up"** — okay, this one I know. Common business term.
+- **"Capture"** — already mentioned above.
+
+---
+
+### Inbox tab — the worst label confusion
+
+The tab is called **"Inbox"** but the page heading says **"Brand inbox"** and there is a status pill **"Brand-wide only"**. Then below, an orange notice:
+
+> "Inbox metrics and transcripts below include all VendingPreneurs conversations until flow_id lands on the conversations table."
+
+Words I have to translate:
+
+- **"Brand-wide"** — "wide" means "across the whole brand", not "wide" as in physical width. Compound adjective. Suggest: **"all brand conversations"** or **"brand-level"**.
+- **"flow_id lands on the conversations table"** — three idioms stacked: (a) "lands on" is a metaphor (planes land), (b) "flow_id" is a technical column name, (c) "the conversations table" is database terminology. This sentence is written for a backend engineer, not a marketer. The marketer who opens this page does not know what any of these words mean, in any language. Suggest: **"Until we can split conversations by flow, this inbox shows all conversations for VendingPreneurs."**
+
+Then four metric cards: **STARTED TODAY / BOOKED / COMPLETED / STALLED**.
+
+- **"STALLED"** — a car stalls. A motor stalls. A negotiation stalls. Three different mechanical meanings. For a non-native reader, the dictionary meaning is "the engine stopped working". Here it must mean "no recent activity". Suggest: **"NO REPLY"** or **"INACTIVE"**.
+- **"BOOKED"** vs **"COMPLETED"** — what is the difference? Booked an appointment? Completed the conversation? Completed the booking? I cannot tell from the labels alone.
+
+---
+
+### Variables tab
+
+> "A plain-English map of what the bot remembers, where those values are captured, and which details persist across conversations."
+
+- **"plain-English map"** — "plain English" itself means "easy English", but for non-native readers it sounds like an idiom. We say "simple language" or "easy to read". Also a "map" is geographic — for a marketer, a "map" of variables is metaphorical and unclear.
+- **"persist across conversations"** — "persist" is a programming term for "stays in storage". In normal English, "persist" means "to keep doing something stubbornly". Different meaning. Suggest: **"are kept across conversations"**.
+
+The three category cards say:
+
+- **"Brand stays put forever."** — "stays put" is an idiom meaning "does not move". For a non-native reader, the words "put" and "stays" together do not parse easily. Suggest: **"is fixed permanently"**.
+- **"Contact follows a person across every conversation."** — "follows a person" sounds like stalking. Suggest: **"belongs to one person across all conversations"**.
+- **"Conversation is scoped to a single thread."** — "scoped to" is engineering jargon (scope = visibility in code). Suggest: **"only applies to one conversation"**.
+
+In the table: **"Set manually"** under "CAPTURED BY". I think this means a human typed it in. But "CAPTURED BY" headed by a verb-passive feels strange. "Source: manual" would be clearer.
+
+The orange banner says: **"This page shows the current shared draft values and where each variable is captured. Creating variables and row-level actions is not wired yet."**
+
+- **"row-level actions"** — table-row actions, an engineering pattern. The marketer does not know.
+- **"is not wired yet"** — "wired" is electrical-cable metaphor. Engineering jargon. Suggest: **"is not built yet"** or **"is coming soon"**.
+
+---
+
+### Release tab
+
+The page heading is **"Release status"**. The subtitle:
+
+> "A marketer-facing reality check: what is saved in the shared draft, what still powers live replies, and what this screen can help you confirm today."
+
+Five idioms:
+
+- **"reality check"** — figurative phrase meaning "honest comparison". For a non-native reader, "reality" + "check" suggests a mental health context. We say "realistic comparison".
+- **"shared draft"** — see above.
+- **"powers live replies"** — "powers" as a verb (provides power to). "Live" as in live conversation. Suggest: **"is used to generate live replies"**.
+- **"confirm today"** — confirm what? The verb has no clear object.
+
+The four cards on this page each say something different about state:
+
+| Card title                                                   | Body                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| DRAFT WORKSPACE — Unpublished edits                          | "The shared draft has editor changes that are not live in Instagram yet."                       |
+| LIVE RUNTIME — Live: setter-v2                               | "New conversations still use the compiled setter-v2 prompt until publish wiring lands."         |
+| PROMPT SOURCE — Compiled from src/lib/prompts/sections/\*.ts | "Prompt Reader shows the live source sections that feed setter-v2 today."                       |
+| SIMULATOR — Live prompt only                                 | "In this environment the simulator runs the compiled setter-v2 prompt without draft overrides." |
+
+Looking at this together is a vocabulary stress test:
+
+- "shared draft", "editor changes", "not live", "live runtime", "compiled", "publish wiring lands", "prompt source", "live source sections", "feed setter-v2", "simulator", "compiled setter-v2 prompt", "draft overrides".
+
+Twelve different words used in four cards to describe one thing: the difference between "what the marketer is editing" and "what the customers see". A non-native reader has to track twelve vocabulary items at the same time, plus the file path `src/lib/prompts/sections/*.ts` which has no business being shown to a marketer.
+
+The fix is not to remove the page — the page is useful — but to standardise vocabulary. Pick two words: "draft" (what you are editing) and "live" (what customers see). Use only those two everywhere.
+
+The orange banner at the top of this page also says: **"Publish controls and release history are not wired yet."** — "wired" again.
+
+The bottom section headed **"Recommended workflow today"** — what does "today" do here? Is the recommendation different tomorrow? Suggest: **"Recommended steps"** or remove the word "today".
+
+---
+
+### Bot tab — Appointment Setter
+
+Title: **"Appointment Setter"**. Subtitle: **"Inspect the global persona and guardrails behind every reply."**
+
+- **"Inspect"** — okay, technical-sounding but acceptable.
+- **"global persona"** — global as in "applies to all"? Or worldwide? "Persona" is a marketing-research word (target persona). For a non-native reader who has not done English-language marketing courses, this is unclear.
+- **"guardrails"** — physical metal barriers on highways. The metaphorical meaning ("safety constraints") is a 2022-era startup vocabulary word and not universally known. Suggest: **"safety rules"** or **"limits"**.
+
+Display name input: **"Not named — shared team inbox"**.
+
+- The placeholder text is also a hint AND a status. Two purposes in one field, which makes it confusing. Is the field disabled? Did I just not enter a name yet? After clicking I see it is editable. Move "shared team inbox" out of the placeholder into a help label below.
+
+Then the persona is shown in collapsed sections:
+
+| Section                     | Status pill |
+| --------------------------- | ----------- |
+| Identity — HARD RULES       | LOCKED      |
+| Voice                       | EDITABLE    |
+| Message Length — HARD LIMIT | LOCKED      |
+| Affirmation Rules           | EDITABLE    |
+
+Three different status systems running in parallel:
+
+- **"HARD RULES"** vs **"HARD LIMIT"** — what is the difference? Both have a lock icon. To me, "hard" suggests "difficult" first, then "strict". The word "hard" is doing too much work. We have soft drinks and hard drinks, soft science and hard science, hard work, hard luck, hardware. Each carries a different meaning. Suggest: **"FIXED RULES"** or **"NOT EDITABLE"**.
+- **"LOCKED"** + **"HARD RULES"** — the icon already says locked, the badge already says HARD RULES. Two redundant signals.
+- **"Affirmation Rules"** — "affirmation" is a Western therapy concept. In Japanese business there is no direct equivalent. The closest is 共感 (empathy), but the bot is not really empathising — it is acknowledging. Suggest: **"Acknowledgement Rules"** or simply **"Validation rules"**.
+
+Inside the Voice section is the line:
+
+> **"Tone is customisable per brand. Peer-mentor beats salesperson 3:1."**
+
+This sentence stopped me cold for almost a minute. Let me unpack:
+
+- **"Peer-mentor"** — a compound noun. A peer is an equal; a mentor is a teacher. So "peer-mentor" means a teacher who is your equal. Friendly senior coworker. This concept has no single word in Japanese.
+- **"beats"** — the verb. Two meanings: (a) wins against, like "Japan beat Germany at football", (b) hits, like "beat a drum". Here it means (a). But for a non-native reader processing this sentence the literal violent meaning is the first to appear.
+- **"3:1"** — a ratio. But ratio of what? Wins out of attempts? Conversations per minute? Without the surrounding context I genuinely cannot tell what is being measured. Looking at the source code I find it means "use the peer-mentor tone three times more than the salesperson tone". That is hard to derive from the sentence as written.
+
+Suggest: **"Tone is configurable per brand. Sound like a friendly senior coworker, not a salesperson — about 75% friendly, 25% salesy."** — uses concrete percentages and removes the sports metaphor.
+
+Voice content body:
+
+- **"Match the prospect's energy and formality level."** — "energy" again. "Formality" is okay.
+- **"keep yours tight"** — "keep tight" as in "keep your messages short"? In Japanese "tight" (タイト) means small/snug clothing. The verb "keep" + "tight" together is hard to parse. Suggest: **"keep your messages short too"**.
+- **"Write like a real person texting, not like an essay."** — okay, this is clear and helpful. Good sentence.
+- **"No em dashes."** — em dash is a punctuation term. Most non-native marketers do not know what an em dash is. Suggest showing the symbol: **"No em dashes (—). Use commas and periods."**
+
+---
+
+### Mobile / tablet gate
+
+I tried opening the page on mobile (iPhone). I got a message:
+
+> **"Flow Builder needs a desktop. Editing the flow uses a multi-panel canvas that doesn't fit on a phone or small tablet. Open this page on a screen at least 1024px wide. You can still monitor live conversations on your phone."**
+
+This is the clearest copy on the entire app. Praise:
+
+- The first sentence states the rule.
+- The second sentence states the why.
+- The third sentence states the how (specific number: 1024px).
+- The fourth sentence offers an alternative ("You can still…").
+
+This is the format every other piece of copy in the app should follow. Whoever wrote this — please write the rest of the app.
+
+The only nitpick: "1024px" is a developer's measurement. A non-engineer brand owner does not know what 1024px looks like. They know "phone, tablet, laptop, desktop". Suggest: **"Open this page on a laptop or desktop computer."** and put "(at least 1024px wide)" in smaller grey text below.
+
+---
+
+### Idioms catalog
+
+For the team's reference, here are every idiom and ambiguous word I encountered, in the order I met them. If you cannot replace them all at once, replace these ones first (highest impact first):
+
+| #   | Phrase                                                              | Where                            | Severity | Suggested replacement                                                                      |
+| --- | ------------------------------------------------------------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| 1   | "drop the booking link"                                             | Booking block description        | Critical | "send the booking link"                                                                    |
+| 2   | "flow_id lands on the conversations table"                          | Inbox banner                     | Critical | "Until we can split conversations by flow, this shows all of VendingPreneurs"              |
+| 3   | "Mirror back what you know"                                         | Booking block description        | Critical | "Summarise what you've heard"                                                              |
+| 4   | "Peer-mentor beats salesperson 3:1"                                 | Voice section                    | Critical | "Sound like a friendly coworker, about 75% of the time, and a salesperson 25% of the time" |
+| 5   | "STALLED"                                                           | Inbox metric card                | High     | "NO REPLY" or "INACTIVE"                                                                   |
+| 6   | "Booking Handoff"                                                   | Block title                      | High     | "Booking step" or "Booking transition"                                                     |
+| 7   | "guardrails"                                                        | Bot subtitle                     | High     | "safety rules"                                                                             |
+| 8   | "Edit the shared draft and sanity-check tone before anything ships" | Header subtitle                  | High     | "Edit the team draft and check the tone before publishing"                                 |
+| 9   | "Live: setter-v2" status pill                                       | Page header                      | High     | "Currently live: setter-v2"                                                                |
+| 10  | "Stays put forever"                                                 | Variables card                   | High     | "Permanent — does not change"                                                              |
+| 11  | "scoped to"                                                         | Variables card                   | High     | "only applies to"                                                                          |
+| 12  | "is not wired yet"                                                  | Variables banner, Release banner | High     | "is not built yet" or "coming soon"                                                        |
+| 13  | "powers live replies"                                               | Release subtitle                 | High     | "is used to generate live replies"                                                         |
+| 14  | "reality check"                                                     | Release subtitle                 | High     | "comparison"                                                                               |
+| 15  | "qualifier" (sales sense)                                           | Multiple block descriptions      | High     | First mention should define it                                                             |
+| 16  | "probe"                                                             | Objection block                  | High     | "ask follow-up questions"                                                                  |
+| 17  | "skip to resolution"                                                | Objection block                  | High     | "do not jump to the answer"                                                                |
+| 18  | "watch the prospect's energy"                                       | Inspector                        | High     | "match how engaged the prospect is"                                                        |
+| 19  | "interrogate"                                                       | Inspector                        | High     | "ask too many questions"                                                                   |
+| 20  | "location gate"                                                     | Inspector                        | High     | "location check"                                                                           |
+| 21  | "data capture"                                                      | Inspector right rail             | Medium   | "what is collected"                                                                        |
+| 22  | "runtime details"                                                   | Inspector right rail             | Medium   | "how it runs" or hide                                                                      |
+| 23  | "Try a real prospect opener"                                        | Simulator                        | Medium   | "Try a sample first message"                                                               |
+| 24  | "Send" disabled vs "Run" active                                     | Simulator                        | Medium   | Pick one verb                                                                              |
+| 25  | "Brand-wide"                                                        | Inbox status pill                | Medium   | "All brand conversations"                                                                  |
+| 26  | "Brand inbox" vs "Inbox" tab                                        | Inbox heading vs tab             | Medium   | Match the tab and heading                                                                  |
+| 27  | "BOOKED" vs "COMPLETED"                                             | Inbox cards                      | Medium   | Disambiguate or merge                                                                      |
+| 28  | "Plain-English map of what the bot remembers"                       | Variables subtitle               | Medium   | "Simple list of what the bot remembers"                                                    |
+| 29  | "persist across conversations"                                      | Variables subtitle               | Medium   | "are kept across conversations"                                                            |
+| 30  | "row-level actions"                                                 | Variables banner                 | Medium   | "actions per row" or remove                                                                |
+| 31  | "Saved to Supabase"                                                 | Header status pill               | Medium   | "Saved" (drop "to Supabase" — internal)                                                    |
+| 32  | "Escalation"                                                        | Block library                    | Medium   | "Hand off to human"                                                                        |
+| 33  | "global persona"                                                    | Bot subtitle                     | Medium   | "the persona that applies to all blocks"                                                   |
+| 34  | "Affirmation Rules"                                                 | Bot persona section              | Medium   | "Acknowledgement Rules"                                                                    |
+| 35  | "HARD RULES" / "HARD LIMIT" / "LOCKED" / "EDITABLE"                 | Bot status pills                 | Medium   | Pick two states only: "Editable" or "Fixed"                                                |
+| 36  | "Inspect the global persona and guardrails"                         | Bot subtitle                     | Medium   | "See the persona and safety rules"                                                         |
+| 37  | "Shared draft workspace."                                           | Left nav footer                  | Medium   | "Team draft area" or remove                                                                |
+| 38  | "tight" (in voice content)                                          | Bot voice section                | Medium   | "short"                                                                                    |
+| 39  | "1024px" in mobile gate                                             | Mobile gate                      | Low      | "Use a laptop or desktop"                                                                  |
+| 40  | "Recommended workflow today"                                        | Release tab                      | Low      | "Recommended steps"                                                                        |
+| 41  | "VendingPreneurs" tight against "DEV"                               | Header chrome                    | Low      | Add spacing                                                                                |
+| 42  | "ships"                                                             | Header subtitle                  | Low      | "is published"                                                                             |
+
+---
+
+### Findings table
+
+| #   | Page                          | Category          | Finding                                                                                                                                                                                                                                                                | Severity | Persona Rationale                                                                                                                                                                                                                                                   |
+| --- | ----------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | All tabs (header)             | Copy & Labels     | The subtitle "Edit the shared draft and sanity-check tone before anything ships" stacks three idioms ("shared draft", "sanity-check", "ships") before the user has done anything.                                                                                      | Critical | Yuki has to translate three idiomatic phrases in a single sentence to understand what page she is on. The first 30 seconds in any app determine if a non-native reader will continue.                                                                               |
+| 2   | All tabs (header)             | Copy & Labels     | "Live: setter-v2" pill uses "live" with an ambiguous meaning that recurs throughout the app with different meanings ("Live preview", "live replies", "what's live").                                                                                                   | Critical | The word "live" appears at least four times across the app and means "currently active in production" each time, but English-as-second-language users have to consider three other meanings (alive, live broadcast, live performance) every time they see the word. |
+| 3   | All tabs (header)             | Copy & Labels     | "Saved to Supabase" exposes an internal database brand name to marketing users.                                                                                                                                                                                        | High     | Yuki does not know what Supabase is. The marketer she sits next to in Tokyo certainly will not. The word adds noise without adding meaning — it should be "Saved" only.                                                                                             |
+| 4   | Flow tab — Booking block      | Copy & Labels     | "Mirror back what you know, drop the booking link, and ask for email in the same message" stacks three idioms in one sentence on the most important block (the conversion step).                                                                                       | Critical | Yuki had to read this sentence four times. Each idiom — "mirror back", "drop the link", "in the same message" — required separate decoding. The booking step is the highest-stakes point in the flow; its description is the least understandable.                  |
+| 5   | Flow tab — Block titles       | Copy & Labels     | "Booking Handoff" uses an American-football metaphor ("handoff") to describe a step in a chat flow.                                                                                                                                                                    | High     | Yuki does not have a Japanese equivalent for "handoff" in conversational software. The literal meaning (passing a ball between players) is what she sees first.                                                                                                     |
+| 6   | Flow tab — Block descriptions | Copy & Labels     | "qualifier" appears twice without ever being defined.                                                                                                                                                                                                                  | High     | "Qualifier" is sales jargon. A grammar-aware non-native reader reads it as a grammar term first. The app uses it as a noun for "qualifying questions" but never says so.                                                                                            |
+| 7   | Flow tab — Objection block    | Copy & Labels     | "Acknowledge → probe → respond. Never skip to resolution." uses "probe" (interrogation), "skip" (jump over), and "resolution" (image quality OR an answer) — all ambiguous.                                                                                            | High     | The most useful sentence on the Objection block is also the hardest to parse. The arrow notation is fine; the verbs and nouns are not.                                                                                                                              |
+| 8   | Flow tab (Inspector)          | Copy & Labels     | "Watch the prospect's energy" uses the Western pop-psychology meaning of "energy".                                                                                                                                                                                     | High     | Yuki reads "energy" as electrical or physical stamina first. The intended meaning ("mood/engagement level") is a culturally specific interpretation.                                                                                                                |
+| 9   | Flow tab (Inspector tabs)     | Copy & Labels     | "Routing", "Triggers", "Live" — three software-engineering terms used as marketer-facing tab labels.                                                                                                                                                                   | High     | Yuki recognises these as engineering vocabulary because she is one. A marketer would not. The labels do not describe what the tab contains.                                                                                                                         |
+| 10  | Flow tab (Simulator)          | Forms & Input     | "Send" button is disabled while a parallel "Run" button is the working action. Same widget, two verbs for the same operation.                                                                                                                                          | High     | Yuki tried Send first because that is the universal English verb for chat. It was disabled with no explanation. She had to find Run. Inconsistency confuses learners more than experts.                                                                             |
+| 11  | Flow tab (Simulator)          | Copy & Labels     | "Try a real prospect opener" uses "opener" (improv/dating slang).                                                                                                                                                                                                      | Medium   | Yuki has never seen "opener" used to mean "first message". She had to infer from context.                                                                                                                                                                           |
+| 12  | Inbox tab                     | Copy & Labels     | "Inbox metrics and transcripts below include all VendingPreneurs conversations until flow_id lands on the conversations table." — exposes a database column name and uses "lands on" as a metaphor.                                                                    | Critical | This sentence is written for an engineer, not a marketer. Yuki, who is an engineer, can decode it. The marketer who actually owns this brand cannot.                                                                                                                |
+| 13  | Inbox tab                     | Copy & Labels     | The metric "STALLED" is ambiguous (engine stalled, conversation stalled, negotiation stalled).                                                                                                                                                                         | High     | Yuki's first reading of "stalled" is mechanical. The intended meaning (no recent message) is not derivable from the word alone.                                                                                                                                     |
+| 14  | Inbox tab                     | Copy & Labels     | "BOOKED" and "COMPLETED" are not visibly distinguishable.                                                                                                                                                                                                              | Medium   | Yuki cannot tell whether a conversation that booked is also "completed", or whether they are exclusive states. The labels need to be either combined or distinguished with helper text.                                                                             |
+| 15  | Inbox tab                     | Navigation & Flow | The tab is labelled "Inbox" but the page heading is "Brand inbox", and the status pill is "Brand-wide only". Three different framings of the same scope.                                                                                                               | Medium   | Yuki has to mentally reconcile three different phrasings on one page.                                                                                                                                                                                               |
+| 16  | Variables tab                 | Copy & Labels     | "A plain-English map" — uses "plain English" as an idiom. The subtitle then mixes "plain-English" with "map" (geographic) for what is actually a list.                                                                                                                 | Medium   | The page is a list, not a map. The phrase "plain-English" is itself an idiom that says "easy English".                                                                                                                                                              |
+| 17  | Variables tab                 | Copy & Labels     | "Brand stays put forever", "Contact follows a person", "Conversation is scoped to a single thread" — three different verb metaphors for "stored at three different scopes".                                                                                            | High     | Yuki has to translate "stays put", "follows", and "scoped to" separately. Three sentences for one parallel concept. They should be parallel: "Brand: stored once, permanently. Contact: stored per person. Conversation: stored per chat."                          |
+| 18  | Variables / Release           | Copy & Labels     | "is not wired yet" — uses electrical-cable metaphor.                                                                                                                                                                                                                   | High     | "Wired" suggests electrical work. Yuki has to translate this as "not built yet".                                                                                                                                                                                    |
+| 19  | Release tab                   | Copy & Labels     | "A marketer-facing reality check: what is saved in the shared draft, what still powers live replies, and what this screen can help you confirm today." — uses five idioms and three different phrasings of the same state.                                             | Critical | Yuki's translator has to handle "reality check", "shared draft", "powers live replies", "help you confirm", "today" all in one sentence to understand what the page is for.                                                                                         |
+| 20  | Release tab                   | Copy & Labels     | The four cards (DRAFT WORKSPACE, LIVE RUNTIME, PROMPT SOURCE, SIMULATOR) introduce 12 different vocabulary items for the same fundamental concept (draft vs live).                                                                                                     | Critical | Yuki has to track 12 separate words referring to two states. The fix: standardise to two terms ("draft" and "live") and use them everywhere.                                                                                                                        |
+| 21  | Release tab                   | Copy & Labels     | The card "PROMPT SOURCE — Compiled from src/lib/prompts/sections/\*.ts" displays a file path to a marketer.                                                                                                                                                            | High     | Yuki understands what `*.ts` means. A marketer does not. File paths do not belong in marketer UI.                                                                                                                                                                   |
+| 22  | Bot tab                       | Copy & Labels     | "Inspect the global persona and guardrails behind every reply" — "global persona" (worldwide?) + "guardrails" (highway barriers?).                                                                                                                                     | High     | "Persona" is marketing-research vocabulary; "guardrails" is 2022 startup vocabulary; "global" is an English engineering adjective. Stacked, they are unparseable for a non-native reader.                                                                           |
+| 23  | Bot tab                       | Copy & Labels     | "Tone is customisable per brand. Peer-mentor beats salesperson 3:1."                                                                                                                                                                                                   | Critical | Yuki spent over a minute on this sentence. "Beats" can mean wins or hits. "3:1" is a ratio of unspecified things. "Peer-mentor" is a compound noun without a Japanese equivalent. The sentence loses meaning at three of its four key words.                        |
+| 24  | Bot tab                       | Copy & Labels     | "HARD RULES", "HARD LIMIT", "LOCKED", "EDITABLE" — four different status words for two states (editable / not editable). The "LOCKED" pill duplicates the lock icon next to it.                                                                                        | Medium   | The combination "Persona — HARD RULES — LOCKED" creates ambiguity: is it locked because it's hard? Are hard rules and a hard limit the same thing? Yuki has to read the badges in sequence to understand.                                                           |
+| 25  | Bot tab                       | Copy & Labels     | "Affirmation Rules" — Western therapy/self-help vocabulary.                                                                                                                                                                                                            | Medium   | "Affirmation" in Japanese maps closest to 肯定 (kotei, affirmation/agreement) but is rarely used in business software. "Acknowledgement" is more international.                                                                                                     |
+| 26  | Bot tab — Voice section       | Copy & Labels     | "Match the prospect's energy and formality level. If they write in paragraphs, respond in kind. If they send one-liners, keep yours tight." — uses "energy", "respond in kind" (idiom for "match"), "one-liners" (stand-up comedy slang), "tight" (idiom for "short"). | High     | Four idioms in two sentences. The intended meaning (match style and length) is buried under translation work.                                                                                                                                                       |
+| 27  | Bot tab — Voice section       | Copy & Labels     | "No em dashes" — "em dash" is a typography term.                                                                                                                                                                                                                       | Low      | A marketer probably does not know what an em dash is. Show the symbol.                                                                                                                                                                                              |
+| 28  | Bot tab                       | Forms & Input     | The Display name placeholder "Not named — shared team inbox" mixes a state ("Not named") and a hint ("shared team inbox") in one field.                                                                                                                                | Medium   | Yuki cannot tell at a glance whether the field is empty or contains "shared team inbox" as a value. Move the hint to helper text.                                                                                                                                   |
+| 29  | Left nav                      | Copy & Labels     | The five workspace items use single English words ("Flow", "Inbox", "Variables", "Release", "Bot") each with multiple meanings. The subtitles use inconsistent grammar (verb / verb / verb / non-verb / non-verb).                                                     | High     | Yuki has to translate every label and every subtitle. The lack of grammatical parallelism in the subtitles makes them impossible to scan.                                                                                                                           |
+| 30  | Left nav (footer)             | Copy & Labels     | "Shared draft workspace." — three abstract words forming a sentence-like label with no anchor.                                                                                                                                                                         | Medium   | Yuki cannot tell who the workspace is shared with. The period at the end suggests this is a complete thought; it is actually a description of the page.                                                                                                             |
+| 31  | Header (chrome)               | Visual & Layout   | "VendingPreneurs" sits tight against a yellow "DEV" pill, making it look like part of the brand name.                                                                                                                                                                  | Low      | Yuki initially read "VendingPreneursDEV". The compound word is already hard for a non-native reader; adjacent badges make it harder.                                                                                                                                |
+| 32  | All tabs                      | Copy & Labels     | The product name "InstaSetter" and the role "setter" are nowhere defined for a first-time non-native reader.                                                                                                                                                           | High     | Yuki had to read the README to learn that "setter" means "appointment setter". Inside the app there is no glossary, tooltip, or first-run explanation.                                                                                                              |
+| 33  | Mobile gate                   | Copy & Labels     | "Open this page on a screen at least 1024px wide." — px is developer vocabulary.                                                                                                                                                                                       | Low      | A marketer probably does not know how to convert pixels to a device. "Open this on a laptop or desktop" with "(at least 1024px)" in smaller text would be friendlier.                                                                                               |
+| 34  | All tabs                      | Feedback & State  | The status badge "Unpublished edits" appears in three places (header pill, Release page card, Release page status pill) using slightly different framings.                                                                                                             | Medium   | Yuki sees the same state three times. The repetition suggests it is important, but it is unclear if these are the same status or different statuses.                                                                                                                |
+| 35  | Block library (palette)       | Copy & Labels     | "Escalation" — implies conflict to a non-native reader (an argument escalating). The intended meaning is "hand off to a human".                                                                                                                                        | High     | Yuki's first reading of "Escalation" is "the conversation is getting worse". The intended meaning (transfer to human) is a corporate-support sense she may not know.                                                                                                |
+
+---
+
+### Gut feel scores (1-5)
+
+- **Flow tab** (canvas): **2** — Functional but the block descriptions are dense with idioms. I can build a mental model with effort, but every reading slows me down.
+- **Inbox tab**: **2** — The orange banner exposing `flow_id` and `conversations table` is an own-goal. The metric labels (STALLED especially) are ambiguous.
+- **Variables tab**: **3** — The three category cards have parallel structure (good) but use inconsistent verbs (bad).
+- **Release tab**: **2** — Twelve vocabulary items for two states. This is the page where I felt most lost.
+- **Bot tab**: **2** — "Peer-mentor beats salesperson 3:1" alone is a 1, but the rest is a 3, so I average to 2.
+- **Mobile gate**: **5** — The clearest copy in the app. Direct, structured, and gives an alternative.
+- **Overall**: **2** — Functional but confusing for a non-native English reader.
+
+---
+
+### Three changes I would make first
+
+If the team can only do three things this sprint:
+
+1. **Standardise the draft/live vocabulary to two words.** Pick "draft" (what marketers edit) and "live" (what customers see). Replace every instance of "shared draft", "live runtime", "live replies", "live source", "compiled prompt", "publish wiring", "Live: setter-v2", "powers live replies", "live preview" with one of the two words. This single change removes the largest source of confusion.
+2. **Replace the four worst sentences.** "Peer-mentor beats salesperson 3:1", "Mirror back what you know, drop the booking link, and ask for email in the same message", "Edit the shared draft and sanity-check tone before anything ships", and "until flow_id lands on the conversations table". Each one stops a non-native reader cold. Each one is one sentence. That is four sentences to rewrite.
+3. **Add a one-sentence definition for "setter", "qualifier", "prospect", and "handoff".** Either a glossary page, or hover tooltips, or first-run banners. These four sales-jargon words appear on almost every screen and are invisible to anyone who has not done English-language sales training.
+
+The mobile gate copy is the model. Whoever wrote it already knows how to write for non-native readers. Let them rewrite the rest.
+
+— Yuki

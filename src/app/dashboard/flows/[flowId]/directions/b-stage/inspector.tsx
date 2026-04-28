@@ -269,7 +269,7 @@ function DesignTab({
         <Field
           label="Marketer examples"
           action="+ add"
-          hint="Draft overrides for this block. Persisted in Supabase."
+          hint="Draft overrides for this block. Saved to the shared draft."
           onAction={() => actions.addExample(block.id, 'New example — edit me')}
         >
           {block.examples.length === 0 && (

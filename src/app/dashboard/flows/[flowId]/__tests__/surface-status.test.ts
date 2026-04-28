@@ -24,10 +24,10 @@ describe('surface status copy', () => {
     expect(String(status.detail)).toContain('no unpublished editor changes')
   })
 
-  it('reports Supabase save state separately from publish state', () => {
+  it('reports save state separately from publish state', () => {
     expect(getDraftSaveStatus('pending').label).toBe('Save pending')
     expect(getDraftSaveStatus('saving').label).toBe('Saving draft')
-    expect(getDraftSaveStatus('saved').label).toBe('Saved to Supabase')
+    expect(getDraftSaveStatus('saved').label).toBe('Saved')
     expect(getDraftSaveStatus('error').label).toBe('Save failed')
   })
 
@@ -46,10 +46,12 @@ describe('surface status copy', () => {
   })
 
   it('keeps scope messaging explicit across marketing-facing tabs', () => {
-    expect(BRAND_INBOX_STATUS.label).toBe('Brand-wide only')
-    expect(String(BRAND_INBOX_STATUS.detail)).toContain('flow_id')
+    expect(BRAND_INBOX_STATUS.label).toBe('All flows')
+    expect(String(BRAND_INBOX_STATUS.detail)).toContain(
+      'Per-flow filtering is coming soon'
+    )
     expect(VARIABLE_REFERENCE_STATUS.label).toBe('Reference only')
     expect(RELEASE_STATUS_INTRO.label).toBe('Release status')
-    expect(getLiveRuntimeStatus().label).toBe('Live: setter-v2')
+    expect(getLiveRuntimeStatus().label).toBe('Live')
   })
 })

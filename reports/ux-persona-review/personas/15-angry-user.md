@@ -1,98 +1,150 @@
-# Persona 15 — Karen, the Already-Frustrated User
+# Persona Review: Karen — Angry Frustrated User (47)
 
-**Who I am:** Karen. 47. Something has already gone wrong before I got here — let's pretend a billing charge didn't match, or an appointment vanished, or an email bounced me to this tool. I opened this app because I need to fix a problem RIGHT NOW. I'm not here to explore. I'm not here to "learn the interface." I want to find a human, explain what's wrong, and get my money/time/data back.
+## Context I'm walking in with
 
-**My filter for everything:** Where's the help link? Where's the contact button? Where's the support email? Where's the chat? Where do I complain? If I can't find one of those in the first 3 seconds on any page, I'm calling my card company and disputing the charge.
+My client just called me yelling. Their bot — _my_ bot, the one I sold them on — sent something embarrassing to a real prospect on Instagram. I am pissed.
 
----
+I need three things, in order:
 
-## Executive take (before the table)
+1. **Stop the bot.** Right now.
+2. **Find the bad message.** I need to read it.
+3. **Take over the conversation manually.** Apologise like a human.
 
-I walked through the whole app. I saw the homepage, the dashboard, the conversations page, the flow builder, and the 404 page. I did NOT find a single one of the following on ANY screen:
+Then **roll back** the prompt change, and **someone to call** when I can't figure it out.
 
-- A "Help" link
-- A "Support" link
-- A "Contact us" button
-- An email address
-- A phone number
-- A chat bubble
-- A knowledge base link
-- A "Report a problem" link
-- A footer (there is no footer ANYWHERE — not on home, not on dashboard, not on 404, not on the error page)
+## Summary
 
-The error page literally says **"Something went wrong / An unexpected error occurred / Try again"** — and when I click Try Again, the exact same error page reloads. That is the entire recovery path. A shrug and a reload button. If my livelihood depended on this tool I would be on the phone with my lawyer by now.
+- **Pages reviewed:** 7
+- **Issues:** 32
+- **Blockers:** 6
+- **Overall gut feel:** **1 / 5** — This app is _actively hostile_ to a frustrated user. There is no kill switch. There is no support link. There is no rollback. There is no way to filter the inbox to find the prospect. Half the things I need say "not wired yet." If my bot goes rogue, this app does not let me stop it.
 
-The 404 page says **"404 / Page not found / Go home"**. No search. No "maybe you meant…". No link to report a broken link. No support.
+## What's missing entirely
 
-This app has no front door for frustrated humans. Not one.
+| #   | What I needed                                                        | What I found                                                                                                | Severity     |
+| --- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------ |
+| 1   | **PAUSE THE BOT** — kill switch                                      | Nothing. Anywhere. Header, every tab, Bot tab, Release tab — no button on this page that turns the bot off. | **Blocker**  |
+| 2   | A **support link** — phone, email, "contact us", live chat, "?" icon | Nothing. No support email, no contact link, no help menu.                                                   | **Blocker**  |
+| 3   | A way to **find the angry prospect**                                 | Inbox is "Brand-wide only" — no search box, no filter, no Instagram handle field, no date range.            | **Blocker**  |
+| 4   | A **"take over conversation" / human handoff** button                | Inbox right pane only says "Select a conversation to view the transcript." No "reply manually" affordance.  | **Blocker**  |
+| 5   | A **rollback / revert** button                                       | Release tab: "Publish controls and release history are not wired yet."                                      | **Blocker**  |
+| 6   | An **undo** of last edit                                             | No `Cmd-Z` indicator. No undo button. No "last saved 2 minutes ago — restore" link.                         | **Critical** |
 
----
+That's six blockers before I've reviewed a single page.
 
-## Findings
+## Page-by-Page Review
 
-| #   | Page                     | Category          | Finding                                                                                                                                                                                                                                                                                                | Severity     | Persona Rationale                                                                                                                                                                                                                                                                                                                                          |
-| --- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | /dashboard/conversations | Feedback & State  | Error page shows "Something went wrong / An unexpected error occurred" with ZERO information about what went wrong, what the user did, what they can do, or who to contact. No error code. No timestamp. No incident ID. No support link. Nothing to copy and email to anyone.                         | **Blocker**  | Karen is already furious. She hit this page hoping to see her DM history to PROVE something went wrong. Instead she gets a shrug. She has no way to report this, no way to escalate, no way to even describe the error to a human because there IS no error description. She will dispute her credit card charge because this is her only remaining lever. |
-| 2   | /dashboard/conversations | Feedback & State  | The "Try again" button does literally nothing useful — clicking it shows the exact same error screen (verified: conversations-desktop-002-click-try-again.png is identical to -001). There is no loading state, no feedback, no "we tried again and it failed again" message. It's a button that lies. | **Blocker**  | I clicked it. Nothing happened. I clicked it again. Nothing happened. That is the definition of a hostile UI — a button that claims to do something and doesn't. I have no idea if it tried, if it's broken, if my internet is dead, or if the whole company is out of business.                                                                           |
-| 3   | ALL pages                | Trust & Safety    | There is NO support link, help link, contact link, email, phone, chat widget, or footer anywhere in the entire application. Not on home, not on dashboard, not on conversations, not on flow builder, not on 404, not on the error page. Zero exit paths to a human.                                   | **Blocker**  | A real product has a way to contact its company. A scam does not. From a frustrated user's perspective, an app with no support contact is indistinguishable from an abandoned product. I genuinely cannot tell if a human works here.                                                                                                                      |
-| 4   | /dashboard/conversations | Copy & Labels     | "An unexpected error occurred" is the laziest error copy in software. It tells me nothing. Was it a network timeout? An auth failure? A missing API key (the console logs show a ZodError about ANTHROPIC_API_KEY being too small — the app KNOWS what's wrong and chose not to tell me)?              | **Critical** | The app has structured knowledge of its own failure (ZodError in console) and deliberately hides it behind a generic shrug. That's not protecting me from complexity, that's withholding information I need. Tell me "Our AI service is misconfigured — contact support at X" and I'd at least know whose fault it is.                                     |
-| 5   | / (home)                 | Navigation & Flow | Home page has exactly two links: "Conversations" and "Flow Builder." No nav bar. No account menu. No help. No settings. No logout. No profile. No notifications. No ANYTHING. If I got here confused, there is nowhere to go except further in.                                                        | **Critical** | I came here to find help. The home page has no help. So now what? I have to click into the product to hunt for it — and there isn't any there either. This is a maze with no exits.                                                                                                                                                                        |
-| 6   | Error page               | Trust & Safety    | No way to report the error. No "Send error details to support" button. No way to copy an error ID. No way to attach what I was doing. I am completely alone with a broken product.                                                                                                                     | **Critical** | In real products (Stripe, GitHub, Linear, Intercom) every error page has a "Contact support" link with the error ID pre-filled. Here there is nothing. The implicit message is "your problem is not our problem."                                                                                                                                          |
-| 7   | /404 page                | Navigation & Flow | 404 page has only "Go home." No search bar. No "maybe you meant…" suggestions. No site map. No "Report this broken link." No support link.                                                                                                                                                             | **Critical** | I probably got here from a stale link in an email or bookmark. Sending me to the home page erases my context entirely. I have to start over. And there's still no way to say "hey, your link is broken."                                                                                                                                                   |
-| 8   | /404 page                | Feedback & State  | The 404 page gives no hint of what URL failed. I don't see the bad path. I can't tell if I mistyped or if the app is broken.                                                                                                                                                                           | **High**     | Did /billing 404 because I mistyped it or because it was removed? I have no idea. The page gives me nothing to work with.                                                                                                                                                                                                                                  |
-| 9   | /dashboard/conversations | Copy & Labels     | The word "Conversations" is the nav label, and the error page makes no mention of conversations. I don't know if my conversations are LOST, TEMPORARILY UNAVAILABLE, PERMANENTLY DELETED, or STILL THERE-just-can't-render.                                                                            | **Critical** | If this is a paid product and my conversation data is MY data, "Something went wrong" is completely inadequate. Tell me whether my data is safe.                                                                                                                                                                                                           |
-| 10  | /dashboard/conversations | Feedback & State  | No retry with backoff. No "we're auto-retrying in 5s." No incident status link (like status.instasetter.com). No ETA.                                                                                                                                                                                  | **High**     | Other grown-up SaaS products tell me "we're on it, last updated 2 min ago, ETA unknown, follow @status." Here I have no idea if this is a 30-second blip or a week-long outage.                                                                                                                                                                            |
-| 11  | ALL pages                | Trust & Safety    | No footer with legal links, ToS, Privacy Policy, company name, registered address, or copyright. Cannot verify this is a real company.                                                                                                                                                                 | **Critical** | I'm about to dispute a charge. I need to tell my bank the merchant's legal name. The app doesn't display it. That's a red flag straight out of /r/scams.                                                                                                                                                                                                   |
-| 12  | /dashboard (landing)     | Copy & Labels     | "Flow Builder preview. Open the prototype flow to see the split-view editor." The word "preview" and "prototype" signal this is UNFINISHED software. If I paid money for finished software, I'm even angrier now.                                                                                      | **High**     | If this is beta, tell me in advance. If it's not, don't call things "preview" and "prototype." This copy screams "you shouldn't have paid yet."                                                                                                                                                                                                            |
-| 13  | /dashboard/conversations | Navigation & Flow | When I hit the error and click Try Again, the URL doesn't change, the page doesn't reload, nothing indicates progress. Browser back button takes me to the dashboard, which doesn't acknowledge that an error just happened.                                                                           | **High**     | Error happens in a silo. The rest of the app pretends everything is fine. If I were a support agent, I would have nothing to work with — no breadcrumbs, no flag, no incident.                                                                                                                                                                             |
-| 14  | Flow Builder             | Copy & Labels     | Bot status shows "Draft v13" and a green "Publish v13" button. No explanation of what happens when I publish. No undo. No preview of what will change.                                                                                                                                                 | **Critical** | I am an already-frustrated user. If I accidentally click the big green button out of confusion, I have no idea what I just did to my live bot. Destructive action, zero guardrail, zero undo.                                                                                                                                                              |
-| 15  | Flow Builder             | Trust & Safety    | Flow builder shows a "Send" button for an external action (per the exploration log). No confirmation dialog. No "this will send a real message" warning.                                                                                                                                               | **Critical** | A tool that DMs real Instagram accounts needs explicit "are you sure, this is live" confirmation on Send. Especially when I'm already irritated and half-reading the screen.                                                                                                                                                                               |
-| 16  | Flow Builder             | Visual & Layout   | Per the exploration log, multiple tabs (Flow, Runs, Variables, Versions, Bot) fail to click because of overlapping DOM — something is intercepting pointer events. The automated test had to force-click them.                                                                                         | **Critical** | If an automated click fails, a human click on a laptop trackpad will also fail. I'll click "Runs" three times, get nothing, and conclude the product is broken. This is a silent reliability issue that will generate exactly zero useful bug reports because there's no way to report bugs.                                                               |
-| 17  | Flow Builder             | Copy & Labels     | Icon-only buttons everywhere: ⎔, ◉, ∥, ⟳, ◐, ⤢, ⊞, ×, +, −. These are geometric shapes with no labels. I have zero idea what ⎔ versus ⊞ does.                                                                                                                                                          | **High**     | Symbol soup. I am 47, I wear reading glasses, and these are nonsense glyphs. I'm not going to guess — I'm going to close the tab.                                                                                                                                                                                                                          |
-| 18  | ALL pages                | Accessibility     | Icon-only buttons with no `aria-label` evident from the exploration log (they register as text labels of just the symbol). Screen readers would read "close bracket top, close bracket bottom, times, times, times…"                                                                                   | **High**     | Accessibility violation but also a usability one. My mother uses VoiceOver. She would be lost.                                                                                                                                                                                                                                                             |
-| 19  | /dashboard/conversations | Forms & Input     | If there's a search or filter for conversations, I can't see it because the error page wipes it all out. No graceful degradation — the error eats the whole page, not just the data region.                                                                                                            | **High**     | On a well-designed product, the error lives IN the list area and the search/filter/new buttons still work. Here the whole screen is hijacked by the error.                                                                                                                                                                                                 |
-| 20  | Error page               | Feedback & State  | No visible timestamp on the error. No error ID. I cannot call support (there is none) and say "error at 3:47pm, reference ABC123."                                                                                                                                                                     | **Critical** | Without a reference ID, even if there WAS support, they'd have nothing to look up.                                                                                                                                                                                                                                                                         |
-| 21  | Home                     | Navigation & Flow | The primary call to action (Conversations) leads directly to the broken error page. The FIRST THING a new user clicks is broken.                                                                                                                                                                       | **Blocker**  | This is the product's front door. It's broken. A paying customer who clicks the obvious button gets a wall of "Something went wrong." I would assume the whole product is dead.                                                                                                                                                                            |
-| 22  | ALL pages                | Trust & Safety    | No visible indication of who I'm logged in as, what account this is, whether my session is active, or how to log out.                                                                                                                                                                                  | **High**     | If my issue is that I'm logged into the wrong account, I have no way to see or change it. No avatar, no email shown, no account switcher.                                                                                                                                                                                                                  |
-| 23  | Error page               | Copy & Labels     | Title "Something went wrong" is three words and says nothing. Compare to good error copy: "We couldn't load your conversations. This usually clears up in a minute — if it doesn't, email support@instasetter.com with error ID XYZ."                                                                  | **Critical** | The entire message communicates "we don't know and we don't care." That's the vibe.                                                                                                                                                                                                                                                                        |
-| 24  | Home                     | Visual & Layout   | The entire home page is empty beige space with a title, a tagline, and two buttons centered. No footer, no navigation, no logo anywhere that would link back to a company website. It's aggressively minimalist in a way that reads as "unfinished."                                                   | **Medium**   | For a product I'm trusting with paid marketing automation, the home page feels like a placeholder someone forgot to finish. I'd be reluctant to hand over my card.                                                                                                                                                                                         |
-| 25  | Flow Builder             | Feedback & State  | Per exploration log, tabs are unclickable due to z-index/pointer-event issues on a running production-style UI. No visual indication to the user that a click was registered.                                                                                                                          | **Critical** | I click Runs. Nothing. I click again. Nothing. I assume the tab is disabled. I leave. There's no error telling me "an overlay is blocking this."                                                                                                                                                                                                           |
-| 26  | /dashboard/conversations | Feedback & State  | Reload the whole browser tab, not the React error boundary: still the same broken page. The app has given up and has no escape hatch other than navigating by URL to somewhere else.                                                                                                                   | **Blocker**  | A hard reload is the universal "last resort." If even a hard reload doesn't fix it, the product is broken and the user has nowhere to go except away.                                                                                                                                                                                                      |
-| 27  | ALL pages                | Trust & Safety    | No "Status" link, no status page URL anywhere. I can't tell if the outage is known, reported, or being fixed.                                                                                                                                                                                          | **High**     | Stripe, GitHub, Vercel, Supabase all have status pages linked from their error states. Here: nothing. I have no way to know if this is me, them, or the internet.                                                                                                                                                                                          |
-| 28  | Error page               | Accessibility     | The "Try again" button has no `aria-live` region announcing the retry result. Even if it worked, a screen reader user would not know.                                                                                                                                                                  | **Medium**   | For my accessibility-needing friends, the retry is invisible. But honestly, the retry does nothing anyway, so maybe it's fine.                                                                                                                                                                                                                             |
-| 29  | 404 page                 | Copy & Labels     | "404 / Page not found" — 404 is jargon. "The page you were looking for doesn't exist" is clearer.                                                                                                                                                                                                      | **Low**      | I know what 404 means but not every Karen does. My mom would ask what a 404 is.                                                                                                                                                                                                                                                                            |
-| 30  | ALL pages                | Trust & Safety    | No visible version number, build hash, or "last updated" indicator. If I'm talking to someone about a bug, I can't tell them which version of the product I'm on.                                                                                                                                      | **Medium**   | For debugging, this matters. For trust, it signals the company doesn't think about maintainability.                                                                                                                                                                                                                                                        |
+### Flow canvas
 
----
+**Gut feel: 1/5** — Pretty boxes. Nice colours. None of which help me right now.
 
-## Gut Feel scores
+| #   | Category          | Finding                                                                                        | Severity    | Persona Rationale                                                                                   |
+| --- | ----------------- | ---------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| 7   | Trust & Safety    | **No kill switch in the header.**                                                              | **Blocker** | If my bot is misbehaving the _first thing_ I should see is a giant red Pause button. Not "Preview." |
+| 8   | Copy & Labels     | "Live: setter-v2" pill — green dot. **Looks healthy. Is the literal source of the bad reply.** | Critical    | Green dot makes me think things are fine. They are not. Need way to flag a live prompt as suspect.  |
+| 9   | Trust & Safety    | "Unpublished edits" pill — I don't know if my edits are live, staged, or about to go live      | Critical    | Scared to click anything because I don't know what's deployed.                                      |
+| 10  | Copy & Labels     | "Saved to Supabase" — what is a Supabase? I don't care about your database.                    | High        | Tell me if my work is _safe_.                                                                       |
+| 11  | Navigation & Flow | Five tabs all on same URL — can't right-click "open in new tab"                                | High        | I want bot rules in one tab and broken conversation in another. I cannot.                           |
+| 12  | Feedback & State  | Console throws **30+ "Maximum update depth exceeded" errors**                                  | **Blocker** | If I open dev tools, the app looks _broken_. Asking for a refund.                                   |
+| 13  | Trust & Safety    | Canvas seeds for _any_ flow ID I type                                                          | Critical    | Type wrong flow ID by accident → fake data that looks real. I'd act on it.                          |
+| 14  | Copy & Labels     | "Edit the shared draft and sanity-check tone before anything ships."                           | Medium      | Copy implies prevention. Runtime didn't deliver.                                                    |
+| 15  | Navigation & Flow | Block in canvas — which one caused the bad reply? **No way to know.**                          | Critical    | Need a "trace" — given a bad message, which block produced it?                                      |
 
-| Page                           | Score | One-sentence justification                                                                                                                           |
-| ------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| / (home)                       | 2     | It loads and looks tidy, but there's no support link, no footer, no account, no sense that a company exists behind this product.                     |
-| /dashboard                     | 2     | Another empty beige page with one link. "Preview" and "prototype" in the copy make me worry I paid for unfinished software.                          |
-| /dashboard/conversations       | **1** | It is broken. The retry button is a lie. There is no support link. This single page is enough for me to dispute my charge.                           |
-| /dashboard/flows/ig-organic-dm | 2     | Busy and technical with symbol-only icons and a "Publish" button that has no safety net. Tabs don't click. It looks unfinished and fragile.          |
-| /404                           | 2     | The bare minimum. No search, no suggestions, no support. "Go home" is the only option, which erases whatever I was trying to do.                     |
-| **Overall**                    | **1** | A product with no support link, no footer, no contact, no error detail, and a broken primary page — this is indistinguishable from an abandoned app. |
+### Inbox tab
 
----
+**Gut feel: 1/5** — _Uniquely_ useless to me.
 
-## What would make this not-a-disaster
+| #   | Category          | Finding                                                         | Severity    | Persona Rationale                                                                                         |
+| --- | ----------------- | --------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------- |
+| 16  | Forms & Input     | **No search box.** Anywhere.                                    | **Blocker** | I have ONE prospect to find. Client gave me their handle. No field to type it in.                         |
+| 17  | Forms & Input     | **No filter by date, status, or block.**                        | **Blocker** | "Last hour" is enough info — except no time filter.                                                       |
+| 18  | Copy & Labels     | Amber warning: "until flow_id lands on the conversations table" | **Blocker** | Database migration sentence. Reads as "this data might be wrong." Can't trust this for incident response. |
+| 19  | Feedback & State  | Four empty metric cards `—`                                     | Critical    | Are those zero? Loading? Broken? Looks dead.                                                              |
+| 20  | Feedback & State  | Two simultaneous "Loading…" states                              | Medium      | Can't tell if working or stuck.                                                                           |
+| 21  | Trust & Safety    | **No "Take over conversation" or "Pause this thread"** button   | **Blocker** | The instant I find the bad conversation I should be one click from "stop bot, let me reply manually."     |
+| 22  | Trust & Safety    | No "Mark as needs review" / "Flag for QA"                       | Critical    | Want to flag for client and possibly legal. No way.                                                       |
+| 23  | Navigation & Flow | "Brand-wide only" badge is passive label, not action            | Medium      | If known limitation, give me "Switch to flow-scoped view" — even disabled with tooltip.                   |
+| 24  | Copy & Labels     | "while per-flow attribution is still being wired"               | High        | So this _isn't_ the real inbox. I don't know whether to trust it.                                         |
 
-If I were in charge for 10 minutes, I would demand the following (not asking — demanding):
+### Variables tab
 
-1. **Every page gets a footer** with: company legal name, ToS, Privacy, Support email, Status page, Contact page.
-2. **Every error page** gets: a specific error description, an incident ID, a timestamp, a "Contact support" button with the error pre-filled, a link to status page.
-3. **Retry button that actually retries**, with a loading state, and if it fails again shows "still not working — email support@…" with the button.
-4. **404 page** gets a search box, a "Report broken link" link, and a support link.
-5. **Home page** gets a nav bar with Help, Support, Contact, Account.
-6. **Every destructive action** (Publish, Send, delete anything) gets a confirmation dialog, an undo, and a clear explanation of consequences.
-7. **Icon-only buttons** get text labels, tooltips, and aria-labels.
-8. **Tabs that intercept pointer events** get fixed. Today.
+**Gut feel: 2/5** — Pretty. Read-only. Mocks me.
 
----
+| #   | Category       | Finding                                                                         | Severity | Persona Rationale                                                                                     |
+| --- | -------------- | ------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| 25  | Trust & Safety | "Reference only" + "Creating variables and row-level actions is not wired yet." | Critical | I came to maybe edit `brand.brand_name` because that might be the source. **I cannot edit anything.** |
+| 26  | Copy & Labels  | Booking URL with tiny `url` chip                                                | Low      | Fine. But I can't click to test it.                                                                   |
+| 27  | Forms & Input  | Brand timezone shows "not set" in light grey                                    | Medium   | If timezone isn't set, bot might send replies at 3am. Should be required.                             |
 
-## Closing
+### Release tab
 
-I am Karen. I came here angry. I left angrier. If this app charged my card, I'm disputing it — not because the product is bad, but because I have no way to tell them it's bad. That's the whole review.
+**Gut feel: 1/5** — This is the page that should save me. It does the opposite.
+
+| #   | Category          | Finding                                                                                 | Severity    | Persona Rationale                                                                                       |
+| --- | ----------------- | --------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
+| 28  | Trust & Safety    | "Publish controls and release history are not wired yet."                               | **Blocker** | This page exists _for the explicit purpose_ of giving me rollback. It is admittedly non-functional.     |
+| 29  | Copy & Labels     | Four cards with "Compiled from src/lib/prompts/sections/\*.ts"                          | Critical    | A file path. To me. The marketer. With an angry client. I do not know what `*.ts` is and don't want to. |
+| 30  | Trust & Safety    | "New conversations still use the compiled setter-v2 prompt until publish wiring lands." | Critical    | So my edits _aren't_ the live behaviour? Then why is "Unpublished edits" lit up?                        |
+| 31  | Navigation & Flow | "Recommended workflow today" section                                                    | Medium      | A "workflow" doesn't help when bot is on fire. Where's the **incident** workflow?                       |
+| 32  | Trust & Safety    | No "Pause publishing", no "Roll back", no version list                                  | **Blocker** | If something goes wrong I should be one button from a known-good version.                               |
+
+### Bot tab
+
+**Gut feel: 2/5** — I can read the rules. I cannot turn the bot off.
+
+| #   | Category       | Finding                                                                 | Severity    | Persona Rationale                                                                                                          |
+| --- | -------------- | ----------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 33  | Trust & Safety | Bot has no name — "Display name" empty                                  | High        | If a prospect asks "who am I talking to?" the bot doesn't know. Could explain weird reply. No "danger, undefined" warning. |
+| 34  | Copy & Labels  | LOCKED on Identity, EDITABLE on Voice, LOCKED on Message Length         | High        | "Locked" — by whom? Legal? Tech? Behind an upgrade? No tooltip.                                                            |
+| 35  | Trust & Safety | Voice section is free-text area                                         | Medium      | If marketer pastes paragraph contradicting locked Identity, who wins at runtime? Nothing tells me.                         |
+| 36  | Forms & Input  | No "test this rule change" button. No "draft / publish" within Bot tab. | Critical    | I'd be petrified to edit anything mid-incident.                                                                            |
+| 37  | Trust & Safety | **No "Pause the bot" toggle on the page that controls the bot.**        | **Blocker** | Of all pages, this should have the kill switch.                                                                            |
+
+### Simulator
+
+**Gut feel: 2/5**
+
+| #   | Category         | Finding                                                                         | Severity | Persona Rationale                                                              |
+| --- | ---------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| 38  | Forms & Input    | Send button permanently disabled per exploration log                            | Critical | Tried to send. Nothing. I'd assume simulator is broken.                        |
+| 39  | Copy & Labels    | "Side chamber" / "Prep camera" buttons                                          | High     | Don't read like buttons in a chat simulator. Like typo or untranslated copy.   |
+| 40  | Trust & Safety   | Simulator runs _live_ prompt only                                               | Critical | Edit draft, but simulator runs live one. Can't actually test my fix. Catch-22. |
+| 41  | Feedback & State | No "send a real prospect's message and see what bot would have replied" feature | High     | Literal need: paste the prospect's last DM.                                    |
+
+### Palette drawer
+
+**Gut feel: 2/5**
+
+| #   | Category          | Finding                                                                    | Severity | Persona Rationale                                      |
+| --- | ----------------- | -------------------------------------------------------------------------- | -------- | ------------------------------------------------------ |
+| 42  | Navigation & Flow | Palette overlays canvas and **steals click events from blocks underneath** | Critical | Even _closing_ the palette is a fight.                 |
+| 43  | Copy & Labels     | "Block library" with list                                                  | Low      | Doesn't help me. I'm trying to _read_ what's deployed. |
+
+### Mobile gate
+
+**Gut feel: 1/5** — In the car between meetings. Phone is the only thing I have.
+
+| #   | Category       | Finding                                                                | Severity    | Persona Rationale                                                                 |
+| --- | -------------- | ---------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------- |
+| 44  | Trust & Safety | "Editing requires desktop." Only mobile action: "Open conversations →" | **Blocker** | **My bot is on fire. I am on my phone. I cannot pause it.**                       |
+| 45  | Copy & Labels  | "You can still monitor live conversations on your phone."              | Critical    | "Monitor" is passive. I want to _intervene_.                                      |
+| 46  | Trust & Safety | No emergency-pause that _does_ fit on mobile                           | **Blocker** | Every modern automation product has at least _one_ mobile-accessible kill switch. |
+
+## What would fix the worst
+
+1. **A persistent header element on every tab — "Bot status: Active. [Pause Bot]"** — single most important fix.
+2. **A search box and date filter in the Inbox.**
+3. **A "Take over" button per conversation.**
+4. **A "Roll back to last live version" button on the Release tab.**
+5. **A help icon, top-right, every page.**
+6. **An incident playbook on the Release tab.** "Something went wrong? 1. Pause the bot. 2. Find the conversation. 3. Take over. 4. Roll back. 5. Contact support."
+7. **Stop saying "not wired yet"** in production UI.
+8. **Strip the engineering language.**
+
+## Final word
+
+I sell this to my clients on the promise that it makes their lives _easier_ and _safer_. Right now, when something goes wrong, the app is _less_ helpful than a junior VA — at least the VA picks up the phone.
+
+I am going home and pouring a large glass of wine. Then calling my client and apologising. Then on Monday, evaluating ManyChat. **Fix this before someone else's bot makes them call me.**
+
+— Karen

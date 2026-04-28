@@ -1,66 +1,140 @@
-# Persona 13 — Victoria, C-Suite Executive
+# Persona Review — Victoria, 55, Executive With 30 Seconds
 
-**Archetype:** 55-year-old C-suite executive. Gets briefed by assistants. Opens links in meetings. Will not scroll. Will not read paragraphs. 30 seconds per page, max.
+I have a meeting in two minutes. My assistant sent me a link and said "this is the new bot dashboard — take a look." I clicked it.
 
-**Lens:** Can I get the status of this business in a glance? Where is the number that tells me if this is working? Is this a dashboard, or is this a tool someone else has to learn?
+## The 30-Second Test — Failed
 
-**Overall verdict:** This is not an executive product. There is no dashboard, no KPI, no "here is what your bot did this week." The page literally labelled `/dashboard` has two sentences and a link. Conversations is broken. Flow Builder is a dense engineer interface I would never touch. If my team put this in front of me in a board meeting, I would close the tab.
+I will say this clearly. I opened the page. I looked at it. I did not understand what was happening.
 
----
+There is no headline number. There is no traffic light. There is no "your bot booked 14 appointments today." There is a graph of boxes connected by lines.
 
-## Findings
+I closed the tab.
 
-| #   | Page                           | Category          | Finding                                                                                                                                                                                                                                  | Severity | Persona Rationale                                                                                                                                                                                                                                                                                         |
-| --- | ------------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | /dashboard                     | Visual & Layout   | The page called "Dashboard" contains no metrics, no charts, no counts, no status. It is two centered sentences and one link ("Open IG Organic DM →").                                                                                    | Blocker  | Victoria opened the route named `dashboard` expecting appointments booked, DMs handled, conversion rate, uptime. She got marketing copy. The word "dashboard" is a promise. This product breaks it. She will not click into a flow to find her numbers — a dashboard is the summary, not the entry point. |
-| 2   | /dashboard                     | Feedback & State  | No KPIs anywhere. No "X appointments booked this week," no "Y conversations active," no "Z% response rate," no last-run timestamp, no bot-status indicator (running / paused / error).                                                   | Blocker  | Victoria's entire job on this page is to answer: "is the money we're spending on this thing working?" The product cannot answer that. She cannot report up. She cannot report down. The product is invisible to the level of the organisation that funds it.                                              |
-| 3   | / (Home)                       | Navigation & Flow | Home and `/dashboard` are near-identical centered-text pages with a link. There is no difference in role — home is a launcher, dashboard is a launcher. Executive reads this as "the builders haven't decided what this product is yet." | Critical | Victoria evaluates product maturity in two seconds. Two near-duplicate landing pages reads as unfinished. She will question whether this is ready to represent the company to a client or investor.                                                                                                       |
-| 4   | / (Home)                       | Copy & Labels     | Tagline "Instagram DM appointment setting automation" is a feature description, not a value statement. No number, no social proof, no "X appointments booked last month."                                                                | High     | Victoria needs one line that says what this is worth, not what it does. "Instagram DM appointment setting automation" could be anything — a script, a service, a SaaS, a Zapier hack. She cannot place it.                                                                                                |
-| 5   | /dashboard/conversations       | Feedback & State  | Primary navigation destination (linked from Home) loads an error screen: "Something went wrong / An unexpected error occurred / Try again." One of only two top-level links is broken.                                                   | Blocker  | Victoria clicked the primary CTA on the home page and got a crash. In a real board or client demo she would never continue past this. The product failed its first meaningful click. Trust is gone for the session.                                                                                       |
-| 6   | /dashboard/conversations       | Copy & Labels     | Error copy is "An unexpected error occurred." No context, no what-failed, no who-to-contact, no status-page link, no incident ID.                                                                                                        | Critical | Victoria is used to enterprise tooling that at minimum gives her a reference number for her assistant to chase. "Unexpected error" tells her nothing about whether this is her problem, the vendor's, or the internet's.                                                                                  |
-| 7   | /dashboard/conversations       | Trust & Safety    | Error page is the ONLY state reachable. No sense of what this page should contain when healthy (no preview, no empty state, no description). She cannot evaluate the feature at all.                                                     | Critical | Victoria cannot sign off on something she has not seen working. A broken page with no fallback explanation is indistinguishable from a product that doesn't exist.                                                                                                                                        |
-| 8   | /dashboard/flows/ig-organic-dm | Visual & Layout   | Flow Builder is a three-pane engineer IDE: card canvas, inspector, simulator chat. At-a-glance, zero signal about business performance — only editing affordances (zoom, +, ×, "+ rule", "+ add," "Publish v13").                        | Critical | Victoria was promised a flow builder and got a developer tool. There is no "this flow booked 47 appointments this week" header. She will not understand what she is looking at in 30 seconds and will not try.                                                                                            |
-| 9   | /dashboard/flows/ig-organic-dm | Copy & Labels     | Top-level tabs use single-glyph icons: ⎔, ◉, ∥, ⟳, ◐. With labels (Flow, Runs, Variables, Versions, Bot), but the symbols are opaque and add nothing. "Variables" and "Bot" mean nothing to an executive.                                | High     | Victoria does not know what a "Variable" is in this product, does not know what "Runs" contains (executions? attempts? successful bookings?), does not know what "Bot" configures that "Flow" does not. Jargon tax.                                                                                       |
-| 10  | /dashboard/flows/ig-organic-dm | Copy & Labels     | "Publish v13" button. Version number exposed in the primary CTA with no explanation of what changed, who changed it, or what risk "publishing" carries.                                                                                  | High     | Victoria has no idea what publishing does, what users see, whether this is reversible. In her world "publish" to a live channel is a 4-eye sign-off moment. Here it's a single click beside a cryptic version number.                                                                                     |
-| 11  | /dashboard/flows/ig-organic-dm | Feedback & State  | No "bot is live / paused / error" status indicator in a visible place. No last-activity timestamp. No count of active conversations, interventions, or escalations.                                                                      | Critical | Victoria's first question on any automation is "is it currently running?" The product does not answer this anywhere on the page a CEO would land on.                                                                                                                                                      |
-| 12  | /dashboard/flows/ig-organic-dm | Visual & Layout   | Runs / Variables / Versions / Bot tabs appear visually identical after switching (per screenshots). Either the tab switch is broken or the content only differs in a sidebar she would never look at.                                    | High     | Victoria clicks a tab, expects a new view, sees the same screen. She concludes the product is buggy and stops clicking.                                                                                                                                                                                   |
-| 13  | /dashboard/flows/ig-organic-dm | Navigation & Flow | No breadcrumb, no way home, no top-level nav, no user/account/org indicator. She is dropped into the deep end with no exits.                                                                                                             | High     | Victoria's assistant sent her a link; she does not know where she is, which brand this flow belongs to, which environment (prod/staging), or how to get back to an overview. She will close the tab rather than map the product.                                                                          |
-| 14  | /dashboard/flows/ig-organic-dm | Trust & Safety    | "Publish v13" is a primary-styled button with no apparent confirm step, no diff-review, no audit trail visible on the main view. One click appears to mutate a live customer-facing channel.                                             | Critical | Victoria would never ship enterprise software where the live production publish is a single click next to the version number. This is a governance / audit-trail issue that would fail any compliance review.                                                                                             |
-| 15  | /dashboard/flows/ig-organic-dm | Trust & Safety    | No environment indicator (prod vs sandbox). No "this is currently live to X accounts."                                                                                                                                                   | High     | Victoria has to assume she is editing a live system connected to real prospects. Without an indicator she will refuse to touch anything — which is fine for her, but it means she cannot validate a change her team made.                                                                                 |
-| 16  | /dashboard                     | Trust & Safety    | ZodError in console: `ANTHROPIC_API_KEY` missing (per exploration log). Surfaces as runtime error across pages.                                                                                                                          | Critical | Victoria does not read consoles, but her CTO will. A missing API key in the happy path says "this was never configured for the environment it's running in." Instant credibility hit in any technical due-diligence.                                                                                      |
-| 17  | / (Home)                       | Navigation & Flow | No organisation/account switcher, no indication which brand or IG account this is for, no sign-in state visible.                                                                                                                         | High     | Victoria expects to see "logged in as Jane / Acme Brand" in the top right of every page. Its absence means she cannot tell whose data she is looking at — a blocker for any multi-brand agency use.                                                                                                       |
-| 18  | /not-found                     | Copy & Labels     | 404 page is a bare "404 / Page not found / Go home." No search, no "try these popular pages," no support contact.                                                                                                                        | Low      | Victoria wouldn't dwell on a 404 but notes the "minimum viable" feel consistent with the rest of the product.                                                                                                                                                                                             |
-| 19  | All                            | Visual & Layout   | Entire app is centered-text-on-beige. Beautiful Linear/Vercel aesthetic, but every surface looks the same — home, dashboard, 404, error. No visual hierarchy between "you have arrived at overview" and "the system has crashed."        | High     | Victoria uses visual difference as a cue for context. If the error page and the dashboard look identical, she cannot scan-read the product. Consistency is a virtue at the component level; at the page-role level it's a failure.                                                                        |
-| 20  | All                            | Feedback & State  | No notifications, no alerts, no "requires attention," no inbox, no pending-approvals count.                                                                                                                                              | Critical | Executives live in an inbox model — "what needs me today?" This product has no concept of escalation visible to the user who most needs it. A bot that hands off to a human should scream "2 conversations waiting" on page load.                                                                         |
-| 21  | /dashboard/flows/ig-organic-dm | Accessibility     | Icon-only buttons (−, +, ⤢, ⊞, ×) with no visible labels or tooltips in screenshots. Keyboard-only navigability of a canvas UI is suspect.                                                                                               | Medium   | Victoria is 55, likely uses reading glasses, works on a 14" laptop during travel. Unlabelled glyph buttons at typical laptop-pixel density are a target-size and legibility problem.                                                                                                                      |
-| 22  | /dashboard/flows/ig-organic-dm | Visual & Layout   | Exploration log flagged pointer-event interception across most tab and inspector buttons — elements clickable only with force.                                                                                                           | High     | Even if not visible to a user, this guarantees flaky interactions: Victoria clicks "Design" or "Runs", sometimes nothing happens. She attributes this to "the product is broken" and blames the vendor.                                                                                                   |
-| 23  | /dashboard                     | Navigation & Flow | Route `/dashboard` exists and is lit up in the URL bar, but there is no "Dashboard" link anywhere in the UI — home links to `/dashboard/conversations` and `/dashboard/flows/ig-organic-dm` directly, bypassing the overview.            | Medium   | Victoria typed `/dashboard` assuming an overview; the product's own nav doesn't surface it because there's nothing there. The dead page shouldn't exist, or it should be the launcher.                                                                                                                    |
+If I am the person paying for this product, that is the wrong outcome.
 
----
+## Page-by-Page Reaction
 
-## Gut Feel
+### Flow tab (the page that loads first)
 
-### Per-page scores (1–5)
+A diagram. Boxes labelled "Opening," "Qualifier," "Objection Handler," "Booking Handoff," "Email Capture." Lines between them.
 
-| Page                           | Score | One-line                                               |
-| ------------------------------ | ----- | ------------------------------------------------------ |
-| / (Home)                       | 2     | Pretty, empty, says nothing that earns a second click. |
-| /dashboard                     | 1     | A dashboard with no data is a lie.                     |
-| /dashboard/conversations       | 1     | Broken on first click — demo over.                     |
-| /dashboard/flows/ig-organic-dm | 2     | Functional engineer tool; zero value surfaced to me.   |
-| /not-found                     | 3     | Fine. Does the one job.                                |
+This is an engineer's view. It is not a leader's view.
 
-### Overall: **1 / 5**
+There is no number on this page. Not one. I cannot tell:
 
-The product does not exist at my level. There is no page where a non-operator executive gets a clean answer to "is this working, what is it worth, what needs me." The only CTA on Home goes to a broken error screen. The Flow Builder is a tool for the person below me. Close the tab, ask my chief of staff to get me a one-pager.
+- Is the bot working today
+- How many people did it talk to
+- How many appointments did it book
+- Is anything broken
 
----
+The three pills at the top — "Unpublished edits," "Saved to Supabase," "Live: setter-v2" — are not English. "Supabase" is a brand name I have no reason to know. "setter-v2" is a version string. "Unpublished edits" sounds like a problem but no one is telling me whether it is one.
 
-## What would make this a 4 for Victoria
+**Score: 1/5.** Built for the person editing the bot, not the person paying for it.
 
-1. Replace `/dashboard` with a real dashboard: appointments booked (this week / month), conversations in flight, response rate, intervention queue count, bot status (live / paused / error), last activity timestamp.
-2. Inbox-style "needs you" panel: escalations, failed handoffs, unanswered >24h.
-3. Bot status as a persistent pill in the top bar on every page: "Live · 3 conversations active · last reply 2m ago."
-4. Fix the Conversations route or replace with a coherent empty-state explaining what will appear here.
-5. Environment + brand + user indicator in a persistent top bar.
-6. Hide the Flow Builder behind a "Configure" link — it is not a primary surface for executives.
+### Inbox tab
+
+Better. Four large numbers across the top: Started, Booked, Completed, Stalled.
+
+Then I read them. They are all dashes. "Loading..." The numbers never resolved.
+
+Even if they had — Started 0, Booked 0, Completed 21, Stalled 1 — I am told there is a caveat: "Inbox metrics and transcripts below include all VendingPreneurs conversations until flow_id lands on the conversations table."
+
+I do not know what that sentence means. I will assume the numbers are not trustworthy. **The Booked number is the only one I care about.** Make it the largest thing on the page. Put it above everything else. Sparkline next to it. Yesterday's number underneath. _That_ is the dashboard.
+
+**Score: 2/5.** Right idea. Wrong execution.
+
+### Variables tab
+
+Three boxes: Brand, Contact, Conversation. Examples like `brand.brand_name`, `contact.location`, `conversation.last_objection`.
+
+This is a developer reference page. I am not the audience.
+
+**Score: 2/5.** Should not be the third tab in a top-level nav.
+
+### Release tab
+
+Three paragraphs. Four boxes. A "Recommended workflow today" list.
+
+I am told my flow has "Unpublished edits" and that it is also "Live: setter-v2" and the prompt is "Compiled from src/lib/prompts/sections/\*.ts" and the simulator is "Live prompt only."
+
+I cannot tell what is actually running right now. The page is asking me to read three explanations to figure that out.
+
+A traffic light would solve this:
+
+- **Green dot — Live and matching draft**
+- **Amber dot — Live but draft has unsaved changes**
+- **Red dot — Live is broken / paused**
+
+That is one glance. What I have is a reading exercise.
+
+**Score: 2/5.** The information is here. Buried.
+
+### Bot tab
+
+"Appointment Setter." A persona configuration screen with sections labelled "Identity — HARD RULES (LOCKED)," "Voice (EDITABLE)," etc.
+
+This is fine. It is configuration. It is not where I would ever look. It does not need to be in my navigation.
+
+**Score: 3/5.** Honest about what it is. Wrong audience for the top nav.
+
+### Block detail (Opening selected)
+
+Side panel with tabs and lists. I am not editing this.
+
+**Score: not applicable.** Not my view.
+
+### Simulator
+
+A modal opens over the canvas. "Try a real prospect opener." Tabs and a text box.
+
+I do not know what any of this means. Why would I type into this.
+
+**Score: 1/5.** Pure jargon. No "Show me an example conversation" button.
+
+## What Is Actually Missing — The Executive Summary Page
+
+There is no bot health page. None.
+
+If I had to describe what I expect when my assistant says "look at the bot dashboard," it is **one screen** that answers three questions:
+
+1. **Is the bot on right now?** Green dot or red dot. One word.
+2. **What did it do this week?** Big number: "Booked 47 appointments." Trend arrow vs last week.
+3. **Is anything wrong?** "1 stalled lead needs review."
+
+That is the page. Right now my "home" tab is a flowchart. That is wrong. The flowchart is the workshop floor. I should be looking at the showroom.
+
+## Findings — Severity-Ranked
+
+| #   | Page          | Category          | Finding                                                                                | Severity     | Persona Rationale                                                                                       |
+| --- | ------------- | ----------------- | -------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------- |
+| 1   | All pages     | Visual & Layout   | No executive summary view exists. Default landing for a flow is a graph editor.        | **Blocker**  | There is no page in the product for me. Closes tab in 30 seconds.                                       |
+| 2   | Flow tab      | Visual & Layout   | Zero KPIs on default page. Not one number.                                             | **Blocker**  | If the headline page has no headline number, there is no headline.                                      |
+| 3   | Inbox tab     | Feedback & State  | KPI numbers are dashes ("Loading...") at view time.                                    | **Critical** | A dashboard that shows "—" looks broken. Will not refresh.                                              |
+| 4   | Inbox tab     | Trust & Safety    | Brand-wide caveat banner undermines numbers above it.                                  | **Critical** | If numbers cannot be trusted, they should not be there.                                                 |
+| 5   | Release tab   | Copy & Labels     | "What is actually running right now" requires reading three paragraphs.                | **Critical** | My only question is "are we live with the latest changes — yes or no." Should be one-glance.            |
+| 6   | All pages     | Copy & Labels     | Header pills use developer language.                                                   | **High**     | Victoria does not know what Supabase is. "setter-v2" reads as a version string from someone else's job. |
+| 7   | Flow tab      | Navigation & Flow | Five-tab nav puts Flow first by default — most technical view.                         | **High**     | Executive's natural landing should be summary metrics.                                                  |
+| 8   | Variables tab | Navigation & Flow | Reference page sits in top-level nav alongside metrics-bearing tabs.                   | **High**     | Variables, Release internals, Bot persona — none are executive-facing. Collapse under "Configure."      |
+| 9   | Bot tab       | Copy & Labels     | "Identity — HARD RULES (LOCKED)" / "Affirmation Rules (EDITABLE)" written for designer | **High**     | Tells me about permissions, not about what the bot does.                                                |
+| 10  | Simulator     | Copy & Labels     | "Try a real prospect opener" with tabs "Use chunks / First converts / Brand reply."    | **High**     | Pure jargon. No "Show me a demo conversation" button.                                                   |
+| 11  | All pages     | Visual & Layout   | Three colored pills cluster with no visual priority.                                   | **Medium**   | If "Unpublished edits" is a problem state, it should look like one.                                     |
+| 12  | Inbox tab     | Visual & Layout   | Hero KPI cards visually flat — no comparison number, no trend, no time period.         | **Medium**   | "Booked: 0" is meaningless without "vs 14 last week."                                                   |
+| 13  | Release tab   | Copy & Labels     | "Recommended workflow today" — Victoria does not action workflows.                     | **Low**      | Wrong audience.                                                                                         |
+
+## Gut Feel — Overall
+
+**Score: 1/5.**
+
+The product as it stands has no executive view. The default page is a flowchart with no numbers. The page that does have numbers shows dashes and footnotes them with developer language. The page that should answer "is it live" requires three paragraphs of reading.
+
+I want to be very direct. **I do not see what I am paying for from any page in this product.** I see what the engineer has built. I see what the marketer is configuring. I do not see the result.
+
+## Three Things — If I Were Asked
+
+1. **Build a Bot Health page. Make it the default.** One number above the fold: "Booked this week." One status pill: "Running" / "Paused." One list: "Issues needing attention (0)."
+2. **Push everything else into a "Configure" section.** Flow editor, Variables, Release internals, Bot persona — operator views.
+3. **Translate the header pills.** "Live: setter-v2" → "Customers are talking to the latest version." "Unpublished edits" → "Your draft has unsaved changes." "Saved to Supabase" → delete it.
+
+I am out of time.
+
+— Victoria

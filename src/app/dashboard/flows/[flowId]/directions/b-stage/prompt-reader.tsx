@@ -539,21 +539,8 @@ export function PromptReader({
           tone="neutral"
           detail={
             <>
-              Compiled live from{' '}
-              <code
-                style={{
-                  fontFamily:
-                    'var(--font-jetbrains-mono), ui-monospace, monospace',
-                  fontSize: 11.5,
-                  color: B.ink2,
-                  background: B.lineSoft,
-                  padding: '2px 7px',
-                  borderRadius: 5,
-                }}
-              >
-                src/lib/prompts/sections/*.ts
-              </code>
-              . {PROMPT_READER_STATUS.detail} {runtimeStatus.detail}
+              Compiled live from the prompt source files.{' '}
+              {PROMPT_READER_STATUS.detail} {runtimeStatus.detail}
             </>
           }
         />

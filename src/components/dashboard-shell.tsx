@@ -142,20 +142,14 @@ export function DashboardShell({
         >
           {brand}
         </span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-            env === 'production'
-              ? 'bg-[#E6F4EA] text-[#1F6B3A]'
-              : 'bg-[#FBE7D9] text-[#8B4316]'
-          }`}
-          aria-label={`Environment ${env}`}
-        >
-          {env === 'production'
-            ? 'Prod'
-            : env === 'preview'
-              ? 'Preview'
-              : 'Dev'}
-        </span>
+        {env !== 'production' && (
+          <span
+            className="rounded-full bg-[#FBE7D9] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8B4316]"
+            aria-label={`Environment ${env}`}
+          >
+            {env === 'preview' ? 'Preview' : 'Dev'}
+          </span>
+        )}
       </header>
 
       <nav

@@ -1,122 +1,172 @@
-# Persona 10 — Zoe (16, Digital Native)
+# Persona Review: Zoe — Confused Teenager (16)
 
-> "ok so… what is this supposed to be. like where's the app. where's the vibe. where's the people."
+## Summary
 
-I'm Zoe. I'm 16. I live in TikTok, Insta, Snap. I've literally never used a "business" tool before — no Excel, no CRM, no Slack, none of that boomer stuff. The apps I use have avatars, stories, emojis, animations, haptics, color, memes. Every button looks like it wants to be tapped. Every screen tells you what to do. You don't read. You _swipe_.
+- **Pages reviewed:** 8
+- **Issues:** 41
+- **Blockers:** 3
+- **Overall gut feel:** **1 / 5** — okay so… what _is_ this?? I opened it on my phone and it literally told me to go away. Then on my laptop it's like a million little boxes with arrows and words like "QUALIFIER" in all caps?? "VendingPreneurs"?? Lowkey this is the most boomer software I've ever seen.
 
-InstaSetter looks like… homework. Like, the color is beige. It's literally beige. My grandma's bathroom is this color. And then you walk into the Flow Builder and it's full of symbols like ⎔ ◉ ∥ ⟳ ◐ which I genuinely thought were math class. No one uses those. My phone doesn't even have those on the keyboard. WHY is "Flow" an ⎔. That's a shape from geometry. Call it a flower or smth.
+## First impressions
 
-Also "InstaSetter"? Sounds like a dog groomer app. Not cute.
+The whole vibe is like… my dad's work laptop. Everything is white and grey, serif font on the headline like NYT. There's a tiny purple square with lowercase "i" — okay that's kinda cute but everything else is corporate energy. No emojis. No colors. No animations. Why is it so QUIET. Even Slack has emojis and Slack is for old people.
 
----
+URL says `/dashboard/flows/ig-organic-dm`. "ig" is the only thing I recognized. Just say Instagram.
 
-## Gut Feel Scores
+## Page-by-Page Review
 
-| Page                                            | Score   | One-sentence justification                                                                                                        |
-| ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Home (`/`)                                      | 2       | Empty beige room with two little buttons — no vibe, no personality, no reason I'd keep scrolling.                                 |
-| Dashboard (`/dashboard`)                        | 1       | Literally the same page as home but with less. Where is the dashboard??                                                           |
-| Conversations (`/dashboard/conversations`)      | 1       | Straight-up broken. "Something went wrong" is the whole page. Bye.                                                                |
-| Flow Builder (`/dashboard/flows/ig-organic-dm`) | 2       | Looks kinda cool for like 4 seconds then you realize it's spreadsheet-coded and the icons are Wingdings.                          |
-| Simulator panel                                 | 3       | Actually the best part — a chat window is finally something I recognize. Still dry tho.                                           |
-| View Prompt                                     | 1       | A giant wall of business text marked READ-ONLY. Who is this for. Definitely not me.                                               |
-| 404                                             | 3       | Clean I guess. "Go home" button is straight to the point. No personality but whatever, it's a 404.                                |
-| **Overall**                                     | **1.5** | Feels like a 2009 intranet someone painted beige. I would screenshot this for the "my dad's apps" meme account and close the tab. |
+### Flow tab (canvas)
 
----
+**Gut feel: 1/5** — It's giving Microsoft Visio. I genuinely thought I had to draw something? "Greet warmly, detect initial interest, and ask for location as the first qualifier." Bestie. Just say "say hi and ask where they live."
 
-## Findings
+| #   | Category         | Finding                                                                                               | Severity | Persona Rationale                                                                                                   |
+| --- | ---------------- | ----------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1   | Copy & Labels    | "VENDINGPRENEURS" in tiny grey caps                                                                   | High     | I have NO IDEA what that word means. Looks made up.                                                                 |
+| 2   | Copy & Labels    | "Flow Builder" naming                                                                                 | High     | Exactly what software was called in 2008. Sounds like trade show software.                                          |
+| 3   | Visual & Layout  | Serif font on "Instagram DM Flow" headline, sans body                                                 | Medium   | Serif + sans says "this is a serious tool now." Feels like a textbook.                                              |
+| 4   | Copy & Labels    | "DEV" badge top right                                                                                 | High     | I literally don't know what DEV means. Am I supposed to be on this page??                                           |
+| 5   | Copy & Labels    | Three pills: "Unpublished edits / Saved to Supabase / Live: setter-v2"                                | Critical | Words but I have no idea what they're saying. Why does my chat thing have a version number like a video game patch. |
+| 6   | Visual & Layout  | Vertical sidebar with subtitles                                                                       | Critical | This is _Outlook_. The vertical sidebar is straight 2014 enterprise software.                                       |
+| 7   | Copy & Labels    | "WORKSPACE" label in tiny caps                                                                        | Low      | The word "workspace" makes me want to log off. I'm a teen.                                                          |
+| 8   | Visual & Layout  | Big squarish boxes connected by pink/red curving lines                                                | Medium   | Diagram is kinda cool but not interactive in a satisfying way — every box is white so it looks unfinished.          |
+| 9   | Copy & Labels    | TINY ALL CAPS labels: "OPENING", "QUALIFIER", "OBJECTION", "BOOKING"                                  | High     | Why is everything yelling. All caps tiny grey labels feel like a legal document.                                    |
+| 10  | Copy & Labels    | "Collect at least two of five qualifiers through natural conversation — location first, budget last." | High     | Had to read three times. "Qualifier" sounds like an Olympics word.                                                  |
+| 11  | Copy & Labels    | "Objection Handler — Acknowledge → probe → respond."                                                  | High     | "Objection Handler" sounds like a _lawyer_. Arrow notation (`→`) is teacher flowcharts.                             |
+| 12  | Visual & Layout  | "3 exits" / "2 exits" tiny grey label                                                                 | Medium   | "Exits" — like fire exits?? Just say "what happens next."                                                           |
+| 13  | Visual & Layout  | Tiny `+` icon with no label                                                                           | Medium   | I tapped and a _whole drawer_ opened. Zero hint that's what would happen.                                           |
+| 14  | Copy & Labels    | "Block library" inside the palette                                                                    | Medium   | Sounds like an actual library. It's just "stuff you can add". Maybe call it "Add a step."                           |
+| 15  | Visual & Layout  | Color dot pattern in lower-right (mini swatches?)                                                     | Low      | Idk what those are but kinda cute. Tapping did nothing.                                                             |
+| 16  | Feedback & State | No tutorial, tooltip, or "first time?" overlay                                                        | Critical | Every app a teen uses has onboarding. TikTok, Snap, Insta — they all hold your hand.                                |
+| 17  | Visual & Layout  | Hover/tap states are subtle                                                                           | High     | I'm a touch person. I want satisfying _snaps_ and _bounces_. This barely flickers.                                  |
 
-| #   | Page                     | Category          | Finding                                                                                                                                                                                  | Severity | Persona Rationale                                                                                                                                                                                                                                            |
-| --- | ------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | All                      | Visual & Layout   | The entire app is one flat beige color (#EFEAE0 energy). No gradients, no accent colors, no glow, no dark mode, no theme.                                                                | Critical | Zoe swipes through Instagram reels that are all neon / animated / glitchy and jumps into TikTok that literally _moves_. Opening a static beige screen feels like a school library website. She will assume the app is abandoned.                             |
-| 2   | Flow Builder             | Copy & Labels     | Tab icons are Unicode symbols: ⎔ Flow, ◉ Runs, ∥ Variables, ⟳ Versions, ◐ Bot. None of these look like the thing they represent.                                                         | Critical | "What are these?? That first one looks like a homework geometry shape, and ∥ is literally a math symbol. Why not just icons like the phone app has? At least put an actual emoji. 🔁 > ⟳ every single day."                                                  |
-| 3   | Flow Builder             | Visual & Layout   | Canvas nodes are tiny pastel rectangles with stringy lines going everywhere — looks like a family tree diagram.                                                                          | Critical | Zoe expects things that connect to _feel_ like connecting: dragging, snapping, cute little animations like in CapCut timelines or Notion. This is a static PDF of a workflow. No swipe, no tap-and-hold, no bounce.                                          |
-| 4   | Home                     | Copy & Labels     | "InstaSetter" + tagline "Instagram DM appointment setting automation"                                                                                                                    | High     | "Appointment setting automation" is a phrase Zoe has literally never heard a human say. Sounds like a LinkedIn course ad. Brands she trusts say stuff like "Auto-DM your people 💬" or "the bot that books" — short, verb-first, vibe-first.                 |
-| 5   | Home                     | Navigation & Flow | Just two naked buttons on a blank cream page. No hero image, no example, no screenshot, nothing to preview what's inside.                                                                | Critical | Every app Zoe opens (TikTok, Insta, Snap, Duolingo, BeReal) shows you _something happening_ the moment you land — a reel, a story, a streak count. A homepage with two buttons and no content feels like a dev placeholder. She'd assume it's still loading. |
-| 6   | Home                     | Visual & Layout   | No logo, no avatar, no illustration, no mascot.                                                                                                                                          | High     | Every successful teen app has a character (Duo, Snap ghost, Clippy-core things). A wordmark in black Helvetica on beige with no icon is giving "my dentist's online booking form."                                                                           |
-| 7   | Dashboard                | Navigation & Flow | /dashboard page has a _single_ link: "Open IG Organic DM →". That's the whole dashboard.                                                                                                 | Critical | A dashboard with one link isn't a dashboard, it's a button. Zoe clicks "Dashboard" from Home and gets… the same page with different words. Confusing. She'd think the app crashed and reloaded wrong.                                                        |
-| 8   | Dashboard                | Copy & Labels     | "IG Organic DM"                                                                                                                                                                          | High     | "Organic" in Zoe's head = food. "IG Organic DM" reads like a gluten-free recipe. Clearly marketer-speak. She has no idea what "organic" means vs… inorganic? Robot?                                                                                          |
-| 9   | Conversations            | Feedback & State  | Entire page is literally an error: "Something went wrong. An unexpected error occurred. [Try again]"                                                                                     | Blocker  | Zoe clicks Conversations (the thing she actually wants — messages! finally something familiar!) and the app just… dies. No skeleton state, no empty state, no "you have 0 DMs yet". Just "we broke, soz." She closes the tab.                                |
-| 10  | Conversations            | Copy & Labels     | "An unexpected error occurred." is the entire explanation.                                                                                                                               | Critical | That's the most generic error possible. Zoe's apps say stuff like "aw, that didn't work — check your wifi?" with a little emoji. This sounds like a blue screen. No next step, no reassurance.                                                               |
-| 11  | Flow Builder             | Copy & Labels     | Block names: "Qualifier", "Objection Handler", "Booking", "Escalation", "Email Capture", "Post-Call Follow-up"                                                                           | Critical | This is 100% sales-person vocabulary. "Qualifier"? "Objection Handler"? Zoe has never said those words in her life. She'd guess "Objection Handler" is from a courtroom show. This is a teen-hostile vocabulary.                                             |
-| 12  | Flow Builder             | Copy & Labels     | Block descriptions: "First-touch hook, intent detect", "Collect location + motivation", "48h silence check, re-engage", "Hand-off to human closer", "End-of-conversation write to leads" | Critical | Every phrase sounds like a LinkedIn post from a man in a quarter-zip. "Write to leads"? "Human closer"? Zoe reads "closer" and thinks baseball. This reads like homework for a class she's not taking.                                                       |
-| 13  | Flow Builder             | Visual & Layout   | Badges say things like "Handed off", "Price + post-call", "Positive", "Price" — tiny pill tags with no color meaning.                                                                    | Medium   | The tags look like hashtags but they aren't clickable and they aren't colored by meaning (green = good, red = bad, etc.). Zoe would expect them to filter or pop or do _something_.                                                                          |
-| 14  | Flow Builder             | Forms & Input     | Form fields (GOAL / HOW IT SHOULD SOUND / GOOD EXAMPLES / CAPTURE) are stacked textareas with no placeholders except "Type as prospect…" in one spot.                                    | High     | Zoe expects forms to _guide_ her with placeholder hints, emoji prompts, example chips she can tap. Empty boxes with caps-lock labels screams Google Forms circa 2012.                                                                                        |
-| 15  | Flow Builder             | Copy & Labels     | "CAPTURE" section has `contact.motivation` as a code variable.                                                                                                                           | Critical | Seeing a literal dot-path variable (`contact.motivation`) in the UI is instant bounce. Zoe has never seen a variable in her life. Looks like she broke the app and is seeing the source code.                                                                |
-| 16  | Flow Builder             | Navigation & Flow | Top right has "Publish v13" — Zoe doesn't know what "v13" means or why she'd publish something.                                                                                          | Critical | "Publish" in her brain = post a story. "v13" = ??? She'd be scared to click it in case she spams 13 messages to someone. No tooltip, no confirm, no explanation.                                                                                             |
-| 17  | Flow Builder             | Copy & Labels     | Tabs inside the side panel: "Design, Routing, Triggers, Data".                                                                                                                           | High     | Four tabs of business jargon. "Routing" is mail truck energy. "Triggers" sounds scary (guns? allergies?). Data is fine but boring. None of these say "here's where you edit the words your bot says."                                                        |
-| 18  | Flow Builder             | Feedback & State  | "↗ View Persona" button — nothing in the UI hints what a Persona is or why you'd look at one.                                                                                            | High     | Zoe sees "Persona" and thinks either the makeup brand or the Atlus game. Either way, doesn't match the context.                                                                                                                                              |
-| 19  | Flow Builder             | Forms & Input     | Zoom controls are `−` and `+` and a `⤢` fullscreen and a `⊞` grid.                                                                                                                       | Medium   | Pinch-to-zoom is the universal gesture. Having to find zoom buttons on a screen is boomer energy. Also `⊞` looks like a crossword.                                                                                                                           |
-| 20  | Flow Builder             | Visual & Layout   | The split-view squishes both panels at anything under 1280px wide — per the mobile screenshots, it's basically unusable on phone.                                                        | Blocker  | Zoe lives on her phone. If she can't open this on mobile, she will never open it. Literally 0 of her apps require a laptop.                                                                                                                                  |
-| 21  | Flow Builder (Simulator) | Feedback & State  | Simulator chat bubbles are purple-on-beige with no timestamps, no avatars, no typing animation, no read receipts.                                                                        | High     | It's shaped like a DM but missing everything that makes a DM feel alive. No bubble tail, no "delivered", no little emoji reactions. Feels like a placeholder chat from a design portfolio.                                                                   |
-| 22  | Flow Builder (Simulator) | Copy & Labels     | Input placeholder says "Type as prospect…"                                                                                                                                               | Medium   | "Prospect" is a word Zoe has heard in gold rush movies. Nobody DMing someone thinks of themselves as a prospect. Should be "Pretend you're the customer" or just "Type a message".                                                                           |
-| 23  | View Prompt              | Copy & Labels     | Giant modal titled "Qualification Criteria" with bullets like "Zero qualification attempted in many conversations that died at value delivery"                                           | Blocker  | This is straight-up internal documentation shown to the user. Zoe is looking at engineer's notes. She'd close the modal immediately and not come back.                                                                                                       |
-| 24  | View Prompt              | Copy & Labels     | "THE FIVE QUALIFIERS (PRIORITY ORDER): 1. Location / Market: ask first, always. It's the highest-rapport qualifier…"                                                                     | Blocker  | Zoe has no idea what any of this is. "Highest-rapport qualifier" — her brain shut off halfway through. This is a sales bootcamp PDF pasted into a modal.                                                                                                     |
-| 25  | View Prompt              | Navigation & Flow | Modal says READ-ONLY. Edit today." Edit Flow Builder editing ships in Week 7."                                                                                                           | Critical | Telling the user "you can't edit this yet, come back in Week 7" is dev-diary talk leaking into production. Zoe would think the app isn't even finished.                                                                                                      |
-| 26  | 404                      | Visual & Layout   | "404 / Page not found / Go home" — no illustration, no mascot, no humor.                                                                                                                 | Medium   | 404 pages are the one place every fun brand puts a little joke or an animation or a meme character. InstaSetter does… nothing. Wasted opportunity for vibes.                                                                                                 |
-| 27  | All                      | Feedback & State  | No hover animations, no tap ripples, no micro-interactions anywhere.                                                                                                                     | High     | Zoe's phone physically buzzes when she likes a post. Tapping things here gives zero feedback. Feels dead.                                                                                                                                                    |
-| 28  | All                      | Visual & Layout   | Typography is all in one weight (black text on cream). No size variation above headline level, no accent fonts, no italic, no display flourishes.                                        | Medium   | Every app Zoe likes has at least one "look at me" font moment — a big pastel header, a bold label, a weird emoji anchor. This whole thing is one font in one weight.                                                                                         |
-| 29  | All                      | Copy & Labels     | Zero emojis anywhere in the product UI.                                                                                                                                                  | High     | Like… literally not one. Zoe's group chat has 40 emojis in the last three messages. A product aimed at Instagram marketers with zero emojis is wild. It's lowkey sus.                                                                                        |
-| 30  | Flow Builder             | Trust & Safety    | "Publish v13" has no confirm step, no preview of what's changing, no "are you sure"                                                                                                      | High     | For a 16 year-old who's never used a business tool, "Publish" sounds like it instantly spams her followers. She wouldn't touch it out of fear.                                                                                                               |
-| 31  | Flow Builder             | Accessibility     | Tiny node text (~10pt looking), light color, cream-on-cream cards, low contrast everywhere.                                                                                              | High     | Zoe's eyes are fine but she has ADHD brain — if text doesn't pop, she bounces. Contrast ratio here looks sub-WCAG in the badges.                                                                                                                             |
-| 32  | Flow Builder             | Navigation & Flow | Per the exploration log, clicking Flow/Runs/Variables/Versions/Bot tabs was intercepted by another div — actually broken in the real DOM, not just hard to hit.                          | Blocker  | If the top-level nav literally doesn't click, there is no app. This is the biggest "boomer software" tell — it looks stern AND it doesn't work. Nope.                                                                                                        |
-| 33  | All                      | Navigation & Flow | No profile avatar, no user account, no notifications bell, no anything indicating "me" is here.                                                                                          | Critical | Every single app Zoe uses puts HER at the top-right: her profile pic, her streak, her notifications. This app has nothing. It feels like it doesn't know who she is — so why would she log in?                                                               |
-| 34  | All                      | Trust & Safety    | Brand is called "VendingPreneurs" in the top-left of the flow builder header, but the product is "InstaSetter". Two different names.                                                     | Medium   | "Wait which app is this?" Zoe would think she clicked the wrong tab. No clear relationship between the product and the brand.                                                                                                                                |
-| 35  | Home                     | Copy & Labels     | The two home CTAs just say "Conversations →" and "Flow Builder →" with no explanation of what either one is.                                                                             | High     | If Zoe didn't know what she was supposed to do, there's no copy helping her. No "New here? Try the simulator" onboarding card. No intro tour. Just cold buttons.                                                                                             |
-| 36  | All                      | Feedback & State  | Console is throwing ZodError about missing ANTHROPIC_API_KEY on every page.                                                                                                              | Critical | Not user-visible, but it means the AI half of the product doesn't work in this session. Zoe would send a DM and get nothing back. Would assume the app is fake / broken.                                                                                     |
-| 37  | Flow Builder             | Copy & Labels     | "Live on v12 · 42 convos today" in the header                                                                                                                                            | Low      | This is actually kinda cute — real social-proof number. But it's hidden in tiny grey text. Zoe would never notice it. Pump it up.                                                                                                                            |
-| 38  | All                      | Accessibility     | No skip links, no keyboard-visible focus rings visible in any screenshot.                                                                                                                | Medium   | Tab navigation likely invisible. Zoe uses touch so doesn't care personally but friends who use accessibility tools would be stuck.                                                                                                                           |
-| 39  | All                      | Visual & Layout   | No dark mode. Entire app is one theme.                                                                                                                                                   | High     | Zoe switches every app she owns to dark mode. An app with zero theming is 2015-coded.                                                                                                                                                                        |
-| 40  | Flow Builder             | Forms & Input     | No undo/redo visible on the canvas.                                                                                                                                                      | Medium   | Every Zoe-tier app has undo — CapCut, Procreate, even Notes. Doing anything on a no-undo canvas is terrifying.                                                                                                                                               |
+### Block selected (Inspector)
 
----
+**Gut feel: 2/5**
 
-## Category Summary
+| #   | Category        | Finding                                                                             | Severity | Persona Rationale                                                             |
+| --- | --------------- | ----------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| 18  | Visual & Layout | Inspector tabs (Design / Routing / Triggers) — tiny text, no icons                  | Medium   | More tabs?? In another panel that's already in tabs?? Tab inception.          |
+| 19  | Copy & Labels   | Block goal description repeated from canvas                                         | Low      | If I clicked it I already saw the description. Show me something _different_. |
+| 20  | Visual & Layout | List with `>` arrows: "Why This Exists / Examples / Data Capture / Runtime Details" | Medium   | Feels like FAQ from a 2015 SaaS.                                              |
 
-### Navigation & Flow
+### Simulator (Preview replies)
 
-The whole app is three screens of nothing and one screen that's overwhelming. You go Home → "Dashboard" (which is basically just a re-link to the flow) → Flow Builder → 💀. Conversations is broken. There's no you, no profile, no streaks, no notifications, no "what's new". For an app where the point is literally _talking to people_ there is zero social shape to the UI.
+**Gut feel: 3/5** — Most familiar thing in the app, mostly because chat is everywhere I live.
 
-### Copy & Labels
+| #   | Category        | Finding                                       | Severity | Persona Rationale                                                                        |
+| --- | --------------- | --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------- |
+| 21  | Copy & Labels   | "Simulator — Live preview"                    | Medium   | "Simulator" sounds like flight simulator. Just say "Test the chat."                      |
+| 22  | Copy & Labels   | "Try a real prospect opener"                  | High     | "Prospect" again. Heard once in real estate ad. Just say "Pretend to be a customer."     |
+| 23  | Visual & Layout | Two buttons + "Ready to send" status          | Medium   | Don't know what either button does. Just put one big "Send."                             |
+| 24  | Forms & Input   | Send button disabled until I type             | Low      | Should turn purple as soon as I type and bounce. It just sits there grey. Sad button.    |
+| 25  | Visual & Layout | Floats over canvas, partially blocking blocks | Medium   | Tiny — want to make it bigger. Doesn't seem like I can.                                  |
+| 26  | Visual & Layout | Chat doesn't look like a real Instagram DM    | High     | If the whole point is Instagram, _make it look like Instagram_. This is just grey boxes. |
 
-Top-tier boomer vocabulary throughout: "Qualifier", "Objection Handler", "prospect", "closer", "organic DM", "Publish v13", "Persona", "Routing". The only words that made sense to me were "Send", "Conversations", and "404". Even the "View Prompt" modal is written like an internal engineering doc leaked out. Severely teen-hostile.
+### Palette drawer
 
-### Forms & Input
+**Gut feel: 2/5**
 
-Everything is a textarea with a CAPS LABEL. No emoji pickers, no chip selectors, no quick-reply templates, no sliders, no toggles, no mobile-friendly inputs. The canvas has no drag-to-reorder feel, no pinch-zoom. A variable called `contact.motivation` is shown raw. Very "coder not designer."
+| #   | Category      | Finding                                | Severity | Persona Rationale                                                                           |
+| --- | ------------- | -------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| 27  | Forms & Input | List of just text rows                 | High     | A list of just words is the _least_ sticky thing. Even Discord has emojis next to channels. |
+| 28  | Copy & Labels | "Escalation" / "Summary" / "Follow-up" | Medium   | These all sound like business email words. "Escalation" is what HR does.                    |
+| 29  | Forms & Input | Drag-and-drop only                     | High     | Why not tap to add? Touch screen would be unbearable.                                       |
 
-### Visual & Layout
+### Inbox tab
 
-Beige on beige on beige. One font, one weight, low contrast, no illustrations, no mascot, no color coding, no gradient, no glow. Looks like something you'd find at the back of a filing cabinet. On mobile the split view gets wrecked. No dark mode.
+**Gut feel: 1/5** — Loaded forever then showed me an empty finance dashboard.
 
-### Feedback & State
+| #   | Category        | Finding                                               | Severity | Persona Rationale                                       |
+| --- | --------------- | ----------------------------------------------------- | -------- | ------------------------------------------------------- |
+| 30  | Visual & Layout | Four metric cards with `—` and gray background        | Critical | Straight up my dad's "running a business" software.     |
+| 31  | Copy & Labels   | "until flow_id lands on the conversations table"      | Critical | Read 3 times, no idea what it says. Code talking.       |
+| 32  | Visual & Layout | Two "Loading…" indicators                             | Medium   | Pick one. A spinner animation would help.               |
+| 33  | Visual & Layout | "Select a conversation to view the transcript."       | Low      | Empty states are an _opportunity_. Add an illustration. |
+| 34  | Copy & Labels   | "Brand inbox" + "Brand-wide only" + "Brand-wide data" | Medium   | Brand brand brand brand. I get it.                      |
 
-No hover states visible, no tap feedback, no loading skeletons (Conversations just crashes to error), no success toasts shown. Simulator chat missing timestamps and typing indicators. Console is spewing ZodError which means the bot probably isn't even replying.
+### Variables tab
 
-### Trust & Safety
+**Gut feel: 1/5** — Made me close my laptop.
 
-"Publish v13" button with no confirm + no preview. The "VendingPreneurs" label vs "InstaSetter" name mismatch is weird. The crashed conversations page makes the whole thing feel unmaintained. A modal that literally says "editing ships in Week 7" to the user is not reassuring.
+| #   | Category        | Finding                                                     | Severity | Persona Rationale                                                        |
+| --- | --------------- | ----------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| 35  | Copy & Labels   | `brand.brand_name`, `brand.booking_url`, `contact.location` | Critical | These are CODE NAMES. I would never type something like this in my life. |
+| 36  | Copy & Labels   | "Scoped to a single thread"                                 | High     | "Scoped" — just say "lasts for one chat."                                |
+| 37  | Visual & Layout | Three category cards with examples in dotted form           | High     | Replace with real-life sentences.                                        |
+| 38  | Visual & Layout | Big table — basically Excel                                 | Critical | Excel is the literal definition of boomer software.                      |
 
-### Accessibility & Inclusion
+### Release tab
 
-Low contrast everywhere, tiny node text, reliance on Unicode glyphs that probably render differently on different OSes and have meaningless screen-reader labels (what does a screen reader say for ⎔?). No visible focus rings. Mobile is broken for the main feature. Nobody except a sighted desktop user is getting into this app.
+**Gut feel: 1/5** — A whole tab that does NOTHING.
 
----
+| #   | Category        | Finding                                                    | Severity | Persona Rationale                                                                            |
+| --- | --------------- | ---------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| 39  | Copy & Labels   | Tab named "Release"                                        | Medium   | Release means a song or movie coming out.                                                    |
+| 40  | Copy & Labels   | "A marketer-facing reality check..." paragraph             | Critical | A whole _paragraph_. With "marketer-facing reality check." I tuned out at "marketer-facing." |
+| 41  | Copy & Labels   | "Publish controls and release history are not wired yet."  | High     | If it's not wired, why is the tab here.                                                      |
+| 42  | Copy & Labels   | DRAFT WORKSPACE / LIVE RUNTIME / PROMPT SOURCE / SIMULATOR | High     | Coding bootcamp terms.                                                                       |
+| 43  | Copy & Labels   | "Compiled from src/lib/prompts/sections/\*.ts"             | Critical | A FILE PATH IS ON THE PAGE. With wildcards.                                                  |
+| 44  | Visual & Layout | Bullet circles in different colors with no legend          | Medium   | Decorative-but-also-maybe-meaningful is confusing.                                           |
 
-## Overall Vibe Check (not a category, just a Zoe thing)
+### Bot tab
 
-If this was a TikTok, no one would finish the first slide. There's no hook. No color. No animation. No face. No mascot. No meme. No vibe. The product screams "made by a 45 year old man who reads Harvard Business Review." If I saw this ad on my FYP I'd swipe in 0.3 seconds.
+**Gut feel: 1/5** — Might be the scariest. "HARD RULES" "LOCKED."
 
-**Fastest wins to stop looking like homework:**
+| #   | Category        | Finding                                                                         | Severity | Persona Rationale                                                                                 |
+| --- | --------------- | ------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| 45  | Copy & Labels   | "Identity — HARD RULES" with "LOCKED"                                           | Critical | All caps with lock icon = I'll get in trouble. Threatening?? In an app for editing chat replies?? |
+| 46  | Copy & Labels   | "Message Length — HARD LIMIT"                                                   | High     | Same energy. Like a school rule.                                                                  |
+| 47  | Copy & Labels   | "Affirmation Rules" / "Voice" / "Identity"                                      | Medium   | "Affirmation Rules" sounds like therapy.                                                          |
+| 48  | Copy & Labels   | "Parsed from the live system prompt."                                           | High     | "Parsed" / "system prompt" — programmer words.                                                    |
+| 49  | Copy & Labels   | "Display name — Not named — shared team inbox"                                  | Low      | Why is the dash inside the placeholder??                                                          |
+| 50  | Visual & Layout | Purple "V" square next to "Display name" — looks like avatar uploader but isn't | Medium   | I tried tapping. Nothing.                                                                         |
+| 51  | Copy & Labels   | "Flow scope: Instagram DM Flow"                                                 | Low      | "Flow scope" is two words I don't naturally pair.                                                 |
+| 52  | Copy & Labels   | Voice rules content with second-person directives                               | Medium   | Am I supposed to follow these rules? Make it clearer who they're for.                             |
 
-1. Kill every Unicode symbol. Use real SVG icons, ideally with matching emoji for teen energy.
-2. Rename every block to teen-English: "Qualifier" → "Get to know them", "Objection Handler" → "When they push back", "Escalation" → "Pass to a human".
-3. Make the homepage _show_ something: a phone mockup with a running chat, a counter of messages sent, a vibey hero.
-4. Add literally one color accent. Any color. Please.
-5. Fix Conversations. A dead page > a broken one.
-6. Lose the `v13` jargon on Publish or at least add a tooltip "save your changes so the bot uses them."
-7. Put a profile / avatar / notification bell in the top right so the app feels lived-in.
-8. A 404 with a little "oopsie 🫠" character would cost nothing and change the whole vibe.
+### Mobile gate
 
-Tl;dr: it's not broken-looking, it's _absent_-looking. No personality, hostile vocabulary, and the one page I actually wanted (messages!) is literally an error. I'd close this tab and go back to my For You page. 2/10, would not recommend to the group chat.
+**Gut feel: 2/5** — Honestly?? At least straightforward.
+
+| #   | Category          | Finding                                                           | Severity | Persona Rationale                                                                                                             |
+| --- | ----------------- | ----------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 53  | Trust & Safety    | Tool requires desktop ≥1024px                                     | Blocker  | I do EVERYTHING on my phone. iPad portrait is 768px so it's blocked too. The choice is "we don't care about anyone under 30." |
+| 54  | Copy & Labels     | "Multi-panel canvas that doesn't fit on a phone or small tablet." | Low      | Honest. But "multi-panel canvas" is a bit much.                                                                               |
+| 55  | Visual & Layout   | Plain white with no illustration                                  | Medium   | If you're going to disappoint a mobile user, at least make the disappointment cute.                                           |
+| 56  | Navigation & Flow | "Open conversations →" only escape                                | Low      | At least somewhere to go.                                                                                                     |
+
+### General / Cross-cutting
+
+| #   | Category         | Finding                                                                                                       | Severity | Persona Rationale                                                              |
+| --- | ---------------- | ------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| 57  | Visual & Layout  | Zero emojis anywhere                                                                                          | Critical | Every app I use has emojis. The total absence makes this feel sterile and old. |
+| 58  | Visual & Layout  | Color palette is mostly white + grey                                                                          | High     | Whole app is washed out. Linear has gradients. This is just flat paper.        |
+| 59  | Visual & Layout  | No animations on hover, tap, page transitions                                                                 | High     | Modern apps live and breathe. Snap-cuts feel like 2005.                        |
+| 60  | Copy & Labels    | "marketer-facing reality check," "compiled prompt," "system prompt," "shared draft workspace," "live runtime" | Critical | None of this is human. All corporate or technical. Where is the personality?   |
+| 61  | Visual & Layout  | Top nav: Dashboard / Conversations / Lead Sources / Flow Builder                                              | Medium   | "Lead Sources" / "Flow Builder" feel like 2014 SaaS.                           |
+| 62  | Visual & Layout  | Tiny purple "i" square as brand mark                                                                          | Low      | Cute? But plain. Like a placeholder.                                           |
+| 63  | Trust & Safety   | "Saved to Supabase" pill                                                                                      | High     | Saying the name of your _database_ on screen is embarrassing to read.          |
+| 64  | Accessibility    | Inspector tabs and tiny pills too small for thumb taps                                                        | Medium   | iPad-first design isn't a thing here.                                          |
+| 65  | Feedback & State | No haptic-feeling feedback (no scale, no flashes, no micro-interactions)                                      | High     | Tapping things feels dead.                                                     |
+
+## What actually slapped (rare)
+
+- **Chat simulator** felt familiar.
+- **Purple accent color** is fine.
+- **Mobile gate** at least redirects rather than being broken.
+- **Zoom in/out and fit view** controls familiar from Figma.
+
+## What Zoe would actually do
+
+I'd close the tab. Sorry. The "VendingPreneurs DEV" + "Saved to Supabase" + "compiled from src/lib/prompts/sections/*.ts" combo in the first 5 seconds tells me this app is not for me. It's for *programmers\*.
+
+If you want teens (and 20somethings) to use this:
+
+1. **Plain English everywhere.** No "qualifier", no "objection handler", no "release", no "compiled prompt".
+2. **More color, more motion, more personality.** Even one delightful animation would change the whole feel.
+3. **Mobile-first or at least mobile-good.** Locking out phones is a generational choice.
+4. **Hide the tech.** I should never see "Supabase" or a file path or version number.
+5. **Emojis. Just one. Anywhere. Please.**
+
+This app needs a glow-up.
+
+— Zoe

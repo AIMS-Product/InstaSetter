@@ -1,120 +1,225 @@
-# Persona 06 — RACHEL, The Skeptic
-
-**Who I am:** 42, marketing director at a mid-market services firm. I've owned the SaaS selection process for the last six vendors we've onboarded — two of them got ripped out inside ninety days because they didn't live up to the pitch. So I evaluate before I commit. I read the fine print. I look for the things the sales page is hiding.
-
-**My lens:** trust signals, commercial transparency, legitimacy, proof. I am not here to explore a product — I am here to decide whether this is a real company I can hand money (and my brand's Instagram inbox) to.
-
+---
+persona: Rachel — Skeptical Buyer (42)
+role: Marketing Director, evaluating InstaSetter for her team
+date: 2026-04-28
+scope: /dashboard/flows/[flowId] and its 5 tabs
 ---
 
-## Overall Gut Feel: 1/5 — Broken or hostile
+# Rachel's Review — InstaSetter Flow Builder
 
-I cannot tell this is a real business. There is no company name, no pricing, no contact, no testimonials, no terms, no privacy policy, no demo, no "who is behind this." The product's showpiece page (Conversations) is broken on load. This looks like an internal prototype that someone accidentally put on the public internet. If a sales rep pointed me at this URL right now, the call would end within thirty seconds.
+## Overall Gut Feel: **1 / 5**
 
----
+I came in to evaluate this for our team. I'm leaving without enough trust to put it on a shortlist, let alone in front of our CEO.
+
+This product reads like a tool that escaped from a developer's branch mid-sprint. There is no pricing page, no terms, no privacy policy, no support contact, no testimonials, no "about us," no security page — and _that_ is before I even got into the product itself. Once I'm in the product, it tells me, in its own words, that several of the screens I'm looking at "are not wired yet." So what exactly am I being asked to buy?
+
+I will not be sending this up the chain. Below is the receipt.
+
+## Trust-Breaking Findings
+
+### Finding 1 — A literal "DEV" badge in the chrome
+
+| Where    | Header, top right, every page |
+| -------- | ----------------------------- |
+| Severity | **Blocker**                   |
+
+There is an orange pill that says **"DEV"** sitting in the global header next to the brand selector. I can see it in every screenshot. It is the very last visual element my eye lands on before I look at the page content.
+
+If this is a development environment, why am I being shown it as a sales surface? If this is the production product, why does it call itself "DEV"? Either answer is bad. A serious SaaS does not ship a debug-environment label to a customer-facing UI. This single pill, all on its own, would get me to close the tab if I weren't being paid to review it.
+
+### Finding 2 — "Saved to Supabase" exposes the database vendor
+
+| Where    | Header pill, every tab |
+| -------- | ---------------------- |
+| Severity | **Critical**           |
+
+A green pill in the header literally says **"Saved to Supabase"**. Supabase is the name of the _database vendor they use_. I am a marketing director, not their CTO.
+
+Two problems:
+
+1. It tells me their team is shipping engineer-language to me.
+2. It tells me, indirectly, that my data lives in a third-party Postgres-as-a-service. I now have a whole new vendor to vet — one they didn't volunteer in a DPA. Where is data residency? Who is sub-processor? Is it on Supabase's free tier?
+
+The right copy here is **"Saved"** or **"All changes saved"**.
+
+### Finding 3 — Dev-diary copy on the Inbox tab
+
+| Where    | Inbox tab    |
+| -------- | ------------ |
+| Severity | **Critical** |
+
+The Inbox screen has a banner that reads, verbatim:
+
+> **BRAND-WIDE ONLY**
+> Inbox metrics and transcripts below include all VendingPreneurs conversations until flow_id lands on the conversations table.
+
+"Until flow_id lands on the conversations table" is a TODO comment from a Jira ticket. It's also a confession that the metrics are wrong. They don't show me data for the flow I'm looking at — they show a rolled-up brand total. That's the _entire reason a marketer logs into a flow tool_.
+
+The four big metric cards are all empty dashes. Whether that's because there's no data or the page is broken, I cannot tell.
+
+### Finding 4 — "Reference only — not wired yet" on the Variables tab
+
+| Where    | Variables tab |
+| -------- | ------------- |
+| Severity | **Critical**  |
+
+The Variables tab carries a pill that says **"Reference only"** + banner:
+
+> **REFERENCE ONLY** — Creating variables and row-level actions is **not wired yet.**
+
+Translation: "You can't actually use this tab. It's a screenshot of a feature we haven't built." It's listed in the workspace nav with same visual weight as Flow, Inbox, Release, Bot, so a buyer reasonably believes it's a working part of the product. It is not. _Deceptive surface area._
+
+### Finding 5 — "Publish controls and release history are not wired yet"
+
+| Where    | Release tab  |
+| -------- | ------------ |
+| Severity | **Critical** |
+
+The Release tab — where I'd expect version history, diffs, rollback, audit log — has a banner: "**Publish controls and release history are not wired yet.**"
+
+So how do I:
+
+- Roll back if the new flow tanks our reply rate?
+- Show my CEO an audit trail?
+- Sign off on a change before it goes to live customers?
+- Comply with internal change-control?
+
+I cannot. The _publish_ feature does not work. On a tool whose entire job is to push prompts to live Instagram conversations.
+
+The same screen has a card titled **"PROMPT SOURCE — Compiled from src/lib/prompts/sections/\*.ts"**. That's a filesystem path. I should not be able to see this. Ever.
+
+### Finding 6 — "Live: setter-v2" — version names from inside the codebase
+
+| Where    | Header pill on every tab |
+| -------- | ------------------------ |
+| Severity | **High**                 |
+
+`setter-v2` is a developer's internal handle for "the second iteration of the setter prompt." It's not a feature, plan, or SKU. It's a branch name listed alongside customer-facing pills as if meaningful.
+
+What does v1 do that v2 doesn't? When does v3 ship? Does v2 cost more? None of that is answered.
+
+### Finding 7 — "LOCKED" sections on the Bot tab with no explanation
+
+| Where    | Bot tab  |
+| -------- | -------- |
+| Severity | **High** |
+
+"Identity — HARD RULES" is LOCKED. "Voice" is EDITABLE. The page never tells me:
+
+- Locked **for whom**? My plan? Every customer? The team hasn't shipped the feature?
+- Locked **forever**, or unlockable on a higher plan?
+- Locked **by InstaSetter / by my admin**?
+
+If "locked" means "we will never let you change this," it's a positioning decision that should be sold proudly. If "locked" means "we haven't built the editor yet," it's another _not wired_. The ambiguity is the problem.
+
+### Finding 8 — Header status pills mean nothing to a buyer
+
+| Severity | **High** |
+
+Header carries up to four pills + DEV. Three are about _internal state of their engineering pipeline_ (Supabase, setter-v2, save pending). One is the brand. None tell me what _I_ should do next.
+
+### Finding 9 — No pricing, no plans, no "buy" path anywhere
+
+| Severity | **Blocker** |
+
+I scrolled the whole page. No pricing page, plans, "Upgrade," "Billing." A buyer cannot evaluate without this.
+
+### Finding 10 — No legal pages: no Terms, no Privacy, no DPA, no Security
+
+| Severity | **Blocker** |
+
+This product:
+
+1. Connects to my Instagram Business account.
+2. Reads inbound DMs (PII — names, locations, phone numbers).
+3. Generates and sends replies on my behalf.
+4. Stores transcripts ("conversations table").
+5. Routes data through "Supabase."
+
+And there is no DPA. No company on Earth lets me sign a SaaS that touches customer DMs without a DPA.
+
+### Finding 11 — No social proof, no testimonials, no logos, no case studies
+
+| Severity | **Critical** |
+
+The only social signal is "VendingPreneurs" — and only by inference. No "trusted by." A new SaaS with zero social proof in 2026 either doesn't have customers or doesn't know how to ask.
+
+### Finding 12 — No "How is my Instagram account protected?" answer
+
+| Severity | **Critical** |
+
+The product sends DMs from my IG Business account. Meta will ban my account if the bot violates automation policies. Nothing reassures me about:
+
+- Meta Business Partner status
+- DM processing region
+- Rate limiting / spam protection
+- Audit log of what was sent
+- Pause/kill switch
+- Human-handoff for sensitive messages
+
+### Finding 13 — No support contact, no help center, no chat widget
+
+| Severity | **Critical** |
+
+No Help / Docs link. No live chat. No "Contact us." No support email. No phone. No status page link. If something breaks at 9pm Friday, who do I call?
+
+### Finding 14 — Flow Builder is mocked out with seeded sample data, no obvious "this is sample" indicator
+
+| Severity | **High** |
+
+Canvas loads with fully populated blocks. Variables tab shows real-looking values. Is this:
+
+- Sample data?
+- A real customer's flow I'm somehow seeing because auth isn't enforced?
+
+No auth on `/dashboard/flows/[flowId]` _and_ any flowId works. So `/dashboard/flows/unknown-flow-test` _also_ renders the same flow. Either critical authz bug or every visitor sees the same demo.
+
+### Finding 15 — Mobile gate is honest but undersells
+
+| Severity | **Medium** |
+
+"Open conversations →" is respectful, but no nav, no logo brand-mark, no "Get a demo" or "Start trial." A mobile buyer just bounces.
+
+### Finding 16 — The "Preview replies" simulator is unlabelled
+
+| Severity | **Medium** |
+
+Questions a buyer asks and the product never answers:
+
+- Does this call my Instagram account or a sandbox?
+- Is it talking to live Claude API and burning my credits?
+- Will the prospect see anything?
+- Where do test transcripts go?
+
+A skeptical buyer does not press "Run" without knowing.
 
 ## Per-Page Gut Feel
 
-| Page                           | Score   | One-sentence justification                                                                                                            |
-| ------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| / (Home)                       | **1/5** | A wordmark, one tagline, and two links into an unauthenticated admin — nothing that tells a buyer this is a legitimate company.       |
-| /dashboard                     | **1/5** | "Flow Builder preview" in the copy confirms this is still a prototype; no buyer should be looking at this.                            |
-| /dashboard/conversations       | **1/5** | "Something went wrong" on cold load with four repeated ZodErrors about a missing API key — product isn't production-ready.            |
-| /dashboard/flows/ig-organic-dm | **2/5** | Genuinely interesting-looking editor, but tabs are click-blocked by an overlay and half the UI is undecoded glyphs — not buyer-ready. |
-| 404                            | **3/5** | Clean and recovers to home, which is the one thing on this site that just works.                                                      |
+| Page          | Score   | One-Sentence Reason                                                                                                |
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| Flow tab      | 2/5     | Looks like a real editor for thirty seconds, then the DEV badge, Supabase pill, and seeded demo data with no auth. |
+| Inbox tab     | 1/5     | "Until flow_id lands on the conversations table" — a literal Jira-comment in the chrome.                           |
+| Variables tab | 1/5     | "Reference only — not wired yet." Sidebar tab that admits it doesn't work.                                         |
+| Release tab   | 1/5     | Publish flow doesn't publish. Source file paths on a customer screen.                                              |
+| Bot tab       | 2/5     | Best-looking page, but LOCKED/EDITABLE badges with no explanation.                                                 |
+| Mobile gate   | 3/5     | Honest, but undersells.                                                                                            |
+| Overall       | **1/5** | I cannot find a price, a privacy policy, a support contact, or a single working publish button.                    |
 
----
+## What Would Move Me to a 3?
 
-## Findings
+1. Remove the "DEV" badge.
+2. Replace **"Saved to Supabase"** with **"Saved"**.
+3. Either ship Variables and Release tabs, or hide them. "Not wired yet" must not appear in production.
+4. Add a footer with Pricing, Terms, Privacy, DPA, Security, Contact.
+5. Add a sentence above the canvas: _"This is a sample flow. Sign in to start your own."_
+6. Replace `setter-v2` with a marketer-readable label.
+7. Remove `src/lib/prompts/sections/*.ts` from the Release tab.
+8. Explain "LOCKED" — even one sentence.
 
-| #   | Page                           | Category          | Finding                                                                                                                                                                                               | Severity     | Persona Rationale                                                                                                                                                                                             |
-| --- | ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | /                              | Trust & Safety    | No company name, legal entity, "about" blurb, or founder credibility signal anywhere on the landing page.                                                                                             | **Blocker**  | I hand over my IG inbox to a faceless wordmark? No. I need to know who is on the other end of my DMs before I connect an account.                                                                             |
-| 2   | /                              | Trust & Safety    | No pricing, no pricing page, no "starting at $X," no plan comparison.                                                                                                                                 | **Blocker**  | Hidden pricing means "contact sales." That tells me the number changes based on how wealthy you look. I won't even start that conversation without a public number to benchmark against.                      |
-| 3   | /                              | Trust & Safety    | No free trial, demo, sandbox, or "try it" affordance. The only CTAs dump you straight into an admin UI.                                                                                               | **Blocker**  | Every tool I've been burned by refused to let me try before buying. That's now a disqualifier on sight.                                                                                                       |
-| 4   | /                              | Trust & Safety    | No testimonials, case studies, logos, press, reviews, G2/Capterra embed, or named customers.                                                                                                          | **Critical** | "Trained on hundreds of real conversations" is the kind of claim that needs a receipt. Without one named customer or outcome metric I assume there are none.                                                  |
-| 5   | /                              | Trust & Safety    | No Privacy Policy, Terms of Service, Data Processing Addendum, or cookie banner.                                                                                                                      | **Blocker**  | I cannot pass this past procurement or legal. If I'm plugging this into Instagram, I need a DPA. No DPA = dead on arrival.                                                                                    |
-| 6   | /                              | Trust & Safety    | No contact: no email address, support link, phone, chat, or sales form.                                                                                                                               | **Critical** | If something breaks at 11pm on a Sunday and the bot is spamming leads, who do I call? The absence of any contact vector is a production-readiness signal.                                                     |
-| 7   | /                              | Trust & Safety    | No Instagram/Meta Partner badge, no "official Meta partner" claim, no indication this is authorised against Meta's platform terms.                                                                    | **Critical** | Unofficial IG automation is a ban risk. I'd need explicit confirmation this is done through sanctioned APIs before I expose a brand account.                                                                  |
-| 8   | /                              | Trust & Safety    | No SOC 2, ISO 27001, GDPR, CCPA or any security/compliance badge.                                                                                                                                     | **High**     | I have to explain data handling to my CMO. "They don't mention it" reads as "they don't have it."                                                                                                             |
-| 9   | /                              | Copy & Labels     | The entire value proposition is six words: "Instagram DM appointment setting automation." No proof, no outcome, no ICP, no differentiation.                                                           | **Critical** | I cannot distinguish this from the dozen other IG automation tools sliding into my LinkedIn DMs. Six words is a placeholder, not a pitch.                                                                     |
-| 10  | /                              | Navigation & Flow | Both CTAs ("Conversations →", "Flow Builder →") dump an unauthenticated visitor directly into what looks like a customer-only admin.                                                                  | **Critical** | Either this is unauthenticated and I'm seeing someone else's data (catastrophic trust fail), or this is a demo env with no indication it's a demo. Both readings kill the deal.                               |
-| 11  | /                              | Visual & Layout   | Landing page is a headline, tagline, and two buttons on a near-empty beige canvas. No hero, no screenshots, no features, no footer.                                                                   | **Critical** | This is not a landing page. This is a placeholder. If the marketing site looks unfinished, why would I trust the product behind it?                                                                           |
-| 12  | /                              | Visual & Layout   | No footer at all — no copyright, no company address, no social links, no sitemap.                                                                                                                     | **High**     | A missing footer on a B2B SaaS page is the fingerprint of pre-launch scaffolding. It signals "we haven't shipped yet."                                                                                        |
-| 13  | /                              | Feedback & State  | Console throws a ZodError on cold load about a missing `ANTHROPIC_API_KEY`.                                                                                                                           | **Critical** | Any evaluator who opens DevTools (and I do, every time) sees that the product is missing its AI credentials. That's "not production." I close the tab.                                                        |
-| 14  | /dashboard                     | Copy & Labels     | Body copy literally reads "Flow Builder preview. Open the prototype flow to see the split-view editor."                                                                                               | **Blocker**  | You have told me, in your own copy, that I am looking at a prototype. That's not a product I can buy. Evaluation ends here.                                                                                   |
-| 15  | /dashboard                     | Trust & Safety    | No authentication gate in front of what is clearly a customer dashboard.                                                                                                                              | **Critical** | If I reached this without logging in, either the app is wide open or the "dashboard" is a marketing shell dressed as one. Both hurt trust.                                                                    |
-| 16  | /dashboard                     | Navigation & Flow | "Dashboard" contains one card pointing into one flow. No KPIs, no activity feed, no nav bar, no account menu, no billing link.                                                                        | **Critical** | Real dashboards have KPIs. This is a stub. It confirms the "preview" language in the body copy.                                                                                                               |
-| 17  | /dashboard/conversations       | Feedback & State  | Page returns a 200 but renders "Something went wrong / An unexpected error occurred." with only a "Try again" button.                                                                                 | **Blocker**  | The feature most central to the value proposition (seeing conversations) is broken on load. In an evaluation that is a full stop.                                                                             |
-| 18  | /dashboard/conversations       | Copy & Labels     | Error message gives no error code, no support link, no "email us if this persists," no timestamp, no trace ID.                                                                                        | **Critical** | "An unexpected error occurred" tells me nothing and gives me no way to report it. This is pre-launch error handling.                                                                                          |
-| 19  | /dashboard/conversations       | Feedback & State  | "Try again" does not recover — the page is broken because a server-side env var (`ANTHROPIC_API_KEY`) is missing; retry cannot fix a missing secret.                                                  | **Critical** | A retry button that cannot possibly succeed is worse than no button. It makes me click the thing twice and confirms the product is broken, not transient.                                                     |
-| 20  | /dashboard/conversations       | Trust & Safety    | Console log exposes that the server is missing `ANTHROPIC_API_KEY` by name — i.e. the AI model provider and the env-var name are leaked to the client.                                                | **High**     | Leaking the model vendor and env-var naming is a light security smell. Not catastrophic, but it tells me their error plumbing is lazy, and lazy plumbing is where breaches start.                             |
-| 21  | /dashboard/conversations       | Navigation & Flow | No way back except the browser back button. No breadcrumb, no "back to dashboard" link, no nav chrome.                                                                                                | **High**     | On a broken page, being trapped is a second layer of bad. I shouldn't need to hit ⌘← to escape an error screen.                                                                                               |
-| 22  | /dashboard/flows/ig-organic-dm | Trust & Safety    | Page is a fully-featured flow editor with a "Publish v13" button. Unauthenticated. Clicking it does "something" (stayed, per the log) with no confirmation.                                           | **Blocker**  | A "Publish" button that an anonymous visitor can press on the production URL is either a security hole or a fake button. I do not want to find out which.                                                     |
-| 23  | /dashboard/flows/ig-organic-dm | Navigation & Flow | Tabs (Flow / Runs / Variables / Versions / Bot) are click-blocked by an overlapping DOM element and never switch — forced clicks show identical content, suggesting the tabs don't actually work yet. | **Critical** | A core navigation primitive is broken. I clicked five tabs; none responded. The screenshots of each "tab" are indistinguishable. That's a prototype, not a product.                                           |
-| 24  | /dashboard/flows/ig-organic-dm | Copy & Labels     | UI is littered with undecoded glyphs: `⎔`, `◉`, `∥`, `⟳`, `◐`, `⤢`, `⊞`, `↗`. No icons, no labels pairing, no tooltips.                                                                               | **High**     | Icon-fallback characters where real icons should be means the icon font or component isn't loading. It looks broken and cheap in a space where buyers want polish.                                            |
-| 25  | /dashboard/flows/ig-organic-dm | Copy & Labels     | Labels assume deep product literacy: "Qualifier," "Objection Handler," "Escalation," "Handoff," "Capture," "contact.motivation." No glossary, no docs link.                                           | **High**     | I'm the buyer, not the ops person. I need to understand what I'm buying before I authorise my team to use it. This reads as something written for its authors.                                                |
-| 26  | /dashboard/flows/ig-organic-dm | Trust & Safety    | "Live on v12 · 42 convos today" badge in the top bar implies this is a live production account — but the URL is unauthenticated.                                                                      | **Critical** | Either I'm looking at real live data belonging to a real customer (nuclear-grade privacy breach) or the number is fabricated theatre. Both kill trust.                                                        |
-| 27  | /dashboard/flows/ig-organic-dm | Forms & Input     | Multiple textareas and inputs have no labels, no placeholders, no required markers, no help text.                                                                                                     | **High**     | Form design is a leading indicator of product maturity. Unlabelled inputs on the showpiece page tell me the team hasn't polished the thing they want me to buy.                                               |
-| 28  | /dashboard/flows/ig-organic-dm | Copy & Labels     | Top-of-page note: "Edit there today. Flow Builder editing ships in Week 7." (visible in the View Prompt panel.)                                                                                       | **Blocker**  | The team has told me, in the product, that the product isn't finished until Week 7. That is an internal comms leak and an immediate disqualifier — I'm not going to buy something you've labelled unfinished. |
-| 29  | /dashboard/flows/ig-organic-dm | Feedback & State  | "Publish v13" button click (per log) produced no visible confirmation, no toast, no modal, no URL change.                                                                                             | **Critical** | Publish is a destructive, customer-facing action. Silent publish is one of the worst UX patterns in enterprise software — I never know what I just did.                                                       |
-| 30  | /dashboard/flows/ig-organic-dm | Feedback & State  | Simulator has a "Send" chat input that the exploration log flags as "external side effect."                                                                                                           | **High**     | If a simulator message can reach real Instagram prospects, that is an evaluator's worst-case scenario. I need to know this is a sandbox before I touch the keyboard. Label it.                                |
-| 31  | /dashboard/flows/ig-organic-dm | Visual & Layout   | Split layout (canvas + inspector + simulator) at 1280px is cramped; nodes visually overlap connector lines in the screenshots.                                                                        | **Medium**   | At my laptop width (13" MBP) the product already feels squeezed. My CMO, on a 27" iMac, might be fine. I'm not.                                                                                               |
-| 32  | /dashboard/flows/ig-organic-dm | Accessibility     | All tab controls are `<button>` with a single glyph character and no `aria-label`, no visible text label pairing.                                                                                     | **High**     | A11y is a procurement checkbox at any company over 200 people. Icon-only buttons without ARIA fail VPAT immediately.                                                                                          |
-| 33  | /dashboard/flows/ig-organic-dm | Accessibility     | Colour-coded chips (Raises objection, Handled, Price + post-call, Positive, Price) carry meaning through colour alone — no text state indicator for colour-blind users.                               | **High**     | Ditto — a11y line item that will come up in any vendor review.                                                                                                                                                |
-| 34  | /this-route-does-not-exist     | Copy & Labels     | 404 copy is just "404 / Page not found / Go home" — no brand voice, no search, no suggestions, no support link.                                                                                       | **Low**      | The 404 is the one place on this site that works. It's also the cheapest place to earn a trust point, and they didn't bother.                                                                                 |
-| 35  | Global                         | Trust & Safety    | No favicon visible, no `<title>` variation per page (inferred from the empty polish), no OG metadata.                                                                                                 | **Medium**   | Stuff that signals "we shipped on purpose." Its absence adds up.                                                                                                                                              |
-| 36  | Global                         | Trust & Safety    | Hosted at `localhost:3000` — but more important: this is what an evaluator was apparently pointed at.                                                                                                 | **Blocker**  | If I was sent a localhost URL as a product demo, the demo is over. Including this because it's the situation we're in — I'm being asked to evaluate something that isn't yet on the internet.                 |
-| 37  | Global                         | Trust & Safety    | No status page, uptime indicator, or SLA mention anywhere.                                                                                                                                            | **High**     | For a tool handling live customer DMs, SLA is table stakes. Its absence is a signal.                                                                                                                          |
-| 38  | Global                         | Trust & Safety    | No mention of Meta/Instagram approval, Graph API access tier, or Business Verification.                                                                                                               | **Critical** | Two of the tools I got burned by got rugged overnight when Meta changed their API policy. I specifically check for this now.                                                                                  |
-| 39  | Global                         | Trust & Safety    | No pricing calculator, no usage-based metering preview, no "what counts as a conversation / message / run."                                                                                           | **Critical** | Per-message or per-conversation billing on IG automation tools can spiral. I need a cost model before I run anything.                                                                                         |
-| 40  | Global                         | Trust & Safety    | No refund policy, cancellation policy, or month-to-month option visible.                                                                                                                              | **High**     | Annual-contract-only tools that hide their cancellation terms are where people like me get trapped. I ask up front.                                                                                           |
+## Final Word
 
----
+I evaluate four to six SaaS tools a quarter. I have walked away from products with smaller red-flag piles than this. The fundamentals of the flow editor look promising — canvas, inspector, simulator concept — but the chrome around it screams "unfinished." I would not send my CEO a product whose own UI tells me, in three places, that it is not wired yet. And I would not put my brand's Instagram account into a system whose data processing terms I cannot find with a search.
 
-## Category Summary (Rachel's weights)
+**Recommendation to my CEO:** Veto. Revisit in two quarters if they ship pricing, legal, and a publish flow.
 
-### Trust & Safety — catastrophic
-
-This is where I spend 80% of my attention, and this is where the product has nothing to show me. No company identity, no pricing, no proof, no contact, no legal, no security, no Meta partnership. A live-looking admin accessible without auth. A broken showpiece page. Internal copy ("preview," "prototype," "ships in Week 7") leaked into the UI. Every single trust signal on my checklist is missing. I would not take a second meeting after seeing this.
-
-### Copy & Labels — weak
-
-Six-word value prop. Prototype-aware copy visible to users. Undecoded icon glyphs throughout the flow editor. Internal jargon assumed (Qualifier, Escalation, contact.motivation). Error messages that don't explain anything.
-
-### Navigation & Flow — broken in the places it matters
-
-Tabs don't work on the flagship editor. No auth gate in front of admin. No back affordance from error pages. Home page dumps unauthenticated users straight into what-looks-like customer data.
-
-### Feedback & State — pre-launch
-
-Error screens are generic. Retry does not recover. Silent publish. Console errors that name the missing env var.
-
-### Forms & Input — incomplete
-
-Unlabelled inputs across the editor. No required markers, no help text, no validation visible.
-
-### Visual & Layout — unfinished
-
-Empty landing page. No footer. Cramped split layout at 1280px. Icon characters where icons should be. Beige-on-beige aesthetic that reads "unfinished stylesheet" rather than "minimalist."
-
-### Accessibility — fails on basics
-
-Icon-only buttons without ARIA. Colour-only state chips. Almost certainly fails a VPAT in its current form.
-
----
-
-## What would move me to 3/5
-
-None of these are ambitious. They are the floor.
-
-1. A real landing page with: company name, pricing, named customers, Privacy + Terms + DPA links, contact, Meta partner status.
-2. Remove the "preview / prototype / ships in Week 7" copy from any surface a prospect can reach.
-3. Fix `/dashboard/conversations` so it doesn't error on a missing API key — or hide it behind auth until it works.
-4. Put the admin behind login. Unauthenticated visitors should never see "Publish v13."
-5. Fix the flow-builder tabs. A broken tab switch on the showpiece UI is a demo-killer.
-
-Until those five are true, I cannot even begin the real evaluation.
-
----
-
-**Bottom line from Rachel:** I would not put this in front of my CMO. I would not open a Slack thread about it. This is pre-revenue-stage tooling wearing a product URL. Come back when it looks like a company.
+— Rachel

@@ -1,443 +1,441 @@
-# Exploration Log
+# Exploration Log — Flow Builder
 
 Base URL: http://localhost:3000
-Date: 2026-04-20
-Pages explored: 5
-Screenshots captured: 27
-Destructive actions skipped: 1
+Date: 2026-04-27
+Scope: /dashboard/flows/[flowId] and its 5 tab views
 
 ---
 
-## Page: / (Home)
+## Page: /dashboard/flows/ig-organic-dm (desktop, default tab=flow)
 
 ### Load
 
 - Status: 200
-- Load time: 608ms
-- Screenshot: screenshots/home-desktop-001-load.png
+- URL: http://localhost:3000/dashboard/flows/ig-organic-dm
+- Load time: 4111ms
+- Screenshot: screenshots/flow-ig-organic-dm-001-desktop-load.png
 
-### Interactive inventory (clickable)
+### Header inventory
 
-| #   | Tag | Text / Label    | href                           | Bucket |
-| --- | --- | --------------- | ------------------------------ | ------ |
-| 0   | a   | Conversations → | /dashboard/conversations       | safe   |
-| 1   | a   | Flow Builder →  | /dashboard/flows/ig-organic-dm | safe   |
+### Main inventory (visible buttons + links, top 40)
 
-### Interactions performed
+- button "Preview replies" aria=- disabled=false
+- button "Flow
+  Edit the draft" aria=Flow disabled=false
+- button "Inbox
+  Review real chats" aria=Inbox disabled=false
+- button "Variables
+  Check memory" aria=Variables disabled=false
+- button "Release
+  What's live" aria=Release disabled=false
+- button "Bot
+  Global rules" aria=Bot disabled=false
+- button "(no text)" aria=Zoom out disabled=false
+- button "(no text)" aria=Zoom in disabled=false
+- button "(no text)" aria=Fit view disabled=false
+- button "(no text)" aria=Add block disabled=false
+- link "Skip to main content" href=#main
+- link "i
+  InstaSetter" href=/
+- link "Dashboard" href=/dashboard
+- link "Conversations" href=/dashboard/conversations
+- link "Lead Sources" href=/dashboard/marketing-sources
+- link "Flow Builder" href=/dashboard/flows/ig-organic-dm
+- link "Dashboard" href=/dashboard
 
-| #   | Target          | Bucket | Result    | To URL / Note                                       | Screenshot                               |
-| --- | --------------- | ------ | --------- | --------------------------------------------------- | ---------------------------------------- |
-| 0   | Conversations → | safe   | navigated | http://localhost:3000/dashboard/conversations       | home-desktop-002-click-conversations.png |
-| 1   | Flow Builder →  | safe   | navigated | http://localhost:3000/dashboard/flows/ig-organic-dm | home-desktop-003-click-flow-builder.png  |
+### Full-page screenshot (canvas tab): screenshots/flow-ig-organic-dm-002-desktop-fullpage.png
 
-### Responsive screenshots
+### Tab: flow
 
-| Viewport           | File                                  |
-| ------------------ | ------------------------------------- |
-| desktop (1280×800) | screenshots/home-desktop-001-load.png |
-| mobile (375×667)   | screenshots/home-mobile-001-load.png  |
-| tablet (768×1024)  | screenshots/home-tablet-001-load.png  |
+- Clicked via: [role="tab"]:has-text("flow")
+- Screenshot: screenshots/flow-ig-organic-dm-10-tab-flow.png
 
-### Console errors / warnings
+### Tab: runs
 
-- [error] %o
+- Clicked via: [id="flow-builder-tab-runs"]
+- Screenshot: screenshots/flow-ig-organic-dm-11-tab-runs.png
 
-%s ZodError: [
-{
-"origin": "string",
-"code": "too_small",
-"minimum": 1,
-"inclusive": true,
-"path": [
-"ANTHROPIC_API_KEY"
-],
-"message": "Too small: expected stri
+### Tab: variables
+
+- Clicked via: [role="tab"]:has-text("variables")
+- Screenshot: screenshots/flow-ig-organic-dm-12-tab-variables.png
+
+### Tab: versions
+
+- Clicked via: [id="flow-builder-tab-versions"]
+- Screenshot: screenshots/flow-ig-organic-dm-13-tab-versions.png
+
+### Tab: bot
+
+- Clicked via: [role="tab"]:has-text("bot")
+- Screenshot: screenshots/flow-ig-organic-dm-14-tab-bot.png
+
+### Canvas interactions
+
+#### Palette drawer
+
+- Opened palette via: button[aria-label*="block" i]
+- Screenshot: screenshots/flow-ig-organic-dm-200-palette-state.png
+
+#### Click first canvas node
+
+- Canvas nodes detected: 0
+
+#### Inspector inspect
+
+- No inspector landmark found via aside/complementary; using viewport screenshot
+- Screenshot: screenshots/flow-ig-organic-dm-220-inspector-snapshot.png
+
+#### Simulator toggle
+
+- Simulator toggle not found via known patterns
+- Screenshot: screenshots/flow-ig-organic-dm-230-simulator-state.png
+
+#### Simulator interaction
+
+- Did not find a sim input to type into
+- Screenshot: screenshots/flow-ig-organic-dm-240-sim-input-filled.png
+
+#### Publish button (skipped: destructive — modifies live runtime)
+
+- No Publish button visible
+
+### Keyboard navigation
+
+- Screenshot after 5x Tab: screenshots/flow-ig-organic-dm-260-keyboard-tab-5.png
 
 ---
 
-## Page: /dashboard (Dashboard)
+## Page: /dashboard/flows/ig-organic-dm (mobile 375×667 — gate expected)
 
-### Load
+- Screenshot: screenshots/flow-ig-organic-dm-300-mobile-gate.png
+- Page text (first 600 chars):
+
+```
+Skip to main content
+i
+InstaSetter
+Dashboard
+Conversations
+Lead Sources
+Flow Builder
+VendingPreneurs
+DEV
+Dashboard
+›
+Flow Builder
+i
+Flow Builder needs a desktop
+
+Editing the flow uses a multi-panel canvas that doesn’t fit on a phone or small tablet. Open this page on a screen at least 1024px wide.
+
+You can still monitor live conversations on your phone.
+
+Open conversations →
+```
+
+---
+
+## Page: /dashboard/flows/ig-organic-dm (tablet 768×1024)
+
+- Screenshot: screenshots/flow-ig-organic-dm-400-tablet.png
+- Page text (first 600 chars):
+
+```
+Skip to main content
+i
+InstaSetter
+Dashboard
+Conversations
+Lead Sources
+Flow Builder
+VendingPreneurs
+DEV
+Dashboard
+›
+Flow Builder
+i
+Flow Builder needs a desktop
+
+Editing the flow uses a multi-panel canvas that doesn’t fit on a phone or small tablet. Open this page on a screen at least 1024px wide.
+
+You can still monitor live conversations on your phone.
+
+Open conversations →
+```
+
+---
+
+## Page: /dashboard/flows/unknown-flow-test (does this 404 or render?)
 
 - Status: 200
-- Load time: 719ms
-- Screenshot: screenshots/dashboard-desktop-001-load.png
+- URL: http://localhost:3000/dashboard/flows/unknown-flow-test
+- Screenshot: screenshots/flow-unknown-001-desktop.png
+- Page text (first 600 chars):
 
-### Interactive inventory (clickable)
-
-| #   | Tag | Text / Label         | href                           | Bucket |
-| --- | --- | -------------------- | ------------------------------ | ------ |
-| 0   | a   | Open IG Organic DM → | /dashboard/flows/ig-organic-dm | safe   |
-
-### Interactions performed
-
-| #   | Target               | Bucket | Result    | To URL / Note                                       | Screenshot                                         |
-| --- | -------------------- | ------ | --------- | --------------------------------------------------- | -------------------------------------------------- |
-| 0   | Open IG Organic DM → | safe   | navigated | http://localhost:3000/dashboard/flows/ig-organic-dm | dashboard-desktop-002-click-open-ig-organic-dm.png |
-
-### Responsive screenshots
-
-| Viewport           | File                                       |
-| ------------------ | ------------------------------------------ |
-| desktop (1280×800) | screenshots/dashboard-desktop-001-load.png |
-| mobile (375×667)   | screenshots/dashboard-mobile-001-load.png  |
-| tablet (768×1024)  | screenshots/dashboard-tablet-001-load.png  |
-
----
-
-## Page: /dashboard/conversations (Conversations list)
-
-### Load
-
-- Status: 200
-- Load time: 642ms
-- Screenshot: screenshots/conversations-desktop-001-load.png
-
-### Interactive inventory (clickable)
-
-| #   | Tag    | Text / Label | href | Bucket |
-| --- | ------ | ------------ | ---- | ------ |
-| 0   | button | Try again    | —    | safe   |
-
-### Interactions performed
-
-| #   | Target    | Bucket | Result | To URL / Note | Screenshot                                    |
-| --- | --------- | ------ | ------ | ------------- | --------------------------------------------- |
-| 0   | Try again | safe   | stayed | —             | conversations-desktop-002-click-try-again.png |
-
-### Responsive screenshots
-
-| Viewport           | File                                           |
-| ------------------ | ---------------------------------------------- |
-| desktop (1280×800) | screenshots/conversations-desktop-001-load.png |
-| mobile (375×667)   | screenshots/conversations-mobile-001-load.png  |
-| tablet (768×1024)  | screenshots/conversations-tablet-001-load.png  |
-
-### Console errors / warnings
-
-- [error] %o
-
-%s ZodError: [
-{
-"origin": "string",
-"code": "too_small",
-"minimum": 1,
-"inclusive": true,
-"path": [
-"ANTHROPIC_API_KEY"
-],
-"message": "Too small: expected stri
-
-- [error] %o
-
-%s ZodError: [
-{
-"origin": "string",
-"code": "too_small",
-"minimum": 1,
-"inclusive": true,
-"path": [
-"ANTHROPIC_API_KEY"
-],
-"message": "Too small: expected stri
-
-- [error] %o
-
-%s ZodError: [
-{
-"origin": "string",
-"code": "too_small",
-"minimum": 1,
-"inclusive": true,
-"path": [
-"ANTHROPIC_API_KEY"
-],
-"message": "Too small: expected stri
-
-- [error] %o
-
-%s ZodError: [
-{
-"origin": "string",
-"code": "too_small",
-"minimum": 1,
-"inclusive": true,
-"path": [
-"ANTHROPIC_API_KEY"
-],
-"message": "Too small: expected stri
+```
+Skip to main content
+i
+InstaSetter
+Dashboard
+Conversations
+Lead Sources
+Flow Builder
+VendingPreneurs
+DEV
+Dashboard
+›
+Flow Builder
+i
+VENDINGPRENEURS
+Instagram DM Flow
+Instagram — Organic DM · Edit the shared draft and sanity-check tone before anything ships.
+No unpublished edits
+Saved to Supabase
+Live: setter-v2
+Preview replies
+WORKSPACE
+Flow
+Edit the draft
+Inbox
+Review real chats
+Variables
+Check memory
+Release
+What's live
+Bot
+Global rules
+Shared draft workspace.
+OPENING
+Opening
+Greet warmly, detect initial interest, and ask for location as the first qualifier.
+3 exits
+QUALIFIER
+Qualifier
+Colle
+```
 
 ---
 
-## Page: /dashboard/flows/ig-organic-dm (Flow Builder)
-
-### Load
-
-- Status: 200
-- Load time: 629ms
-- Screenshot: screenshots/flow-builder-desktop-001-load.png
-
-### Interactive inventory (clickable)
-
-| #         | Tag    | Text / Label   | href | Bucket   |
-| --------- | ------ | -------------- | ---- | -------- |
-| 0         | button | Simulator      | —    | safe     |
-| 1         | button | Publish v13    | —    | safe     |
-| 2         | button | ⎔              |
-| Flow      | —      | safe           |
-| 3         | button | ◉              |
-| Runs      | —      | safe           |
-| 4         | button | ∥              |
-| Variables | —      | safe           |
-| 5         | button | ⟳              |
-| Versions  | —      | safe           |
-| 6         | button | ◐              |
-| Bot       | —      | safe           |
-| 7         | button | −              | —    | safe     |
-| 8         | button | +              | —    | safe     |
-| 9         | button | ⤢              | —    | safe     |
-| 10        | button | ⊞              | —    | safe     |
-| 11        | button | View prompt    | —    | safe     |
-| 12        | button | ×              | —    | safe     |
-| 13        | button | Design         | —    | safe     |
-| 14        | button | Routing        | —    | safe     |
-| 15        | button | Triggers       | —    | safe     |
-| 16        | button | Data           | —    | safe     |
-| 17        | button | ↗ View Persona | —    | safe     |
-| 18        | button | + add          | —    | safe     |
-| 19        | button | ×              | —    | safe     |
-| 20        | button | ×              | —    | safe     |
-| 21        | button | + rule         | —    | safe     |
-| 22        | button | ×              | —    | safe     |
-| 23        | button | Send           | —    | external |
-
-### Form inputs
-
-| Tag      | Type | Name | Placeholder       | Required |
-| -------- | ---- | ---- | ----------------- | -------- |
-| input    | —    | —    |                   | no       |
-| textarea | —    | —    |                   | no       |
-| textarea | —    | —    |                   | no       |
-| textarea | —    | —    |                   | no       |
-| textarea | —    | —    |                   | no       |
-| input    | —    | —    | Type as prospect… | no       |
-
-### Interactions performed
-
-| #    | Target      | Bucket | Result                                               | To URL / Note | Screenshot                                     |
-| ---- | ----------- | ------ | ---------------------------------------------------- | ------------- | ---------------------------------------------- |
-| 0    | Simulator   | safe   | stayed                                               | —             | flow-builder-desktop-002-click-simulator.png   |
-| 1    | Publish v13 | safe   | stayed                                               | —             | flow-builder-desktop-003-click-publish-v13.png |
-| 2    | ⎔           |
-| Flow | safe        | error  | click: elementHandle.click: Timeout 5000ms exceeded. |
-
-Call log:
-
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <span>⊞</span> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <span>⊞</span> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <span>⊞</span> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 3 | ◉
-  Runs | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 4 | ∥
-  Variables | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 5 | ⟳
-  Versions | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 6 | ◐
-  Bot | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 7 | − | safe | stayed | — | flow-builder-desktop-009-click-.png |
-  | 8 | + | safe | stayed | — | flow-builder-desktop-010-click-.png |
-  | 9 | ⤢ | safe | stayed | — | flow-builder-desktop-011-click-.png |
-  | 10 | ⊞ | safe | stayed | — | flow-builder-desktop-012-click-.png |
-  | 11 | View prompt | safe | stayed | — | flow-builder-desktop-013-click-view-prompt.png |
-  | 12 | × | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 13 | Design | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 14 | Routing | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 15 | Triggers | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 16 | Data | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> from <div>…</div> subtree intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 17 | ↗ View Persona | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 18 | + add | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 19 | × | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 20 | × | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 21 | + rule | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 22 | × | safe | error | click: elementHandle.click: Timeout 5000ms exceeded.
-  Call log:
-- attempting click action
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 20ms
-  2 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 100ms
-  9 × waiting for element to be visible, enabled and stable - element is visible, enabled and stable - scrolling into view if needed - done scrolling - <div>…</div> intercepts pointer events - retrying click action - waiting 500ms
-  | — |
-  | 23 | Send | external | skipped | external side effect | — |
-
-### Responsive screenshots
-
-| Viewport           | File                                          |
-| ------------------ | --------------------------------------------- |
-| desktop (1280×800) | screenshots/flow-builder-desktop-001-load.png |
-| mobile (375×667)   | screenshots/flow-builder-mobile-001-load.png  |
-| tablet (768×1024)  | screenshots/flow-builder-tablet-001-load.png  |
-
----
-
-## Page: /this-route-does-not-exist (404 page)
-
-### Load
+## Page: /dashboard/flows (index — should 404)
 
 - Status: 404
-- Load time: 772ms
-- Screenshot: screenshots/not-found-desktop-001-load.png
-
-### Interactive inventory (clickable)
-
-| #   | Tag | Text / Label | href | Bucket |
-| --- | --- | ------------ | ---- | ------ |
-| 0   | a   | Go home      | /    | safe   |
-
-### Interactions performed
-
-| #   | Target  | Bucket | Result    | To URL / Note          | Screenshot                              |
-| --- | ------- | ------ | --------- | ---------------------- | --------------------------------------- |
-| 0   | Go home | safe   | navigated | http://localhost:3000/ | not-found-desktop-002-click-go-home.png |
-
-### Responsive screenshots
-
-| Viewport           | File                                       |
-| ------------------ | ------------------------------------------ |
-| desktop (1280×800) | screenshots/not-found-desktop-001-load.png |
-| mobile (375×667)   | screenshots/not-found-mobile-001-load.png  |
-| tablet (768×1024)  | screenshots/not-found-tablet-001-load.png  |
-
-### Console errors / warnings
-
-- [error] Failed to load resource: the server responded with a status of 404 (Not Found)
-- [error] Failed to load resource: the server responded with a status of 404 (Not Found)
-- [error] Failed to load resource: the server responded with a status of 404 (Not Found)
-
-### Failed network requests
-
-- http://localhost:3000/this-route-does-not-exist — 404
-- http://localhost:3000/this-route-does-not-exist — 404
-- http://localhost:3000/this-route-does-not-exist — 404
+- URL: http://localhost:3000/dashboard/flows
+- Screenshot: screenshots/flow-index-001-desktop.png
 
 ---
 
-## Flow Builder — state-based tab clicks
+## Console errors (1)
 
-| Tab       | Result | Screenshot |
-| --------- | ------ | ---------- |
-| Flow      | error  | —          |
-| Runs      | error  | —          |
-| Variables | error  | —          |
-| Versions  | error  | —          |
-| Bot       | error  | —          |
+- [flows-index] error: Failed to load resource: the server responded with a status of 404 (Not Found)
 
-## Skipped routes
+## Page errors (0)
 
-| Route                         | Reason                  |
-| ----------------------------- | ----------------------- |
-| /dashboard/conversations/[id] | no conversations seeded |
+## Network failures (1)
 
-## Skipped destructive / external actions
+- [flows-index] GET http://localhost:3000/dashboard/flows → 404
 
-| Page                           | Element | Bucket   | Reason               |
-| ------------------------------ | ------- | -------- | -------------------- |
-| /dashboard/flows/ig-organic-dm | Send    | external | external side effect |
+## Stats
 
-## Flow Builder — supplementary force-clicked interactions
+- Screenshots: 16
 
-After initial exploration found that normal clicks on Flow Builder UI elements were intercepted by overlapping DOM (a potential layout/z-index issue worth persona review), a supplementary pass used `{force: true}` clicks to capture the content of each tab for persona review.
+## Skipped destructive actions
 
-| Interaction | Result        | Screenshot                                 |
-| ----------- | ------------- | ------------------------------------------ |
-| Flow        | force-clicked | screenshots/flow-builder-tab-flow.png      |
-| Runs        | force-clicked | screenshots/flow-builder-tab-runs.png      |
-| Variables   | force-clicked | screenshots/flow-builder-tab-variables.png |
-| Versions    | force-clicked | screenshots/flow-builder-tab-versions.png  |
-| Bot         | force-clicked | screenshots/flow-builder-tab-bot.png       |
+| Page                           | Element                          | Reason                                                   |
+| ------------------------------ | -------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------- |
+| /dashboard/flows/ig-organic-dm | "Publish" button                 | mutates live runtime; outside session-created safety set |
+| /dashboard/flows/ig-organic-dm | block "Delete" controls (if any) | targets seeded blocks, not session-created               | # Exploration Log — Deep (Flow Builder Canvas Interactions) |
 
-Console errors during this pass: 0
+Date: 2026-04-27
+
+## Canvas node detection
+
+- selector `.react-flow__node`: 0 matches
+- selector `[data-id]`: 0 matches
+- selector `.react-flow__node-default`: 0 matches
+- selector `[role="button"][aria-label*="block" i]`: 8 matches
+- selector `[role="treeitem"]`: 0 matches
+
+## Visible block titles on canvas
+
+- found title text: "OPENING"
+- found title text: "Opening"
+- found title text: "Greet warmly, detect initial interest, and ask for location as the first qualifier."
+- found title text: "QUALIFIER"
+- found title text: "Qualifier"
+- found title text: "Collect at least two of five qualifiers through natural conversation — location first, budget last."
+- found title text: "Objection Handler"
+- found title text: "BOOKING"
+- found title text: "Booking Handoff"
+- found title text: "Mirror back what you know, drop the booking link, and ask for email in the same message."
+- found title text: "EMAIL CAPTURE"
+- found title text: "Email Capture"
+
+## Click the Opening block
+
+- Clicked via: text=Opening
+- Screenshot: screenshots/flow-deep-001-opening-block-selected.png
+
+- Inspector content visible: true
+
+## Open "Preview replies" simulator
+
+- Clicked Preview replies
+- Screenshot: screenshots/flow-deep-010-simulator-open.png
+
+## Type a test message in the simulator
+
+- Filled visible input/textarea
+- Screenshot: screenshots/flow-deep-011-simulator-input.png
+
+### Send the test message
+
+- Send failed via button:has-text("Send"): locator.click: Timeout 3000ms exceeded.
+  Call log:
+  - waiting for locator('button:has-text("Send")').first()
+    - locator resolved to <button disabled type="button">Send</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+    - element is not enabled
+    - retrying click action
+    - waiting 20ms
+      2 × waiting for element to be visible, enabled and stable
+      - element is not enabled
+    - retrying click action
+      - waiting 100ms
+        5 × waiting for element to be visible, enabled and stable
+      - element is not enabled
+    - retrying click action
+      - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+
+- Sent via: button:has-text("Run")
+- Screenshot: screenshots/flow-deep-012-simulator-after-send.png
+
+## Open palette and inspect block library entries
+
+- Opened palette
+- Screenshot: screenshots/flow-deep-020-palette-open.png
+
+### Hover a palette item (skipping click — modifies draft)
+
+- Hovered "Booking" palette item
+- Screenshot: screenshots/flow-deep-021-palette-hover.png
+
+## Click different block: Qualifier
+
+- Qualifier click failed: locator.click: Timeout 3000ms exceeded.
+  Call log:
+  - waiting for locator('text=Qualifier').first()
+    - locator resolved to <div>Greet warmly, detect initial interest, and ask fo…</div>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <button type="button" draggable="true">…</button> from <div>…</div> subtree intercepts pointer events
+  - retrying click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div>Objection</div> from <div>…</div> subtree intercepts pointer events
+  - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div>Objection</div> from <div>…</div> subtree intercepts pointer events
+      2 × retrying click action
+          - waiting 100ms
+          - waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div>Block library</div> from <div>…</div> subtree intercepts pointer events
+      2 × retrying click action
+          - waiting 500ms
+          - waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div>Objection</div> from <div>…</div> subtree intercepts pointer events
+      2 × retrying click action
+          - waiting 500ms
+          - waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div>Block library</div> from <div>…</div> subtree intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+- Screenshot: screenshots/flow-deep-030-qualifier-selected.png
+
+## Inspector — content audit after Qualifier click
+
+```
+
+```
+
+## Zoom in / Zoom out / Fit view
+
+- Clicked Zoom in
+- Clicked Zoom out
+- Clicked Fit view
+- Screenshot after zoom controls: screenshots/flow-deep-040-after-zoom.png
+
+## Tab: Inbox (live conversations)
+
+- Screenshot: screenshots/flow-deep-050-inbox-loaded.png
+
+## Tab: Variables (full content)
+
+- Screenshot: screenshots/flow-deep-060-variables-full.png
+
+## Tab: Release
+
+- Screenshot: screenshots/flow-deep-070-release-full.png
+
+## Tab: Bot — expand sections
+
+- Screenshot (initial): screenshots/flow-deep-080-bot-initial.png
+- Screenshot (after expand HARD RULES): screenshots/flow-deep-081-bot-hardrules-expanded.png
+
+## Console errors
+
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+- [desktop-deep] error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every rende
+
+## Page errors
+
+## Network failures

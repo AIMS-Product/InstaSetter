@@ -1,184 +1,163 @@
-# Persona 03 — SAM, First-Time Visitor
+# Sam — First-Time Visitor (28)
 
-**Age:** 28
-**Context:** Clicked a link from social media. Zero prior knowledge of this product, this company, or this space. Phone in hand. Ten seconds of patience before I bounce.
-**Lens:** Does a stranger understand what this is, why they should care, and what to do? Is the first action obvious and low-risk? Is value visible before I commit?
-**Frustration triggers:** Vague value propositions, jargon, assumed knowledge, being dropped into an "expert" UI on my first click, errors on the first page I land on.
+I clicked a link from social media. I have no idea what InstaSetter is. I'll give this 10 seconds before I close the tab.
 
----
+## Summary
 
-## TL;DR
+I'm staring at the screen and… what is this? The logo says "InstaSetter." There's a thing called "Flow Builder." There's a brand pill that says "VendingPreneurs" — am I VendingPreneurs? Am I supposed to be? There's an orange "DEV" tag next to my name which feels like I'm in a place I shouldn't be.
 
-I would leave within 15 seconds. The home page tells me almost nothing — a product name, a seven-word tagline aimed at someone who already knows what this is, and two buttons with insider labels. There is no "what it does," no "who it's for," no "how to try it," no screenshot, no pricing, no social proof, no sign-up. Both buttons drop a naive user into internal tools that make zero sense without context: one shows a broken error page, the other throws me into a power-user split-screen editor with ~24 buttons, symbols like `⎔ ◉ ∥ ⟳ ◐`, and labels like "Flow," "Runs," "Variables," "Versions," "Publish v13" — none of which I understand. This reads like an internal admin tool that someone accidentally made public, not a product for a first-time visitor.
+The page heading "Instagram DM Flow" with subtitle "Edit the shared draft and sanity-check tone before anything ships." Ships where? To who? I don't have an Instagram product. I don't know what "the shared draft" is. Three pills: "Unpublished edits," "Saved to Supabase" (Supa-what?), "Live: setter-v2" (setter as in dog?).
 
----
+Below: huge canvas with rectangles connected by lines — Opening, Qualifier, Objection Handler, Booking Handoff, Email Capture. Looks like a flowchart of some kind of conversation. But I don't know what the product _does_. There's no "What is InstaSetter?" copy anywhere. No demo, no tour, no help link, no pricing, no login wall — I'm just dropped in someone's workspace. No "About," no docs, no contact.
 
-## Page-by-page walkthrough
+I'd close in about 8 seconds.
 
-### 1. `/` — Home
+**Overall gut feel: 1/5.** No idea what this product is, what it does, what I'm supposed to do, or whether I'm in the right place.
 
-**Gut feel: 2 / 5** — "It's pretty, it's clean, and it tells me nothing."
+## Page-by-Page Review
 
-**First 3 seconds:** I see a cream/beige background, a big centered word "InstaSetter," and the subtitle "Instagram DM appointment setting automation." Two buttons: "Conversations →" (black, primary) and "Flow Builder →" (outline, secondary).
+### Page 1 — `/dashboard/flows/ig-organic-dm` (Flow tab — default landing)
 
-**First reactions as SAM:**
+The first thing: "VENDINGPRENEURS / Instagram DM Flow." I cannot tell if VendingPreneurs is the product, a customer, or my own pre-set demo account. The orange DEV pill makes it look broken.
 
-- "InstaSetter" — is this Instagram-related? Is it affiliated with Instagram? (No disclaimer either way, which is a trust issue in its own right.)
-- "Instagram DM appointment setting automation" — I'm parsing this word by word. "Appointment setting" is insider sales/marketing jargon. Normal people say "book a meeting" or "schedule a call." If I'm not already a sales ops person or an agency owner, this tagline sails right past me.
-- There is nothing here that tells me **who** this is for (coaches? clinics? agencies? individuals?), **what problem** it solves in human terms ("stop missing DMs from leads"), **how** it works, **what it costs**, or **whether I can try it**.
-- Two buttons, neither of which says "Get started," "See how it works," "Sign up," or "Learn more." "Conversations" and "Flow Builder" are not first-time-visitor labels — they are app navigation labels. I do not have any conversations. I have never built a flow. I do not know what either word means in this context.
-- No nav bar, no logo, no footer, no "About," no pricing link, no demo video, no contact, no legal. The page is floating in space. This makes the product feel either unfinished or suspicious — I can't tell which.
-- No sign-up or sign-in. Am I already "in"? Is there an account? Is my data exposed? (Turns out there isn't one yet, but a stranger can't tell that from the screen.)
+Subtitle: every key phrase is jargon — "Organic DM," "shared draft," "ships." Then three status pills: "Unpublished edits" / "Saved to Supabase" / "Live: setter-v2" — all inscrutable. "Saved to Supabase" actively hurts trust — that's a database name. Like a restaurant menu saying "stored in our walk-in fridge."
 
-**Primary question I can't answer:** "What happens if I click a button?" I'd expect a homepage to have a micro-explanation — "See the live DMs our AI is handling" or "Build your first auto-reply in 2 minutes." There is nothing here to set expectation. Clicking is a blind leap.
+Left sidebar: Flow / Inbox / Variables / Release / Bot — taglines help but reinforce I'm in a builder, not a website. Canvas itself is genuinely cool-looking, but I don't know if I'm meant to edit it, watch a demo, or just look. There's literally no headline, no hero copy, no value proposition.
 
-**Would I click anything?** I'd probably click "Conversations" because it's the primary (black) button — only to discover it's broken.
+| Category          | Score   | Notes                                                                                       |
+| ----------------- | ------- | ------------------------------------------------------------------------------------------- |
+| Navigation & Flow | 2/5     | Two competing nav systems with no explanation.                                              |
+| Copy & Labels     | 1/5     | "Saved to Supabase," "setter-v2," "Organic DM," "shared draft," "ships" — wall of jargon.   |
+| Visual & Layout   | 4/5     | Honestly looks clean. Linear-y vibes. But polished view of nothing I understand.            |
+| Feedback & State  | 2/5     | Three status pills with no tooltips. Orange "Unpublished edits" feels like a warning at me. |
+| Trust & Safety    | 1/5     | "Saved to Supabase" + "DEV" + version names = leaked staging environment.                   |
+| Accessibility     | 4/5     | Skip-link present, contrast ok.                                                             |
+| **Gut feel**      | **1/5** | I'd close the tab.                                                                          |
 
----
+### Page 2 — Inbox tab
 
-### 2. `/dashboard/conversations` — Conversations (error state)
+Header now says "Brand inbox" with a banner: "_Use this inbox to spot reply quality issues, stalled leads, and booking events while per-flow attribution is still being wired into the conversation records._" That's literally a developer's TODO list. Below: "BRAND-WIDE ONLY" warning with `flow_id` and "conversations table" — database schema notes.
 
-**Gut feel: 1 / 5** — "Broken on my first click. I'm done."
+Four metric tiles all empty placeholders showing dashes.
 
-**What I see:** Giant heading: **"Something went wrong"**, subtitle "An unexpected error occurred," and a "Try again" button. That's it. No header, no nav, no link back home, no logo, no support link, no error code, no "try later," no "contact us."
+| Category        | Score   | Notes                                                                     |
+| --------------- | ------- | ------------------------------------------------------------------------- |
+| Copy & Labels   | 1/5     | "until X lands on Y table" — engineering ticket titles, not product copy. |
+| Visual & Layout | 2/5     | Loading state placeholder, empty tiles, half-built feel.                  |
+| Trust & Safety  | 1/5     | The "until X lands" tells me this product is not done.                    |
+| **Gut feel**    | **1/5** | I'm reading developer notes.                                              |
 
-**First reactions as SAM:**
+### Page 3 — Variables tab
 
-- The very first real page I clicked into is broken. In a first-time visit this is game over. I assume the whole product is broken or abandoned.
-- "Something went wrong" with no detail doesn't even tell me if it's my fault or theirs, a temporary issue or a hard failure.
-- "Try again" does nothing (per the exploration log it stayed on the same page). So the one action offered to me doesn't work either.
-- No way back except browser back. There's no "Go home" link, no logo to click, nothing.
-- Background console errors flood the dev log with `ZodError: ANTHROPIC_API_KEY` — a stranger wouldn't see that, but it confirms the page is failing because the product isn't configured. A first-timer can't configure anything; they just see a dead page.
+Title "Variables" — uh oh. Then `brand.brand_name`, `contact.location`, `conversation.last_objection` — code with dots. "Reference only" pill. Banner: "_Creating variables and row-level actions is not wired yet._" Table looks like database admin panel.
 
-This single page alone is a bounce. If this were a real marketing landing page, I'd have closed the tab before sentence two.
+I now think InstaSetter is a tool I'd need to be a developer to use.
 
----
+| Category       | Score   | Notes                                               |
+| -------------- | ------- | --------------------------------------------------- |
+| Copy & Labels  | 2/5     | Mixes plain English with raw `dot.notation` schema. |
+| Trust & Safety | 1/5     | Third "not wired yet" disclaimer.                   |
+| **Gut feel**   | **1/5** | Confirmed: this is for engineers, not me.           |
 
-### 3. `/dashboard/flows/ig-organic-dm` — Flow Builder
+### Page 4 — Release tab
 
-**Gut feel: 1 / 5** — "This is not for me. Why am I looking at it?"
+Tab is "Release" but heading is "Release status" — three names for the same thing.
 
-**What I see at a glance (2 seconds):** A dense multi-panel screen. Top bar: `VanderhyjPleasure`, `IG Organic DM`, `Draft v13`, `Simulator`, `Publish v13`. Left rail with icon + letter tabs (`⎔ Flow`, `◉ Runs`, `∥ Variables`, `⟳ Versions`, `◐ Bot`). A canvas with connected boxes labelled "Opening," "Qualifier," "Objection Handler," "Booking Handoff," "Post-Call Follow-up," "Escalation," "Summary." On the right, a property inspector with tabs `Design | Routing | Triggers | Data`, a "View Persona" button, and a mock IG chat preview with sample messages.
+"_A marketer-facing reality check…_" — first time I've seen "marketer." So _marketers_ are the audience? News to me. Banner: "_Publish controls and release history are not wired yet._" Fourth disclaimer.
 
-**First reactions as SAM:**
+Cards: DRAFT WORKSPACE / LIVE RUNTIME / PROMPT SOURCE / SIMULATOR. "_Compiled from src/lib/prompts/sections/_.ts\*" — a literal file path on someone's computer.
 
-- This is an airplane cockpit. I came here from a social media link expecting to see **what the product does for me**. Instead I've been handed a tool I have no training for.
-- What is a "Flow"? What is a "Bot"? What is a "Block"? What does "Qualifier" mean in this context — is it a CRM lead qualifier, a training step, a content filter? Why is there a "v13" and a "Draft v13"?
-- "Publish v13" — am I about to deploy someone else's live Instagram account? If I click it, does something happen to a real business? I would not click this.
-- "Simulator" — maybe this is the safe "try it" path. But nothing guides me there. It's just another button among 24.
-- Pre-filled data ("VanderhyjPleasure," sample messages about "Dallas-looking to build some more stamina," "Mike") — wait, am I seeing someone else's data? A real client's flow? Real prospect names? This is a trust-and-safety red flag for a stranger: either this is a live production account I shouldn't see, or a demo that should be labelled as such. Neither is handled.
-- There are symbols I literally cannot read: `⎔`, `◉`, `∥`, `⟳`, `◐`, `⊞`, `⤢`. A first-time visitor has no hope of guessing what these do. They're not even universally recognised glyphs; they look decorative.
-- The side-tabs intercept pointer events per the exploration log — they're visually there but not clickable, which feels broken when you try to explore.
-- There is no "What is this?", no tour, no onboarding, no tooltips, no "Start here." I am alone in someone else's editor.
+| Category       | Score   | Notes                                                                      |
+| -------------- | ------- | -------------------------------------------------------------------------- |
+| Copy & Labels  | 1/5     | A file path is shown as page copy. There is no greater violation of trust. |
+| Trust & Safety | 1/5     | Internal tool that someone forgot to gate.                                 |
+| **Gut feel**   | **1/5** | This is an internal tool I shouldn't be looking at.                        |
 
-**Who is this page for?** Clearly a marketer or power user who already bought the product, already has a workspace, already knows the vocabulary. Not a random visitor from social media. But there is no gating, no sign-up, no "Are you sure you want to go here?" between the home page and this.
+### Page 5 — Bot tab
 
----
+Heading: "Appointment Setter" — first time the actual job-to-be-done is named anywhere. I get it now: this thing books Instagram DM appointments. _That should be on the front door, not five clicks deep._
 
-### 4. `/dashboard` — Dashboard
+"Display name" / "Not named — shared team inbox." "Identity — HARD RULES" `LOCKED`, "Voice" `EDITABLE`, "Message Length — HARD LIMIT" `LOCKED`. Why locked? Would I break the bot? Charge me?
 
-**Gut feel: 2 / 5** — "Another dead-end page with one link."
+Voice section shows actual prose: "Warm, direct, and locally aware…" — first real glimpse of what InstaSetter does. Buried at the bottom of tab #5.
 
-**What I see:** Centered text: "InstaSetter / Flow Builder preview. Open the prototype flow to see the split-view editor. / Open IG Organic DM →"
+| Category       | Score   | Notes                                                                        |
+| -------------- | ------- | ---------------------------------------------------------------------------- |
+| Copy & Labels  | 2/5     | LOCKED-by-whom? Why? No tooltip.                                             |
+| Trust & Safety | 3/5     | Best tab so far. Hard Rules / Hard Limit framing feels considered.           |
+| **Gut feel**   | **2/5** | Tells me what the product is — but it's the LAST page a stranger would find. |
 
-**First reactions as SAM:**
+### Page 6 — Mobile gate
 
-- It's literally a page with one sentence and one link. This feels like a placeholder, not a dashboard.
-- "Flow Builder preview," "prototype flow," "split-view editor" — more insider words. None of this helps me decide whether to click.
-- "IG Organic DM" — this is a **workspace name**, not a product feature. Why is a random visitor seeing a specific tenant's data named in the UI?
-- It's a funnel: home → this → that one editor. Same dead-end as a sales-y landing page, but without any of the sales copy. I can't actually do anything **except** go forward into the complex editor.
-- No breadcrumbs, no nav, no way to go back to home without hitting the browser back button.
+If I clicked from social media on my phone (which I do for most links), I get "_Flow Builder needs a desktop. Editing the flow uses a multi-panel canvas that doesn't fit on a phone or small tablet. Open this page on a screen at least 1024px wide._"
 
----
+Instant bounce. No marketing page, no screenshot, no demo video. "Open conversations" leads to another part of the same internal tool — I don't know what conversations are.
 
-### 5. Flow Builder tabs — Runs / Variables / Versions / Bot
+| Category       | Score   | Notes                                                      |
+| -------------- | ------- | ---------------------------------------------------------- |
+| Trust & Safety | 1/5     | Telling a mobile visitor "go away" is a guaranteed bounce. |
+| **Gut feel**   | **1/5** | If this is the entry point from social, I never come back. |
 
-**Gut feel (combined): 1 / 5** — "I can't even see what these pages are."
+### Page 7 — Block selected (Opening)
 
-**What I see:** All four tab screenshots (`flow-builder-tab-runs.png`, `-variables.png`, `-versions.png`, `-bot.png`) are visually indistinguishable from each other and from the default `flow-builder-desktop-001-load.png`. The active tab appears unchanged; the canvas and inspector look identical in every capture. (The exploration log confirms real clicks timed out because overlays intercepted pointer events.)
+Clicked Opening. Right panel slides in with tabs: "Design / Routing / Triggers / Locals." Then Sketchpad. Then "Why This Exists / Examples / Data Capture / Runtime Details."
 
-**First reactions as SAM:**
+"Why This Exists" is the only button I'd actually click as a first-timer because _that's the question I have about the entire product_. I'd hope clicking explains InstaSetter, but I'm sure it just explains the Opening block.
 
-- If I click "Runs" and nothing visibly changes, I assume the app is broken.
-- Tab labels like "Runs," "Variables," "Versions" are engineering/admin language. A first-timer hasn't formed a mental model of what a "run" is in this system, let alone why they'd inspect one.
-- No active-tab highlight strong enough to survive a thumbnail comparison — visual feedback on tab switching is effectively invisible.
+| Category      | Score   | Notes                              |
+| ------------- | ------- | ---------------------------------- |
+| Copy & Labels | 1/5     | "Locals" is the one that broke me. |
+| **Gut feel**  | **2/5** | Right idea, wrong audience.        |
 
----
+### Page 8 — Simulator open
 
-### 6. `/this-route-does-not-exist` — 404
+Clicked "Preview replies." Floating modal: "Try a real prospect opener" with chat-like interface. Send button disabled until I type.
 
-**Gut feel: 3 / 5** — "Clean, but missing basic courtesy."
+OK — _this is the moment_ InstaSetter could win me. If I type "hi do u have any vending machines" and watch the bot reply, I'd get it instantly. **This should be the front door.**
 
-**What I see:** Big "404", "Page not found," "Go home" button.
+But I had to land on a page I didn't understand, ignore four jargon tabs, click an unfamiliar block, notice the small "Preview replies" button, dismiss feeling I was in the wrong place, _then_ find this.
 
-**First reactions as SAM:**
+| Category          | Score   | Notes                                   |
+| ----------------- | ------- | --------------------------------------- |
+| Navigation & Flow | 2/5     | Buried. Should be the entry point.      |
+| **Gut feel**      | **3/5** | Best part of the product. Hide it less. |
 
-- It's fine. Consistent with the rest of the (minimal) design.
-- No nav, no logo, no search, no suggestions of what to visit instead. For a first-time visitor this is another lonely room.
-- At least "Go home" actually navigates home (one of the few working links in the whole app, per the exploration log).
+### Page 9 — Palette open (Block library)
 
----
+Hit "+" — Block library drawer slid out: Opening / Qualifier / Objection / Booking / Email Capture / Follow-Up / Escalation / Summary.
 
-## Findings table
+I now realize these are the _types_ of conversation steps the bot can handle. **The block names alone describe what the bot does — better than any other copy on the site. Lead with these on the homepage!**
 
-| Category          | Finding                                                                                                                                                                                                                                    | Severity | Why this matters to me (SAM)                                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Copy & Labels     | Home page tagline "Instagram DM appointment setting automation" uses sales-ops jargon ("appointment setting") and doesn't explain the product in human language.                                                                           | Critical | In 10 seconds I need to know what problem this solves for me. I don't. I'm already drafting my exit.                                                                             |
-| Navigation & Flow | Home page offers only "Conversations" and "Flow Builder" as CTAs — both are internal tool labels, not first-visitor labels. No "Get started," "See a demo," "How it works," "Sign up."                                                     | Critical | I have no mental model for these words yet. A stranger cannot tell a "Conversation" from a "Flow." I would guess and lose.                                                       |
-| Feedback & State  | Primary CTA ("Conversations →") leads to a fullscreen "Something went wrong" error page on first click. "Try again" also does nothing.                                                                                                     | Blocker  | The first real thing I do in this product is hit a wall. I assume the product is broken or abandoned and leave.                                                                  |
-| Copy & Labels     | Error page says only "An unexpected error occurred" with no error code, no timestamp, no "contact us," no "try later," no link home.                                                                                                       | Critical | Generic error text with no path forward is the definition of a dead end. I can't even tell if it's my fault.                                                                     |
-| Trust & Safety    | Home page has no logo/wordmark beyond the text, no footer, no "About," no Terms, no Privacy, no company name, no contact.                                                                                                                  | High     | I can't tell if this is a real company, a scam, a side project, or an abandoned prototype. I'm inclined to assume the worst.                                                     |
-| Trust & Safety    | No disclaimer about relationship to Instagram/Meta. Name "InstaSetter" implies affiliation.                                                                                                                                                | High     | I worry about handing over an Instagram login to a product that might get me banned or violate ToS. First-timers are cautious about Instagram integrations.                      |
-| Trust & Safety    | Flow Builder exposes what looks like real-world workspace data ("VanderhyjPleasure," named prospects, fitness-coaching copy with "Dallas," "Mike") to any anonymous visitor. No login, no "demo mode" label.                               | Critical | Either I'm seeing a real customer's data (massive privacy issue) or this is a demo that isn't labelled (trust issue). Either way, I'm uncomfortable.                             |
-| Navigation & Flow | Both home-page CTAs drop an unauthenticated stranger straight into an internal editor with no onboarding, no guided tour, and a "Publish v13" button that implies production deployment.                                                   | Critical | I could click "Publish" in 10 seconds and have no idea whether I just broke a live account. The blast-radius is terrifying for a first-timer.                                    |
-| Copy & Labels     | Flow Builder uses domain-specific vocabulary throughout without any definition: Flow, Block, Bot, Setter, Qualifier, Objection Handler, Booking Handoff, Routing, Triggers, Variables, Versions, Runs, Publish, Draft, Simulator, Persona. | Critical | Every label I read adds cognitive load. By label 8 I've given up trying to build a mental model.                                                                                 |
-| Visual & Layout   | Sidebar tabs use decorative symbols (`⎔ ◉ ∥ ⟳ ◐ ⊞ ⤢`) that aren't universally recognised icons. Zero-context visitors cannot guess their meaning.                                                                                          | High     | The icons don't teach me anything. They hide meaning rather than reveal it.                                                                                                      |
-| Navigation & Flow | No nav bar, no top-level menu, no breadcrumbs anywhere. No way to go "back to home" from the dashboard or flow builder except browser back.                                                                                                | High     | I feel stuck. Feeling stuck makes me close tabs.                                                                                                                                 |
-| Feedback & State  | Tab switches ("Flow," "Runs," "Variables," "Versions," "Bot") produce no visible change in the screenshots — active state is either missing or too subtle.                                                                                 | Critical | If clicking a tab appears to do nothing, the app feels broken, which is the last thing I want to feel as a first-timer.                                                          |
-| Feedback & State  | Exploration log shows pointer-event interception on Flow Builder tabs — clicks on Flow/Runs/Variables/Versions/Bot and Design/Routing/Triggers/Data timed out.                                                                             | Critical | I click something, nothing happens, I conclude the site is broken.                                                                                                               |
-| Visual & Layout   | Home page is ~30% content, ~70% whitespace with everything vertically centered. No visual hierarchy beyond "giant word / small word / two buttons." No hero imagery, no product screenshot, no diagram, no motion.                         | Medium   | I have nothing to look at that tells a story. A good home page teaches me in 5 seconds; this one just greets me.                                                                 |
-| Visual & Layout   | Home page and 404 look stylistically identical — same cream background, same centered minimal text, same small black button. I can't tell "marketing" from "utility" visually.                                                             | Medium   | I read the 404 and briefly wonder if the home page itself is an error page.                                                                                                      |
-| Copy & Labels     | Dashboard page copy: "Flow Builder preview. Open the prototype flow to see the split-view editor." Words "preview," "prototype," "split-view editor" are developer-speak.                                                                  | High     | I don't know what I'm looking at. Calling it a "prototype" also subtly says "this isn't the real product," which kills trust.                                                    |
-| Copy & Labels     | "IG Organic DM" — using a channel/campaign shorthand as a user-facing name.                                                                                                                                                                | Medium   | This is written for the people who built the tool, not the people who'd use it.                                                                                                  |
-| Forms & Input     | No sign-up, sign-in, email capture, or lead form anywhere in the journey. Also no "Try without signing up" messaging.                                                                                                                      | Critical | First-time visitors expect a funnel: either "try it live, no signup" or "enter email to continue." Neither exists — just "here's an editor." I don't know what I've walked into. |
-| Forms & Input     | Flow Builder exposes textareas and an input ("Type as prospect...") with no labels, no placeholders, no required markers, no instructions.                                                                                                 | High     | Even if I wanted to experiment, I wouldn't know what to type where.                                                                                                              |
-| Accessibility     | Decorative unicode symbols used as button icons (`⎔ ◉ ∥ ⟳ ◐`) with no aria-labels visible. Screen readers would announce these as random characters.                                                                                       | High     | If I use a screen reader, this entire sidebar is gibberish.                                                                                                                      |
-| Accessibility     | Tabs rely on subtle visual state. Colour contrast of muted grey labels against cream background looks marginal.                                                                                                                            | Medium   | Anyone with low vision or low-contrast conditions would lose their place fast.                                                                                                   |
-| Accessibility     | Every heading is centered and floating — no landmarks (`<nav>`, `<main>`, `<header>`) visible from the layout.                                                                                                                             | Medium   | A screen-reader user would struggle to navigate.                                                                                                                                 |
-| Feedback & State  | No loading states anywhere. Pages either render or error. Long operations (Simulator, Publish) give me no spinner hint from the screenshots.                                                                                               | Medium   | I don't know if my click did anything.                                                                                                                                           |
-| Trust & Safety    | Environment misconfiguration (`ZodError: ANTHROPIC_API_KEY` missing) causes console errors on both home and conversations pages.                                                                                                           | High     | End users don't see these, but the effect — a dead conversations page — hits them directly.                                                                                      |
-| Trust & Safety    | "Publish v13" button is a prominent top-right CTA in the same position most apps put "Save" or primary action. A naive visitor could fire it.                                                                                              | Critical | A production-publish button without a confirmation step, visible to unauthenticated users, is a blast-radius problem.                                                            |
-| Visual & Layout   | Mobile home page reflows cleanly (good) but offers nothing extra — still the same two opaque buttons, still no explanation.                                                                                                                | Medium   | Mobile is where I arrived. Still no value prop.                                                                                                                                  |
-| Navigation & Flow | Conversations error page has no "Go home" link, unlike the 404. Asymmetric.                                                                                                                                                                | Medium   | I'm stuck on a broken page with only a non-working "Try again" button.                                                                                                           |
-| Copy & Labels     | 404 page is sparse but polite. No suggested routes, no search, no help link.                                                                                                                                                               | Low      | Cleanest page in the app, but still a lonely room.                                                                                                                               |
-
----
+| Category      | Score   | Notes                                                  |
+| ------------- | ------- | ------------------------------------------------------ |
+| Copy & Labels | 4/5     | Best naming on the site. Surface this on the homepage. |
+| **Gut feel**  | **3/5** | Best naming on the site.                               |
 
 ## Blockers
 
-These are dealbreakers — SAM leaves here.
+1. **No value proposition anywhere.** Zero copy says "InstaSetter is a tool that automates Instagram DM appointment booking using AI."
+2. **No marketing/landing page on `/` or `/dashboard/flows/[anything]`.** A stranger drops _into the product_ with no context.
+3. **Mobile gate is a bounce trap.** ~70% of social-media link traffic is mobile.
+4. **Internal artifacts leak to the user.** `src/lib/prompts/sections/*.ts`, "Saved to Supabase," "DEV," "setter-v2," "until flow_id lands on the conversations table."
+5. **"Not wired yet" disclaimers shown to visitors.** Four banners on four pages tell me the product is unfinished.
 
-1. **Primary home-page CTA leads to a crash page.** Clicking "Conversations" — the black, primary button on the first screen — shows "Something went wrong." No recovery. This is the single biggest blocker: a first-time visitor who follows the most prominent call-to-action hits a wall in under 5 seconds.
-2. **No value proposition, no product explanation, no sign-up.** The home page tells a stranger nothing beyond a 7-word jargon tagline. There is no way for a new visitor to learn what this is, whether it's for them, what it costs, or how to begin.
-3. **Both CTAs drop strangers into internal tooling.** A first-time visitor has no business being inside a Flow Builder with Publish controls. This should be a gated, authenticated area — or at minimum a clearly labelled demo/playground with rails.
+## My Top 10 Issues
 
----
+1. **No value proposition copy anywhere.** — Cannot tell what InstaSetter does in 10 seconds.
+2. **Internal/dev artifacts visible.** — Saved to Supabase, DEV tag, setter-v2, file paths.
+3. **Mobile visitors get a flat refusal screen.** — No marketing content, no preview.
+4. **"Not wired yet" disclaimers on Inbox, Variables, Release, and Bot tabs.** — Looks like a developer's todo list.
+5. **VendingPreneurs vs Instagram DM Flow vs InstaSetter title hierarchy unclear.** — Cannot tell which is the product, account, or customer.
+6. **Two competing nav systems.** — Top nav (Dashboard / Conversations / Lead Sources / Flow Builder) and left workspace nav (Flow / Inbox / Variables / Release / Bot). "Inbox" vs "Conversations" — same or different?
+7. **Heavy domain jargon with no glossary or tooltips.** — Block, exits, Routing, Triggers, Locals, Hard Rules, Hard Limit, compiled prompt, shared draft, live runtime.
+8. **The "Preview replies" button — the most valuable interaction for a first-timer — is small and tucked next to noisy status pills.** — The simulator should be the most visually dominant CTA.
+9. **No "About," docs link, help, contact, pricing, login/signup, or marketing footer.** — A legitimate SaaS has _somewhere_ I can read about it.
+10. **Three status pills in the header all look like alerts addressed to me.** — Wrong emotional tone for a stranger.
 
-## Top 10 issues (SAM's priority order)
+## What would actually rescue this for me
 
-1. **Home-page primary CTA is broken** — "Conversations" → Something went wrong. Fix the error or change the CTA. Non-negotiable.
-2. **Explain what InstaSetter is in plain English on the home page.** "Book more calls from your Instagram DMs, on autopilot" beats "Instagram DM appointment setting automation" every day. Add 1-2 sentences of benefit copy and a screenshot/video.
-3. **Add a proper home page funnel.** "See it in action" (demo/video), "How it works" (3-step diagram), "Pricing," "Sign up" — or at the very least one of these. Give a stranger somewhere to go that isn't "the editor."
-4. **Do not drop unauthenticated strangers into a tenant workspace.** Either gate the `/dashboard/*` routes behind login, or create a sandboxed demo mode clearly labelled "Demo — nothing you do is saved."
-5. **Replace decorative unicode icons with real icons + visible text labels.** `⎔`, `◉`, `∥`, `⟳`, `◐` mean nothing to anyone.
-6. **Define vocabulary inline.** First use of "Flow," "Bot," "Block," "Setter," "Qualifier," "Objection Handler" should carry a tooltip or one-sentence definition. Ideally, reword to terms normal humans already understand.
-7. **Fix the conversations error page.** Add a helpful message, contact link, and a "Go home" button at minimum. Better yet, handle the missing-API-key case as a friendly onboarding prompt, not a crash.
-8. **Add global navigation with a clickable logo going home.** Every page needs a way back.
-9. **Redesign "Publish v13."** Move it out of top-right until there is context. Add a confirmation step. Never let the first action a stranger takes be "push live."
-10. **Add a footer with company, contact, privacy, ToS, and Instagram disclaimer.** No footer anywhere in the app is a trust disaster for a first-time visitor evaluating a new brand, especially one trading on an "Insta" name.
+If I were Sam landing here cold, the only thing that would keep me on page longer than 10 seconds is if the **simulator was the front door**: a single screen that says "Type what an Instagram prospect might DM your business. Watch the AI book the appointment." A pre-filled example. One Send button. After the demo runs, _then_ show me the canvas as the "and here's how it works."
 
----
+The product is interesting underneath. The packaging is hostile to anyone who isn't already a customer.
 
-## Overall gut feel: 1.5 / 5
-
-I would leave this site within 30 seconds and never return. Not because the visual design is bad (it's actually clean and minimal in a Linear/Vercel way), but because as a first-time visitor I am given no reason to stay, no explanation of value, no working primary action, and no trust signals. The moment I click the main button and see "Something went wrong," I'm out. Everything behind the home page is clearly built for an insider who already knows the product — which means there is currently no product at all for a stranger arriving from social media. The marketing surface and the product surface are the same page, and neither is doing its job.
+— Sam
