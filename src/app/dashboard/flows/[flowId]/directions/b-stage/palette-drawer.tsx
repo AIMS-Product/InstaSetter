@@ -1,16 +1,20 @@
 'use client'
 
+import { useRef } from 'react'
 import { PanelLeftClose, Plus, PlusCircle } from 'lucide-react'
 import { BLOCK_CATALOG, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import type { BlockCatalogEntry, BlockType, FlowNode } from '../../types'
 import { B } from './palette'
+import { FloatingPanel } from './floating-panel'
 
 const GRID_STEP = { x: 1, y: 0 }
 
 export default function PaletteDrawer() {
   const state = useFlowState()
   const actions = useFlowActions()
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const titleId = 'flow-palette-title'
   const selectedNode = state.selectedId
     ? (state.flow.nodes.find((node) => node.id === state.selectedId) ?? null)
     : null
@@ -104,7 +108,11 @@ export default function PaletteDrawer() {
   }
 
   return (
-    <div
+    <FloatingPanel
+      open={state.paletteOpen}
+      titleId={titleId}
+      onClose={() => actions.togglePalette()}
+      initialFocusRef={toggleRef}
       style={{
         position: 'absolute',
         // 12px from the tabpanel's left edge. The tabpanel already excludes
@@ -129,6 +137,7 @@ export default function PaletteDrawer() {
       }}
     >
       <button
+        ref={toggleRef}
         type="button"
         onClick={() => actions.togglePalette()}
         style={{
@@ -146,8 +155,8 @@ export default function PaletteDrawer() {
           fontWeight: 500,
           pointerEvents: 'auto',
         }}
-        title={state.paletteOpen ? 'Hide palette' : 'Add block'}
-        aria-label={state.paletteOpen ? 'Hide palette' : 'Add block'}
+        title={state.paletteOpen ? 'Hide step library' : 'Add step'}
+        aria-label={state.paletteOpen ? 'Hide step library' : 'Add step'}
         aria-expanded={state.paletteOpen}
       >
         {state.paletteOpen ? (
@@ -155,7 +164,7 @@ export default function PaletteDrawer() {
         ) : (
           <Plus aria-hidden size={14} strokeWidth={2} />
         )}
-        {state.paletteOpen && <span>Blocks</span>}
+        {state.paletteOpen && <span id={titleId}>Steps</span>}
       </button>
       {state.paletteOpen && (
         <div
@@ -176,7 +185,7 @@ export default function PaletteDrawer() {
               padding: '2px 8px 8px',
             }}
           >
-            Block library
+            Step library
           </div>
           {selectedNode && (
             <div
@@ -260,6 +269,6 @@ export default function PaletteDrawer() {
           ))}
         </div>
       )}
-    </div>
+    </FloatingPanel>
   )
 }

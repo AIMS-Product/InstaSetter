@@ -48,7 +48,7 @@ export function RationaleBanner({
             color: B.accentInk,
           }}
         >
-          Why this block exists
+          Why this step exists
         </span>
         <span style={{ flex: 1 }} />
         {stat && (

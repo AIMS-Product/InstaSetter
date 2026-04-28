@@ -80,9 +80,9 @@ export default function PageVariables({ p }: { p: Palette }) {
             marginBottom: 12,
           }}
         >
-          What the bot remembers. <b>Brand</b> stays put forever, <b>Contact</b>{' '}
-          follows a person across every conversation, and <b>Conversation</b> is
-          scoped to a single thread.
+          What the bot remembers. <b>Brand</b> is stored once for the business,{' '}
+          <b>Contact</b> is stored per person, and <b>Conversation</b> is stored
+          per chat.
         </div>
         <div
           style={{
@@ -330,7 +330,7 @@ function ScopeCard({
             </code>
           </>
         ) : (
-          'No variables in this scope yet.'
+          'No saved values in this group yet.'
         )}
       </div>
     </div>

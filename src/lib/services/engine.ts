@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type Anthropic from '@anthropic-ai/sdk'
 import type { Database } from '@/types/database'
+import { PROMPT_VERSION } from '@/types/enums'
 import {
   findOrCreateActiveConversation,
   closeConversation,
@@ -43,6 +44,7 @@ type ContactInput = {
 }
 
 type ProcessMessageOptions = {
+  flowId?: string
   leadSourceContext?: LeadSourceContext
   inboundMetadata?: Json
   prepareInboundContext?: (input: {
@@ -63,7 +65,11 @@ export async function processMessage(
   const { BRAND_NAME, BOOKING_URL } = getServerConfig()
 
   // Step 1: Find or create active conversation
-  const convResult = await findOrCreateActiveConversation(contact.id)
+  const convResult = await findOrCreateActiveConversation(
+    contact.id,
+    PROMPT_VERSION,
+    options.flowId
+  )
   if (!convResult.success) {
     return { success: false, error: convResult.error }
   }

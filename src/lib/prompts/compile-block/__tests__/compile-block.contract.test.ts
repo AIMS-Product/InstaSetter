@@ -82,7 +82,7 @@ describe('compileBlock — active block directive (no overrides)', () => {
       brand: BRAND,
       overrides: { activeBlockType: 'qualifier' },
     })
-    expect(compiled).toContain('Block: Qualifier')
+    expect(compiled).toContain('Block: Questions')
     expect(compiled).toContain(
       'Collect at least two of five qualifiers through natural conversation — location first, budget last.'
     )
@@ -311,12 +311,12 @@ describe('compileBlock contract — no overrides matches buildSystemPrompt acros
   it('renders each block label in the directive', () => {
     const expectedLabels = {
       opening: 'Opening',
-      qualifier: 'Qualifier',
-      objection: 'Objection',
+      qualifier: 'Questions',
+      objection: 'Concerns',
       booking: 'Booking',
       email: 'Email Capture',
       followup: 'Follow-up',
-      escalation: 'Escalation',
+      escalation: 'Human Help',
       summary: 'Summary',
     } as const
 

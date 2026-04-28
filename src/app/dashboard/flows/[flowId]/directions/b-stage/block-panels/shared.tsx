@@ -63,7 +63,7 @@ export function PanelCard({
 export function LockPill({ title }: { title?: string }) {
   return (
     <span
-      title={title ?? 'Locked — engineering-owned'}
+      title={title ?? 'Fixed by InstaSetter for safety and compliance'}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -78,7 +78,7 @@ export function LockPill({ title }: { title?: string }) {
         textTransform: 'uppercase',
       }}
     >
-      <Lock size={9} /> locked
+      <Lock size={9} /> fixed
     </span>
   )
 }

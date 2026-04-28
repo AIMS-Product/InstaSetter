@@ -48,12 +48,10 @@ export function GuardrailsPanel({
         )}
         <Lock size={13} color={B.ink3} />
         <span style={{ fontSize: 12, fontWeight: 600, color: B.ink2 }}>
-          Block guardrails · {guardrails.length}
+          Fixed safety rules · {guardrails.length}
         </span>
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: B.ink3 }}>
-          section-owned · applies at runtime
-        </span>
+        <span style={{ fontSize: 11, color: B.ink3 }}>set by InstaSetter</span>
       </button>
       {open && (
         <ul

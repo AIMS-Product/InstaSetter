@@ -10,6 +10,17 @@ vi.mock('@/lib/services/contact', () => ({
   upsertSendPulseContact: vi.fn(),
 }))
 vi.mock('@/lib/services/engine', () => ({ processMessage: vi.fn() }))
+vi.mock('@/lib/services/flow-runtime', () => ({
+  getFlowRuntimeControl: vi.fn(() =>
+    Promise.resolve({
+      flowId: 'ig-organic-dm',
+      envBotEnabled: true,
+      botPaused: false,
+      pausedUntil: null,
+      botEnabled: true,
+    })
+  ),
+}))
 vi.mock('@/lib/services/sendpulse', () => ({
   sendInstagramMessage: vi.fn(),
   pauseAutomation: vi.fn(),
@@ -42,6 +53,7 @@ vi.mock('@/lib/config', () => ({
 import { POST } from '@/app/api/webhooks/sendpulse/route'
 import { upsertSendPulseContact } from '@/lib/services/contact'
 import { processMessage } from '@/lib/services/engine'
+import { getFlowRuntimeControl } from '@/lib/services/flow-runtime'
 import { sendInstagramMessage, pauseAutomation } from '@/lib/services/sendpulse'
 import { isBotEnabled } from '@/lib/config'
 
@@ -92,6 +104,13 @@ describe('POST /api/webhooks/sendpulse', () => {
     vi.mocked(pauseAutomation).mockResolvedValue({ success: true })
     vi.mocked(sendInstagramMessage).mockResolvedValue({ success: true })
     vi.mocked(isBotEnabled).mockReturnValue(true)
+    vi.mocked(getFlowRuntimeControl).mockResolvedValue({
+      flowId: 'ig-organic-dm',
+      envBotEnabled: true,
+      botPaused: false,
+      pausedUntil: null,
+      botEnabled: true,
+    })
   })
 
   it('short-circuits all events when bot is paused', async () => {
@@ -103,6 +122,23 @@ describe('POST /api/webhooks/sendpulse', () => {
     expect(upsertSendPulseContact).not.toHaveBeenCalled()
     expect(processMessage).not.toHaveBeenCalled()
     expect(sendInstagramMessage).not.toHaveBeenCalled()
+  })
+
+  it('short-circuits all events when the flow runtime is paused', async () => {
+    vi.mocked(getFlowRuntimeControl).mockResolvedValue({
+      flowId: 'ig-organic-dm',
+      envBotEnabled: true,
+      botPaused: true,
+      pausedUntil: null,
+      botEnabled: false,
+    })
+
+    const res = await POST(makeRequest(validPayload))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.results[0].skipped).toBe('bot_paused')
+    expect(upsertSendPulseContact).not.toHaveBeenCalled()
+    expect(processMessage).not.toHaveBeenCalled()
   })
 
   it('returns 401 for invalid token', async () => {
@@ -169,6 +205,7 @@ describe('POST /api/webhooks/sendpulse', () => {
       expect.any(Function),
       'sendpulse',
       expect.objectContaining({
+        flowId: 'ig-organic-dm',
         prepareInboundContext: expect.any(Function),
       })
     )

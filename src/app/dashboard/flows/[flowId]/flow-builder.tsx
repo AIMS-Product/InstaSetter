@@ -1,24 +1,33 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { fetchFlowRuntimeAction, setFlowRuntimeAction } from './actions'
 import DirectionB from './directions/b-stage'
+import { B } from './directions/b-stage/palette'
 
 export default function FlowBuilder({
   flowId,
   brand,
   bookingUrl,
+  botEnabled,
 }: {
   flowId: string
   brand: string
   bookingUrl: string
+  botEnabled: boolean
 }) {
   const [gateOverride, setGateOverride] = useState(false)
 
   if (gateOverride) {
     return (
       <div className="h-full w-full">
-        <DirectionB flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
+        <DirectionB
+          flowId={flowId}
+          brand={brand}
+          bookingUrl={bookingUrl}
+          botEnabled={botEnabled}
+        />
       </div>
     )
   }
@@ -31,10 +40,19 @@ export default function FlowBuilder({
           a checklist that's slower to author with than pen-and-paper. Per the
           UX persona review decision (#7), we gate instead of degrade. */}
       <div className="hidden h-full w-full min-[900px]:block">
-        <DirectionB flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
+        <DirectionB
+          flowId={flowId}
+          brand={brand}
+          bookingUrl={bookingUrl}
+          botEnabled={botEnabled}
+        />
       </div>
       <div className="flex h-full w-full min-[900px]:hidden">
-        <MobileGate flowId={flowId} onContinue={() => setGateOverride(true)} />
+        <MobileGate
+          flowId={flowId}
+          botEnabled={botEnabled}
+          onContinue={() => setGateOverride(true)}
+        />
       </div>
     </>
   )
@@ -42,14 +60,52 @@ export default function FlowBuilder({
 
 function MobileGate({
   flowId,
+  botEnabled,
   onContinue,
 }: {
   flowId: string
+  botEnabled: boolean
   onContinue: () => void
 }) {
   const subject = 'Open Flow Builder'
-  const body = `Open this Flow Builder on a larger screen: /dashboard/flows/${flowId}`
-  const shareHref = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  const [runtimeEnabled, setRuntimeEnabled] = useState(botEnabled)
+  const [runtimeBusy, setRuntimeBusy] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    fetchFlowRuntimeAction({ flowId }).then((runtime) => {
+      if (!alive || !runtime) return
+      setRuntimeEnabled(runtime.botEnabled)
+    })
+    return () => {
+      alive = false
+    }
+  }, [flowId])
+
+  const setPause = async (paused: boolean) => {
+    setRuntimeBusy(true)
+    const runtime = await setFlowRuntimeAction({ flowId, paused })
+    if (runtime) setRuntimeEnabled(runtime.botEnabled)
+    setRuntimeBusy(false)
+  }
+
+  const shareLink = async () => {
+    const url =
+      typeof window === 'undefined'
+        ? `/dashboard/flows/${flowId}`
+        : window.location.href
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: subject, url })
+      } catch {
+        return
+      }
+    } else {
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+        `Open this Flow Builder on a larger screen: ${url}`
+      )}`
+    }
+  }
 
   return (
     <main
@@ -62,8 +118,8 @@ function MobileGate({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '32px 24px',
-        background: '#FAFAFB',
-        color: '#161528',
+        background: B.bg,
+        color: B.ink,
         textAlign: 'center',
         gap: 16,
       }}
@@ -74,7 +130,7 @@ function MobileGate({
           width: 56,
           height: 56,
           borderRadius: 14,
-          background: 'linear-gradient(135deg, #5E52C7, #7B6FE6)',
+          background: `linear-gradient(135deg, ${B.accent}, #7B6FE6)`,
           display: 'grid',
           placeItems: 'center',
           color: 'white',
@@ -95,24 +151,83 @@ function MobileGate({
           maxWidth: 320,
         }}
       >
-        Flow Builder needs a desktop
+        Monitor here. Edit on desktop.
       </h1>
       <p
         style={{
           fontSize: 14,
-          color: '#4B4A5E',
+          color: B.ink2,
           lineHeight: 1.55,
           margin: 0,
           maxWidth: 340,
         }}
       >
-        Editing the flow uses a multi-panel canvas that doesn&rsquo;t fit on a
-        phone or small tablet. Open this page on a screen at least 900px wide.
+        The full editor uses a multi-panel canvas that needs at least 900px.
+        This screen keeps the operational links available while you&rsquo;re
+        away from a desk.
       </p>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 340,
+          border: `1px solid ${B.line}`,
+          borderRadius: 12,
+          background: B.panel,
+          padding: 14,
+          display: 'grid',
+          gap: 8,
+          textAlign: 'left',
+        }}
+      >
+        <div style={{ fontSize: 11, color: B.ink3, fontWeight: 700 }}>
+          BOT STATUS
+        </div>
+        <div
+          style={{
+            fontSize: 15,
+            color: runtimeEnabled ? '#3A5A32' : '#8B231F',
+            fontWeight: 700,
+          }}
+        >
+          {runtimeEnabled ? 'Bot active' : 'Bot paused'}
+        </div>
+        <div
+          style={{
+            fontSize: 12.5,
+            color: B.ink2,
+            lineHeight: 1.45,
+          }}
+        >
+          Inbox and conversation monitoring are available on this device. Use a
+          larger screen for canvas editing.
+        </div>
+        <button
+          type="button"
+          disabled={runtimeBusy}
+          onClick={() => setPause(runtimeEnabled)}
+          style={{
+            minHeight: 44,
+            width: '100%',
+            borderRadius: 10,
+            border: `1px solid ${runtimeEnabled ? '#E6B8A2' : '#BCD6B0'}`,
+            background: runtimeEnabled ? '#FFF4EF' : '#EFF8EA',
+            color: runtimeEnabled ? '#8B231F' : '#31552E',
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: runtimeBusy ? 'wait' : 'pointer',
+          }}
+        >
+          {runtimeBusy
+            ? 'Updating...'
+            : runtimeEnabled
+              ? 'Pause bot'
+              : 'Resume bot'}
+        </button>
+      </div>
       <p
         style={{
           fontSize: 13,
-          color: '#6B6A7E',
+          color: B.ink3,
           lineHeight: 1.55,
           margin: 0,
           maxWidth: 340,
@@ -139,7 +254,7 @@ function MobileGate({
             maxWidth: 260,
             padding: '14px 22px',
             borderRadius: 10,
-            background: '#161528',
+            background: B.ink,
             color: 'white',
             fontSize: 14,
             fontWeight: 500,
@@ -160,9 +275,9 @@ function MobileGate({
             maxWidth: 260,
             padding: '13px 20px',
             borderRadius: 10,
-            border: '1px solid #D9D8E6',
+            border: `1px solid ${B.line}`,
             background: 'white',
-            color: '#161528',
+            color: B.ink,
             fontSize: 14,
             fontWeight: 500,
             cursor: 'pointer',
@@ -170,21 +285,27 @@ function MobileGate({
         >
           Continue anyway
         </button>
-        <a
-          href={shareHref}
+        <button
+          type="button"
+          onClick={() => {
+            void shareLink()
+          }}
           style={{
             minHeight: 44,
-            color: '#5E52C7',
+            border: 'none',
+            background: 'transparent',
+            color: B.accent,
             fontSize: 13,
             fontWeight: 500,
-            textDecoration: 'none',
+            cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
+            fontFamily: 'inherit',
           }}
         >
-          Email this link to myself
-        </a>
+          Share this link
+        </button>
       </div>
     </main>
   )

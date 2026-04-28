@@ -15,6 +15,11 @@ import {
   type FlowDraftKey,
   type SaveFlowDraftArgs,
 } from '@/lib/services/flow-drafts'
+import {
+  getFlowRuntimeControl,
+  setFlowRuntimePause,
+  type FlowRuntimeControl,
+} from '@/lib/services/flow-runtime'
 import type { PersistedFlowDraft } from './draft-persistence'
 
 const nonEmptyString = z.string().trim().min(1).max(200)
@@ -65,6 +70,7 @@ const saveFlowDraftArgsSchema = flowDraftKeySchema.extend({
 const flowRunsFilterSchema = z
   .object({
     limit: z.number().int().min(1).max(200).optional(),
+    flowId: z.string().trim().min(1).max(200).optional(),
     search: z.string().trim().max(80).optional(),
     dateFrom: z.string().datetime().optional(),
     dateTo: z.string().datetime().optional(),
@@ -93,6 +99,40 @@ export async function fetchTodayConversationCountAction(): Promise<number> {
   const startOfDay = new Date()
   startOfDay.setHours(0, 0, 0, 0)
   return countConversationsStartedSince(startOfDay.toISOString())
+}
+
+const flowRuntimeSchema = z
+  .object({
+    flowId: nonEmptyString,
+  })
+  .strict()
+
+const setFlowRuntimeSchema = flowRuntimeSchema.extend({
+  paused: z.boolean(),
+  durationMinutes: z
+    .number()
+    .int()
+    .min(1)
+    .max(60 * 24 * 7)
+    .optional(),
+})
+
+export async function fetchFlowRuntimeAction(args: {
+  flowId: string
+}): Promise<FlowRuntimeControl | null> {
+  const parsed = flowRuntimeSchema.safeParse(args)
+  if (!parsed.success) return null
+  return getFlowRuntimeControl(parsed.data.flowId)
+}
+
+export async function setFlowRuntimeAction(args: {
+  flowId: string
+  paused: boolean
+  durationMinutes?: number
+}): Promise<FlowRuntimeControl | null> {
+  const parsed = setFlowRuntimeSchema.safeParse(args)
+  if (!parsed.success) return null
+  return setFlowRuntimePause(parsed.data)
 }
 
 export async function loadFlowDraftAction(

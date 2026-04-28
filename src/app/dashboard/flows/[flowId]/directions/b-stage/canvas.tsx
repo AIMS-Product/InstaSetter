@@ -193,7 +193,7 @@ function Node({
                   fontWeight: 600,
                 }}
               >
-                {exitCount} exit{exitCount === 1 ? '' : 's'}
+                {exitCount} path{exitCount === 1 ? '' : 's'}
               </span>
             )}
           </div>
@@ -1496,10 +1496,10 @@ export default function BCanvas() {
             fontWeight: selectedNode ? 600 : 500,
           }}
           title={
-            selectedNode ? `Editing ${selectedNode.name}` : 'No block selected'
+            selectedNode ? `Editing ${selectedNode.name}` : 'No step selected'
           }
         >
-          {selectedNode ? `Editing ${selectedNode.name}` : 'No block selected'}
+          {selectedNode ? `Editing ${selectedNode.name}` : 'No step selected'}
         </span>
       </div>
 

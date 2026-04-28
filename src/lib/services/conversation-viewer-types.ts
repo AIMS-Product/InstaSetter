@@ -3,6 +3,7 @@
 
 export interface ConversationListItem {
   id: string
+  flow_id: string | null
   status: string
   started_at: string
   ended_at: string | null
@@ -48,6 +49,7 @@ export interface ConversationEvent {
 
 export interface ConversationDetail {
   id: string
+  flow_id: string | null
   status: string
   prompt_version: string
   summary: string | null

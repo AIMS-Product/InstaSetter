@@ -13,7 +13,7 @@ import type {
 import { interleave } from '@/lib/services/conversation-viewer-types'
 import { ToolBadge } from '@/components/tool-badge'
 import RPHeader from './header'
-import { BRAND_INBOX_STATUS, StatusBadge, StatusNote } from '../surface-status'
+import { BRAND_INBOX_STATUS, StatusNote } from '../surface-status'
 
 // Status tones mirror the real write surface in
 // src/lib/services/conversation.ts: {active, stalled, completed}.
@@ -28,8 +28,10 @@ const STATUS_TONE = (
 
 const FALLBACK_TONE_KEY = 'stalled'
 const STATUS_OPTIONS = ['all', 'active', 'stalled', 'completed'] as const
+const SCOPE_OPTIONS = ['flow', 'all'] as const
 
 type InboxStatusFilter = (typeof STATUS_OPTIONS)[number]
+type InboxScopeFilter = (typeof SCOPE_OPTIONS)[number]
 
 function getInitialParam(name: string): string {
   if (typeof window === 'undefined') return ''
@@ -41,6 +43,13 @@ function getInitialStatus(): InboxStatusFilter {
   return STATUS_OPTIONS.includes(value as InboxStatusFilter)
     ? (value as InboxStatusFilter)
     : 'all'
+}
+
+function getInitialScope(): InboxScopeFilter {
+  const value = getInitialParam('scope')
+  return SCOPE_OPTIONS.includes(value as InboxScopeFilter)
+    ? (value as InboxScopeFilter)
+    : 'flow'
 }
 
 function dateInputToIso(value: string, endOfDay = false): string | undefined {
@@ -78,7 +87,13 @@ type DetailResult =
   | { id: string; status: 'missing' }
   | { id: string; status: 'error'; message: string }
 
-export default function PageRuns({ p }: { p: Palette }) {
+export default function PageRuns({
+  p,
+  flowId,
+}: {
+  p: Palette
+  flowId: string
+}) {
   const [runs, setRuns] = useState<ConversationListItem[] | null>(null)
   const [sel, setSel] = useState<string | null>(null)
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null)
@@ -88,6 +103,8 @@ export default function PageRuns({ p }: { p: Palette }) {
   const [dateTo, setDateTo] = useState(() => getInitialParam('to'))
   const [statusFilter, setStatusFilter] =
     useState<InboxStatusFilter>(getInitialStatus)
+  const [scopeFilter, setScopeFilter] =
+    useState<InboxScopeFilter>(getInitialScope)
 
   // The panel is "loading" when a selection exists but no result for THIS id
   // has come back yet. If the last result is for a different id, we're mid-
@@ -106,15 +123,20 @@ export default function PageRuns({ p }: { p: Palette }) {
   const filters = useMemo(
     () => ({
       limit: 50,
+      flowId: scopeFilter === 'flow' ? flowId : undefined,
       search: search || undefined,
       dateFrom: dateInputToIso(dateFrom),
       dateTo: dateInputToIso(dateTo, true),
       status: statusFilter,
     }),
-    [dateFrom, dateTo, search, statusFilter]
+    [dateFrom, dateTo, flowId, scopeFilter, search, statusFilter]
   )
   const hasFilters = Boolean(
-    search || dateFrom || dateTo || statusFilter !== 'all'
+    search ||
+    dateFrom ||
+    dateTo ||
+    statusFilter !== 'all' ||
+    scopeFilter !== 'flow'
   )
 
   useEffect(() => {
@@ -136,9 +158,11 @@ export default function PageRuns({ p }: { p: Palette }) {
     else params.delete('to')
     if (statusFilter !== 'all') params.set('status', statusFilter)
     else params.delete('status')
+    if (scopeFilter !== 'flow') params.set('scope', scopeFilter)
+    else params.delete('scope')
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`
     window.history.replaceState(null, '', nextUrl)
-  }, [dateFrom, dateTo, search, statusFilter])
+  }, [dateFrom, dateTo, scopeFilter, search, statusFilter])
 
   useEffect(() => {
     let alive = true
@@ -154,6 +178,44 @@ export default function PageRuns({ p }: { p: Palette }) {
       alive = false
     }
   }, [filters])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const tag = target?.tagName
+      if (
+        tag === 'INPUT' ||
+        tag === 'SELECT' ||
+        tag === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return
+      }
+      if (!runs?.length) return
+
+      const direction =
+        event.key === 'j' || event.key === 'ArrowDown'
+          ? 1
+          : event.key === 'k' || event.key === 'ArrowUp'
+            ? -1
+            : 0
+      if (!direction) return
+
+      event.preventDefault()
+      const currentIndex = Math.max(
+        0,
+        runs.findIndex((row) => row.id === sel)
+      )
+      const nextIndex = Math.min(
+        runs.length - 1,
+        Math.max(0, currentIndex + direction)
+      )
+      setSel(runs[nextIndex]?.id ?? null)
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [runs, sel])
 
   useEffect(() => {
     if (!sel) return
@@ -197,7 +259,7 @@ export default function PageRuns({ p }: { p: Palette }) {
         p={p}
         eyebrow="Inbox"
         title="Inbox"
-        description="Spot reply quality issues, stalled leads, and bookings as they happen. Per-flow filtering is coming soon."
+        description="Spot reply quality issues, stalled leads, and bookings as they happen."
         right={
           <div
             style={{
@@ -208,6 +270,42 @@ export default function PageRuns({ p }: { p: Palette }) {
               justifyContent: 'flex-end',
             }}
           >
+            <div
+              role="group"
+              aria-label="Inbox scope"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: 4,
+                borderRadius: 10,
+                border: `1px solid ${p.line}`,
+                background: p.lineSoft,
+              }}
+            >
+              {SCOPE_OPTIONS.map((scope) => (
+                <button
+                  key={scope}
+                  type="button"
+                  onClick={() => {
+                    setRuns(null)
+                    setScopeFilter(scope)
+                  }}
+                  style={{
+                    padding: '6px 9px',
+                    borderRadius: 7,
+                    border: 'none',
+                    background: scopeFilter === scope ? p.panel : 'transparent',
+                    color: scopeFilter === scope ? p.ink : p.ink2,
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    fontWeight: 650,
+                  }}
+                >
+                  {scope === 'flow' ? 'This flow' : 'All flows'}
+                </button>
+              ))}
+            </div>
             <label
               style={{
                 display: 'flex',
@@ -272,28 +370,25 @@ export default function PageRuns({ p }: { p: Palette }) {
               <option value="stalled">Stalled</option>
               <option value="completed">Completed</option>
             </select>
-            <StatusBadge
-              p={p}
-              label={BRAND_INBOX_STATUS.label}
-              tone="warning"
-            />
             <span style={{ fontSize: 11, color: p.ink3 }}>
               {runs === null
                 ? 'Loading…'
-                : `${runs.length} recent brand conversations`}
+                : `${runs.length} recent conversations`}
             </span>
           </div>
         }
       />
 
-      <StatusNote
-        p={p}
-        label={BRAND_INBOX_STATUS.label}
-        detail={BRAND_INBOX_STATUS.detail}
-        tone="warning"
-        role="status"
-        ariaLive="polite"
-      />
+      {scopeFilter === 'all' && (
+        <StatusNote
+          p={p}
+          label={BRAND_INBOX_STATUS.label}
+          detail="Showing conversations from every flow. Switch back to This flow for the current builder."
+          tone="warning"
+          role="status"
+          ariaLive="polite"
+        />
+      )}
 
       <div
         style={{
@@ -310,6 +405,7 @@ export default function PageRuns({ p }: { p: Palette }) {
           label="Started today"
           value={runs === null ? null : String(startedToday)}
           detail={runs === null ? null : `${runs.length} total in inbox`}
+          rule="Conversations whose started time is today in your browser timezone."
         />
         <Kpi
           p={p}
@@ -322,6 +418,7 @@ export default function PageRuns({ p }: { p: Palette }) {
                 ? 'no book_call events yet'
                 : `${bookedCount} book_call calls`
           }
+          rule="Booked counts conversations that called the book_call tool."
         />
         <Kpi
           p={p}
@@ -334,6 +431,7 @@ export default function PageRuns({ p }: { p: Palette }) {
                 ? 'none completed in inbox'
                 : `${completedCount} summary-generated`
           }
+          rule="Completed counts conversations marked completed after summary generation."
         />
         <Kpi
           p={p}
@@ -347,6 +445,7 @@ export default function PageRuns({ p }: { p: Palette }) {
                 : `${stalledCount} inactive`
           }
           bad={stalledCount > 0}
+          rule="No reply counts stalled conversations with no recent customer response."
         />
       </div>
 
@@ -580,15 +679,19 @@ function Kpi({
   value,
   detail,
   bad,
+  rule,
 }: {
   p: Palette
   label: string
   value: string | null
   detail: string | null
   bad?: boolean
+  rule: string
 }) {
   return (
     <div
+      title={rule}
+      aria-label={`${label}. ${rule}`}
       style={{
         padding: '12px 16px',
         background: p.lineSoft,

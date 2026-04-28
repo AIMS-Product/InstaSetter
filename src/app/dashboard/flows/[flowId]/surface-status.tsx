@@ -15,12 +15,11 @@ export function getDraftWorkspaceStatus(
   return dirtySincePublish
     ? {
         label: 'Unpublished edits',
-        detail:
-          'The shared draft has editor changes that are not live in Instagram yet.',
+        detail: 'The team draft has changes customers do not see yet.',
       }
     : {
         label: 'No unpublished edits',
-        detail: 'There are no unpublished editor changes right now.',
+        detail: 'There are no draft changes waiting to publish right now.',
       }
 }
 
@@ -31,7 +30,7 @@ export function getDraftSaveStatus(
     case 'loading':
       return {
         label: 'Loading draft',
-        detail: 'Checking for the latest shared draft for this flow.',
+        detail: 'Checking for the latest team draft.',
       }
     case 'pending':
       return {
@@ -41,7 +40,7 @@ export function getDraftSaveStatus(
     case 'saving':
       return {
         label: 'Saving draft',
-        detail: 'Saving the shared draft now.',
+        detail: 'Saving the team draft now.',
       }
     case 'error':
       return {
@@ -53,7 +52,7 @@ export function getDraftSaveStatus(
     default:
       return {
         label: 'Saved',
-        detail: 'All shared draft changes are saved.',
+        detail: 'All team draft changes are saved.',
       }
   }
 }
@@ -62,7 +61,7 @@ export function getLiveRuntimeStatus(): FlowStatusMessage {
   return {
     label: 'Live',
     detail:
-      'New conversations are using the current production prompt until publish wiring lands.',
+      'New conversations are using the current customer-facing prompt until publishing is ready.',
   }
 }
 
@@ -71,12 +70,12 @@ export function getSimulatorStatus(compileEnabled: boolean): FlowStatusMessage {
     ? {
         label: 'Draft preview',
         detail:
-          "In this environment, the simulator runs Claude against the live prompt plus the selected block's draft overrides.",
+          'The simulator uses the current prompt plus draft changes for the selected step.',
       }
     : {
         label: 'Live prompt only',
         detail:
-          'In this environment, the simulator runs the current production prompt without draft overrides.',
+          'The simulator uses the current customer-facing prompt without draft changes.',
       }
 }
 
@@ -89,19 +88,19 @@ export const BRAND_INBOX_STATUS: FlowStatusMessage = {
 export const VARIABLE_REFERENCE_STATUS: FlowStatusMessage = {
   label: 'Reference only',
   detail:
-    'This page shows the current shared draft values and where each variable is captured. Creating variables and row-level actions is not wired yet.',
+    'This page shows saved values and where the bot learns them. Editing these values is coming later.',
 }
 
 export const PROMPT_READER_STATUS: FlowStatusMessage = {
   label: 'Reference source',
   detail:
-    'This reader shows the compiled live prompt sections. Inspect here; make draft edits in the Flow Builder panels.',
+    'This reader shows the wording customers currently get. Make draft edits in the Flow Builder panels.',
 }
 
 export const RELEASE_STATUS_INTRO: FlowStatusMessage = {
   label: 'Release status',
   detail:
-    'Use this page to check what is saved in the shared draft versus what is live today. Publish controls and release history are not wired yet.',
+    'Use this page to compare the team draft with what customers currently get. Publish controls and release history are coming later.',
 }
 
 function toneStyles(p: Palette, tone: Tone) {

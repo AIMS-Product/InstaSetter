@@ -12,6 +12,7 @@ import type { Turn } from '../../types'
 import { B } from './palette'
 import { isFlowCompileEnabled } from './simulator-overrides'
 import { simulateReplyAction } from './simulator-actions'
+import { FloatingPanel } from './floating-panel'
 
 const ACTION_REJECTION_ERROR = 'Simulator request failed. Please try again.'
 const STARTER_PROMPTS = [
@@ -46,6 +47,7 @@ export default function BSimFloat({
   const inputRef = useRef<HTMLInputElement>(null)
   const compileEnabled = isFlowCompileEnabled()
   const simulatorStatus = getSimulatorStatus(compileEnabled)
+  const titleId = 'flow-simulator-title'
   const activeBlock = state.selectedId
     ? (state.flow.nodes.find((node) => node.id === state.selectedId) ?? null)
     : null
@@ -129,7 +131,11 @@ export default function BSimFloat({
   const handleSend = async () => sendMessage(input)
 
   return (
-    <div
+    <FloatingPanel
+      open={open}
+      titleId={titleId}
+      onClose={onClose}
+      initialFocusRef={inputRef}
       style={{
         position: 'absolute',
         right: dockedBesideInspector ? 432 : 20,
@@ -166,6 +172,7 @@ export default function BSimFloat({
           }}
         />
         <span
+          id={titleId}
           style={{ fontSize: 12, fontWeight: 500 }}
           title={String(simulatorStatus.detail)}
         >
@@ -279,7 +286,10 @@ export default function BSimFloat({
                   <button
                     key={prompt.label}
                     type="button"
-                    onClick={() => void sendMessage(prompt.text)}
+                    onClick={() => {
+                      setInput(prompt.text)
+                      inputRef.current?.focus()
+                    }}
                     disabled={pending}
                     style={{
                       padding: '7px 10px',
@@ -305,8 +315,8 @@ export default function BSimFloat({
                 }}
               >
                 {activeBlock
-                  ? `You are currently editing ${activeBlock.name}. Keep an eye on how the conversation enters and exits that block.`
-                  : 'No block is selected. Use these starters to sanity-check the overall tone before drilling into a single block.'}
+                  ? `You are editing ${activeBlock.name}. Watch how a conversation reaches this step and where it goes next.`
+                  : 'No step is selected. Use these starters to check the overall tone before choosing one step to inspect.'}
               </div>
             </div>
           </div>
@@ -449,6 +459,6 @@ export default function BSimFloat({
           Send
         </button>
       </div>
-    </div>
+    </FloatingPanel>
   )
 }

@@ -198,6 +198,34 @@ describe('findOrCreateActiveConversation', () => {
     )
   })
 
+  it('persists the provided flow id on new conversations', async () => {
+    mockSingle.mockResolvedValue({
+      data: null,
+      error: { code: 'PGRST116', message: 'No rows found' },
+    })
+
+    const mockInsertSelect = vi.fn()
+    const mockInsertSingle = vi.fn()
+    mockInsert.mockReturnValue({ select: mockInsertSelect })
+    mockInsertSelect.mockReturnValue({ single: mockInsertSingle })
+    mockInsertSingle.mockResolvedValue({
+      data: { id: 'conv-new', flow_id: 'ig-organic-dm' },
+      error: null,
+    })
+
+    await findOrCreateActiveConversation(
+      'contact-456',
+      PROMPT_VERSION,
+      'ig-organic-dm'
+    )
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        flow_id: 'ig-organic-dm',
+      })
+    )
+  })
+
   it('returns error when select query fails with non-PGRST116 error', async () => {
     mockSingle.mockResolvedValue({
       data: null,

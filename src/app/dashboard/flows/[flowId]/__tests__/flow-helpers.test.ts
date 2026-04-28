@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_FLOW_BOOKING_URL,
+  KNOWN_FLOWS,
+  isKnownFlowId,
   resolveFlowBookingUrl,
   resolveFlowBrand,
 } from '../flow-config'
@@ -78,6 +80,12 @@ describe('flow config helpers', () => {
     expect(resolveFlowBrand('  Modern Amenities  ')).toBe('Modern Amenities')
     expect(resolveFlowBrand('   ')).toBe('VendingPreneurs')
     expect(resolveFlowBrand(undefined)).toBe('VendingPreneurs')
+  })
+
+  it('guards flow routes to configured ids only', () => {
+    expect(KNOWN_FLOWS.map((flow) => flow.id)).toEqual(['ig-organic-dm'])
+    expect(isKnownFlowId('ig-organic-dm')).toBe(true)
+    expect(isKnownFlowId('garbage-id')).toBe(false)
   })
 })
 

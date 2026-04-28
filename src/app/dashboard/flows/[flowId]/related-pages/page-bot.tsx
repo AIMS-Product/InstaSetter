@@ -15,7 +15,7 @@ import RPHeader from './header'
 export default function PageBot({ p }: { p: Palette }) {
   const state = useFlowState()
   const bot = state.bot
-  const displayName = bot.name.trim() || 'Not named — shared team inbox'
+  const displayName = bot.name.trim() || 'No public bot name'
 
   const personaSections = useMemo(
     () => parsePersonaSections(bot.persona),
@@ -36,7 +36,7 @@ export default function PageBot({ p }: { p: Palette }) {
         p={p}
         eyebrow="Bot"
         title="Appointment Setter"
-        description="These bot-level rules apply across every block. Use this page when marketing needs to understand the overall voice, constraints, and channel wiring."
+        description="These rules apply across every conversation. Use this page to understand voice, safety limits, and connected channels."
         right={null}
       />
       <div
@@ -69,7 +69,7 @@ export default function PageBot({ p }: { p: Palette }) {
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, color: p.ink3, marginBottom: 4 }}>
-              Display name
+              Public name
             </div>
             <div
               style={{
@@ -81,7 +81,7 @@ export default function PageBot({ p }: { p: Palette }) {
                 color: p.ink3,
                 fontStyle: 'italic',
               }}
-              title="The Instagram account is a shared team inbox, never a named person."
+              title="The Instagram account speaks as the business, not as a named person."
             >
               {displayName}
             </div>
@@ -107,14 +107,14 @@ export default function PageBot({ p }: { p: Palette }) {
                 background: '#3A5A32',
               }}
             />
-            Flow scope: {state.flow.name}
+            Flow: {state.flow.name}
           </div>
         </div>
 
         <SettingsSection
           p={p}
           label="Persona"
-          sub="Parsed from the live system prompt. Each section shows what's editable vs locked."
+          sub="Voice guidance. Each section shows what your team can change and what InstaSetter keeps fixed."
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {personaSections.map((sec) => (
@@ -126,7 +126,7 @@ export default function PageBot({ p }: { p: Palette }) {
         <SettingsSection
           p={p}
           label="Global guardrails"
-          sub="These rules come from bot-level persona + message constraints and apply across every block."
+          sub="Safety rules that apply across every conversation."
         >
           <ul
             style={{
@@ -187,7 +187,7 @@ export default function PageBot({ p }: { p: Palette }) {
         <SettingsSection
           p={p}
           label="Channels"
-          sub="Where the bot is wired up."
+          sub="Where the bot is connected."
         >
           <div
             style={{
@@ -233,7 +233,7 @@ export default function PageBot({ p }: { p: Palette }) {
           </div>
         </SettingsSection>
 
-        <SettingsSection p={p} label="Prompt source" sub="">
+        <SettingsSection p={p} label="Customer-facing wording" sub="">
           <div
             style={{
               padding: '12px 14px',
@@ -245,10 +245,9 @@ export default function PageBot({ p }: { p: Palette }) {
               lineHeight: 1.55,
             }}
           >
-            The full compiled system prompt is built from nine modular source
-            sections. Edits in this UI now save to the shared draft for this
-            flow. Runtime still follows the compiled prompt until publish wiring
-            lands.
+            Customer replies are assembled from nine guidance sections. Edits in
+            this UI save to the team draft. Customers keep seeing the current
+            wording until publishing is ready.
           </div>
         </SettingsSection>
       </div>
@@ -300,6 +299,7 @@ function PersonaPanel({ p, section }: { p: Palette; section: PersonaSection }) {
         </div>
         {section.locked ? (
           <span
+            title="Set by InstaSetter for safety and compliance."
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -314,7 +314,7 @@ function PersonaPanel({ p, section }: { p: Palette; section: PersonaSection }) {
               textTransform: 'uppercase',
             }}
           >
-            <Lock size={10} /> Locked
+            <Lock size={10} /> Fixed
           </span>
         ) : (
           <span

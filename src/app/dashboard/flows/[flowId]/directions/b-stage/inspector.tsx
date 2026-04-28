@@ -12,6 +12,7 @@ import { GuardrailsPanel } from './guardrails-panel'
 import { B } from './palette'
 import { PromptReader } from './prompt-reader'
 import { RationaleBanner } from './rationale-banner'
+import { FloatingPanel } from './floating-panel'
 
 // Field renders its label with a stable id and exposes it to children via
 // render-prop. Children that own the primary editable element (textarea/input)
@@ -212,7 +213,7 @@ function DesignTab({
     .filter(Boolean)
     .join(' · ')
   const runtimeSummary = [
-    block.blockConfig ? `${block.blockConfig.kind} config` : null,
+    block.blockConfig ? `${block.blockConfig.kind} settings` : null,
     guardrailCount > 0
       ? `${guardrailCount} guardrail${guardrailCount === 1 ? '' : 's'}`
       : null,
@@ -239,7 +240,7 @@ function DesignTab({
         label="Guidance"
         action="↗ View Persona"
         onAction={() => onOpenPrompt('persona')}
-        hint="Inherits voice from the Persona section. Override it for this draft block."
+        hint="Uses the global voice by default. Add step-specific guidance here."
       >
         {(labelId) => (
           <textarea
@@ -269,12 +270,12 @@ function DesignTab({
         <Field
           label="Marketer examples"
           action="+ add"
-          hint="Draft overrides for this block. Saved to the shared draft."
+          hint="Draft examples for this step. Saved with the team draft."
           onAction={() => actions.addExample(block.id, 'New example — edit me')}
         >
           {block.examples.length === 0 && (
             <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-              No draft overrides yet. Pairs above come from the compiled prompt.
+              No draft examples yet. Pairs above come from the current prompt.
             </div>
           )}
           {block.examples.map((ex, i) => (
@@ -380,7 +381,7 @@ function DesignTab({
       </CollapsibleSection>
       <CollapsibleSection
         title="Runtime Details"
-        summary={runtimeSummary || 'Block config and runtime guardrails'}
+        summary={runtimeSummary || 'Step settings and fixed safety rules'}
       >
         <BlockConfigPanel config={block.blockConfig} />
         <GuardrailsPanel
@@ -450,7 +451,7 @@ function RoutingTab({ block }: { block: FlowNode }) {
             marginBottom: 6,
           }}
         >
-          Dead end. Add a path or mark this block as a terminal.
+          No next path yet. Add one, or leave this step as an ending.
         </div>
       )}
       {block.branches.map((br) => {
@@ -537,7 +538,7 @@ function RoutingTab({ block }: { block: FlowNode }) {
             >
               <span style={{ color: B.ink3 }}>→</span>
               <select
-                aria-label="Route target block"
+                aria-label="Next step"
                 value={br.target}
                 onChange={(e) =>
                   actions.editBranch(block.id, br.id, {
@@ -597,7 +598,7 @@ function DeleteBlockPanel({ block }: { block: FlowNode }) {
           marginBottom: 8,
         }}
       >
-        Block actions
+        Step actions
       </div>
       <button
         type="button"
@@ -628,7 +629,7 @@ function DeleteBlockPanel({ block }: { block: FlowNode }) {
         }}
       >
         <Trash2 aria-hidden size={14} strokeWidth={1.8} />
-        {confirming ? `Confirm delete ${block.name}` : 'Delete block'}
+        {confirming ? `Confirm delete ${block.name}` : 'Delete step'}
       </button>
     </div>
   )
@@ -645,7 +646,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
   return (
     <Field
       label="Ambient triggers"
-      hint="Fire asynchronously after this block is entered. Respect Meta's 24h messaging window."
+      hint="Send later after this step starts. Respect Meta's 24-hour messaging window."
       action="+ trigger"
       onAction={() => {
         const target = others[0]?.id ?? block.id
@@ -662,7 +663,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
     >
       {mine.length === 0 && (
         <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-          No ambient triggers on this block.
+          No scheduled follow-ups on this step.
         </div>
       )}
       {mine.map((t) => (
@@ -770,7 +771,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 12, color: B.ink3, width: 44 }}>Then</span>
             <select
-              aria-label="Trigger target block"
+              aria-label="Follow-up target step"
               value={t.target}
               onChange={(e) =>
                 actions.editTrigger(t.id, {
@@ -817,7 +818,7 @@ function DataTab({ block }: { block: FlowNode }) {
   const writeVars = block.captures
   return (
     <>
-      <Field label="This block writes">
+      <Field label="This step saves">
         {writeVars.length === 0 && (
           <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
             Nothing.
@@ -854,8 +855,8 @@ function DataTab({ block }: { block: FlowNode }) {
         ))}
       </Field>
       <Field
-        label="This block reads"
-        hint="Variables referenced by this block's exit conditions."
+        label="This step checks"
+        hint="Saved details used by this step's path rules."
       >
         {readVars.length === 0 && (
           <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
@@ -908,12 +909,16 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
   const color = blockColor(block.type, { l: 0.58, c: 0.14 })
   const tabs: Array<{ key: typeof state.activeTab; label: string }> = [
     { key: 'design', label: 'Design' },
-    { key: 'routing', label: 'Routing' },
-    { key: 'triggers', label: 'Triggers' },
-    { key: 'data', label: 'Data' },
+    { key: 'routing', label: 'Paths' },
+    { key: 'triggers', label: 'Follow-ups' },
+    { key: 'data', label: 'Memory' },
   ]
+  const titleId = 'flow-inspector-title'
   return (
-    <div
+    <FloatingPanel
+      open
+      titleId={titleId}
+      onClose={onClose}
       style={{
         position: 'absolute',
         right: 12,
@@ -955,7 +960,8 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
             {BLOCK_BY_TYPE[block.type]?.label}
           </div>
           <input
-            aria-label="Block name"
+            id={titleId}
+            aria-label="Step name"
             value={block.name}
             onChange={(e) =>
               actions.updateBlock(block.id, 'name', e.target.value)
@@ -976,7 +982,7 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={() => setReader({})}
-          title="View the live system prompt for this block"
+          title="View the customer-facing wording for this step"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -1016,7 +1022,7 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
 
       <div
         role="tablist"
-        aria-label="Block configuration sections"
+        aria-label="Step settings sections"
         onKeyDown={(e) => {
           const i = tabs.findIndex((x) => x.key === state.activeTab)
           if (i < 0) return
@@ -1103,6 +1109,6 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
           onClose={() => setReader(null)}
         />
       )}
-    </div>
+    </FloatingPanel>
   )
 }

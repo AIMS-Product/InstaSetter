@@ -1,7 +1,9 @@
 'use client'
 
-import { MessageSquareText } from 'lucide-react'
-import { useFlowState } from '../../store'
+import { useEffect, useState, type CSSProperties } from 'react'
+import { MessageSquareText, Undo2 } from 'lucide-react'
+import { fetchFlowRuntimeAction, setFlowRuntimeAction } from '../../actions'
+import { useFlowActions, useFlowState } from '../../store'
 import {
   StatusBadge,
   getDraftSaveStatus,
@@ -12,7 +14,7 @@ import { HeaderHelpMenu } from './header-help-menu'
 import { B } from './palette'
 
 const PAGE_SUMMARY: Record<PageId, string> = {
-  flow: 'Edit the shared draft and sanity-check tone before anything ships.',
+  flow: 'Edit the team draft and check the tone before publishing.',
   runs: 'Review brand-wide conversations and booking signals.',
   variables: 'Check what the bot remembers and where each value comes from.',
   versions: 'See what is saved in draft versus what powers live replies.',
@@ -20,15 +22,23 @@ const PAGE_SUMMARY: Record<PageId, string> = {
 }
 
 export default function BHeader({
+  flowId,
   page,
   simOpen,
   onToggleSim,
+  botEnabled,
 }: {
+  flowId: string
   page: PageId
   simOpen: boolean
   onToggleSim: () => void
+  botEnabled: boolean
 }) {
   const state = useFlowState()
+  const actions = useFlowActions()
+  const [runtimeEnabled, setRuntimeEnabled] = useState(botEnabled)
+  const [runtimeOpen, setRuntimeOpen] = useState(false)
+  const [runtimeBusy, setRuntimeBusy] = useState(false)
   const draftStatus = getDraftWorkspaceStatus(state.dirtySincePublish)
   const saveStatus = getDraftSaveStatus(state.draftSyncStatus)
   const saveTone =
@@ -37,6 +47,30 @@ export default function BHeader({
       : state.draftSyncStatus === 'saved'
         ? 'success'
         : 'info'
+  const draftSummary = `${draftStatus.label} · ${saveStatus.label}`
+
+  useEffect(() => {
+    let alive = true
+    fetchFlowRuntimeAction({ flowId }).then((runtime) => {
+      if (!alive || !runtime) return
+      setRuntimeEnabled(runtime.botEnabled)
+    })
+    return () => {
+      alive = false
+    }
+  }, [flowId])
+
+  const setPause = async (paused: boolean, durationMinutes?: number) => {
+    setRuntimeBusy(true)
+    const runtime = await setFlowRuntimeAction({
+      flowId,
+      paused,
+      durationMinutes,
+    })
+    if (runtime) setRuntimeEnabled(runtime.botEnabled)
+    setRuntimeBusy(false)
+    setRuntimeOpen(false)
+  }
 
   return (
     <div
@@ -122,32 +156,99 @@ export default function BHeader({
       >
         <StatusBadge
           p={B}
-          label={draftStatus.label}
-          tone={state.dirtySincePublish ? 'warning' : 'neutral'}
+          label={`Draft: ${draftSummary}`}
+          tone={state.dirtySincePublish ? 'warning' : saveTone}
         />
-        <StatusBadge p={B} label={saveStatus.label} tone={saveTone} />
-        <StatusBadge p={B} label="Bot: Active" tone="success" />
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={() => setRuntimeOpen((open) => !open)}
+            aria-expanded={runtimeOpen}
+            aria-haspopup="dialog"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              cursor: 'pointer',
+            }}
+          >
+            <StatusBadge
+              p={B}
+              label={`Runtime: ${runtimeEnabled ? 'Bot active' : 'Bot paused'}`}
+              tone={runtimeEnabled ? 'success' : 'danger'}
+            />
+          </button>
+          {runtimeOpen && (
+            <div
+              role="dialog"
+              aria-label="Bot runtime controls"
+              style={{
+                position: 'absolute',
+                top: 30,
+                left: 0,
+                zIndex: 50,
+                width: 230,
+                padding: 10,
+                borderRadius: 12,
+                border: `1px solid ${B.line}`,
+                background: B.panel,
+                boxShadow: '0 18px 40px rgba(22,21,40,0.16)',
+                display: 'grid',
+                gap: 8,
+              }}
+            >
+              <button
+                type="button"
+                disabled={runtimeBusy || !runtimeEnabled}
+                onClick={() => setPause(true, 60)}
+                style={runtimeMenuButtonStyle(runtimeBusy || !runtimeEnabled)}
+              >
+                Pause 1 hour
+              </button>
+              <button
+                type="button"
+                disabled={runtimeBusy || !runtimeEnabled}
+                onClick={() => setPause(true)}
+                style={runtimeMenuButtonStyle(runtimeBusy || !runtimeEnabled)}
+              >
+                Pause until I resume
+              </button>
+              <button
+                type="button"
+                disabled={runtimeBusy || runtimeEnabled}
+                onClick={() => setPause(false)}
+                style={runtimeMenuButtonStyle(runtimeBusy || runtimeEnabled)}
+              >
+                Resume bot
+              </button>
+              <button
+                type="button"
+                onClick={() => setRuntimeOpen(false)}
+                style={runtimeMenuButtonStyle(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div style={{ flex: 1 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {state.undo && (
+          <button
+            type="button"
+            onClick={() => actions.undoLastDelete()}
+            style={headerButtonStyle(false)}
+          >
+            <Undo2 size={15} strokeWidth={1.9} aria-hidden />
+            Undo delete
+          </button>
+        )}
         {page === 'flow' && (
           <button
             type="button"
             onClick={onToggleSim}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 12,
-              border: `1px solid ${simOpen ? B.accentSoft : B.line}`,
-              background: simOpen ? B.accentSoft : B.lineSoft,
-              color: simOpen ? B.accentInk : B.ink,
-              fontSize: 12.5,
-              cursor: 'pointer',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              boxShadow: simOpen ? '0 10px 24px rgba(79,70,186,0.10)' : 'none',
-            }}
+            style={headerButtonStyle(simOpen)}
           >
             <MessageSquareText size={15} strokeWidth={1.9} aria-hidden />
             {simOpen ? 'Hide preview' : 'Preview replies'}
@@ -157,4 +258,36 @@ export default function BHeader({
       </div>
     </div>
   )
+}
+
+function headerButtonStyle(active: boolean): CSSProperties {
+  return {
+    padding: '10px 14px',
+    borderRadius: 12,
+    border: `1px solid ${active ? B.accentSoft : B.line}`,
+    background: active ? B.accentSoft : B.lineSoft,
+    color: active ? B.accentInk : B.ink,
+    fontSize: 12.5,
+    cursor: 'pointer',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    boxShadow: active ? '0 10px 24px rgba(79,70,186,0.10)' : 'none',
+  }
+}
+
+function runtimeMenuButtonStyle(disabled: boolean): CSSProperties {
+  return {
+    width: '100%',
+    padding: '9px 10px',
+    borderRadius: 9,
+    border: `1px solid ${B.line}`,
+    background: disabled ? B.lineSoft : B.panel,
+    color: disabled ? B.ink3 : B.ink,
+    fontSize: 12,
+    fontWeight: 600,
+    textAlign: 'left',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+  }
 }

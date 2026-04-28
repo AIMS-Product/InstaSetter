@@ -29,7 +29,7 @@ export default function PageVersions({ p }: { p: Palette }) {
         p={p}
         eyebrow={state.flow.name}
         title="Release status"
-        description="A marketer-facing reality check: what is saved in the shared draft, what still powers live replies, and what this screen can help you confirm today."
+        description="Compare the team draft with what customers currently get."
         right={
           <StatusBadge
             p={p}
@@ -64,34 +64,33 @@ export default function PageVersions({ p }: { p: Palette }) {
           >
             <StatusCard
               p={p}
-              eyebrow="Draft workspace"
+              eyebrow="Team draft"
               title={draftStatus.label}
               detail={draftStatus.detail}
               tone={state.dirtySincePublish ? 'warning' : 'neutral'}
             >
               <CardMeta p={p}>
-                Flow draft v{state.draftVersion} stored in the shared draft.
+                Draft v{state.draftVersion} saved for this team.
               </CardMeta>
             </StatusCard>
 
             <StatusCard
               p={p}
-              eyebrow="Live runtime"
+              eyebrow="Customer replies"
               title={runtimeStatus.label}
               detail={runtimeStatus.detail}
               tone="success"
             >
               <CardMeta p={p}>
-                New conversations read the compiled source, not this saved
-                draft.
+                New conversations use the current customer-facing wording.
               </CardMeta>
             </StatusCard>
 
             <StatusCard
               p={p}
-              eyebrow="Prompt source"
-              title="Compiled from prompt source files"
-              detail="Prompt Reader shows the live source sections that feed the current production prompt today."
+              eyebrow="Prompt reader"
+              title="Current customer wording"
+              detail="Prompt Reader shows the guidance customers currently get."
               tone="info"
             >
               <CardMeta p={p}>
@@ -108,8 +107,8 @@ export default function PageVersions({ p }: { p: Palette }) {
             >
               <CardMeta p={p}>
                 {compileEnabled
-                  ? 'Selected block overrides can be previewed here.'
-                  : 'Draft overrides are ignored in this environment.'}
+                  ? 'Draft changes for the selected step can be previewed here.'
+                  : 'Draft changes are ignored in this environment.'}
               </CardMeta>
             </StatusCard>
           </div>
@@ -127,7 +126,7 @@ export default function PageVersions({ p }: { p: Palette }) {
               <li>Edit the draft in Flow Builder.</li>
               <li>Preview likely prospect replies in the simulator.</li>
               <li>
-                Open Prompt Reader when you need the compiled live wording.
+                Open Prompt Reader when you need the current customer wording.
               </li>
               <li>
                 Use this page as the final truth check before sharing changes.
@@ -146,16 +145,16 @@ export default function PageVersions({ p }: { p: Palette }) {
               }}
             >
               <li>
-                Edit block goals, guidance, examples, routes, and captures.
+                Edit step goals, guidance, examples, paths, and saved details.
               </li>
-              <li>Inspect the compiled live prompt in Prompt Reader.</li>
+              <li>Inspect current customer wording in Prompt Reader.</li>
               <li>
                 Preview replies with the simulator and review the brand inbox.
               </li>
             </ul>
           </InfoSection>
 
-          <InfoSection p={p} title="Not wired yet">
+          <InfoSection p={p} title="Coming later">
             <ul
               style={{
                 margin: 0,
@@ -166,8 +165,8 @@ export default function PageVersions({ p }: { p: Palette }) {
               }}
             >
               <li>Publishing draft changes from this screen.</li>
-              <li>Marketer-facing release history tied to the live runtime.</li>
-              <li>Per-flow reporting in the inbox tab.</li>
+              <li>Release history for customer-facing changes.</li>
+              <li>Per-flow reporting in the inbox.</li>
             </ul>
           </InfoSection>
         </div>

@@ -74,6 +74,7 @@ export type Database = {
           created_at: string
           ended_at: string | null
           flagged_reason: string | null
+          flow_id: string | null
           id: string
           is_test: boolean
           prompt_version: string
@@ -87,6 +88,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           flagged_reason?: string | null
+          flow_id?: string | null
           id?: string
           is_test?: boolean
           prompt_version: string
@@ -100,6 +102,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           flagged_reason?: string | null
+          flow_id?: string | null
           id?: string
           is_test?: boolean
           prompt_version?: string
@@ -117,6 +120,27 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      flow_runtime_controls: {
+        Row: {
+          bot_paused: boolean
+          flow_id: string
+          paused_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          bot_paused?: boolean
+          flow_id: string
+          paused_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bot_paused?: boolean
+          flow_id?: string
+          paused_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       integration_events: {
         Row: {

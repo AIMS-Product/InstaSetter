@@ -17,6 +17,7 @@ import type {
 
 export interface ListConversationsOptions {
   limit?: number
+  flowId?: string
   search?: string
   dateFrom?: string
   dateTo?: string
@@ -67,10 +68,11 @@ export async function listConversations(
   let query = client
     .from('conversations')
     .select(
-      'id, status, started_at, ended_at, summary, contact_id, contacts(id, instagram_handle, name)'
+      'id, flow_id, status, started_at, ended_at, summary, contact_id, contacts(id, instagram_handle, name)'
     )
     .order('started_at', { ascending: false })
 
+  if (options.flowId) query = query.eq('flow_id', options.flowId)
   if (contactIds) query = query.in('contact_id', contactIds)
   if (options.dateFrom) query = query.gte('started_at', options.dateFrom)
   if (options.dateTo) query = query.lte('started_at', options.dateTo)
@@ -152,6 +154,7 @@ export async function listConversations(
     const contact = Array.isArray(c.contacts) ? c.contacts[0] : c.contacts
     return {
       id: c.id,
+      flow_id: c.flow_id,
       status: c.status,
       started_at: c.started_at,
       ended_at: c.ended_at,
@@ -193,7 +196,7 @@ export async function getConversation(
   const { data: conv, error } = await client
     .from('conversations')
     .select(
-      'id, status, prompt_version, summary, started_at, ended_at, contacts(id, instagram_handle, name, email)'
+      'id, flow_id, status, prompt_version, summary, started_at, ended_at, contacts(id, instagram_handle, name, email)'
     )
     .eq('id', conversationId)
     .maybeSingle()
@@ -235,6 +238,7 @@ export async function getConversation(
 
   return {
     id: conv.id,
+    flow_id: conv.flow_id,
     status: conv.status,
     prompt_version: conv.prompt_version,
     summary: conv.summary,

@@ -20,16 +20,21 @@ function isStale(conversation: Conversation): boolean {
 
 export async function findOrCreateActiveConversation(
   contactId: string,
-  promptVersion: string = PROMPT_VERSION
+  promptVersion: string = PROMPT_VERSION,
+  flowId?: string
 ): Promise<ServiceResult<Conversation & { staleConversationId?: string }>> {
   const supabase = createServiceRoleClient()
 
   // Look for an existing active conversation
-  const { data: existing, error: selectError } = await supabase
+  let existingQuery = supabase
     .from('conversations')
     .select('*')
     .eq('contact_id', contactId)
     .eq('status', 'active')
+
+  if (flowId) existingQuery = existingQuery.eq('flow_id', flowId)
+
+  const { data: existing, error: selectError } = await existingQuery
     .limit(1)
     .single()
 
@@ -52,6 +57,7 @@ export async function findOrCreateActiveConversation(
         .from('conversations')
         .insert({
           contact_id: contactId,
+          flow_id: flowId,
           status: 'active',
           prompt_version: promptVersion,
         })
@@ -81,6 +87,7 @@ export async function findOrCreateActiveConversation(
     .from('conversations')
     .insert({
       contact_id: contactId,
+      flow_id: flowId,
       status: 'active',
       prompt_version: promptVersion,
     })

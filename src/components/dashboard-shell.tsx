@@ -16,6 +16,7 @@ interface NavItem {
   label: string
   Icon: LucideIcon
   matchPrefix?: string
+  hideBelowBuilderWidth?: boolean
 }
 
 const NAV: NavItem[] = [
@@ -37,6 +38,7 @@ const NAV: NavItem[] = [
     label: 'Flow Builder',
     Icon: Workflow,
     matchPrefix: '/dashboard/flows',
+    hideBelowBuilderWidth: true,
   },
 ]
 
@@ -121,7 +123,7 @@ export function DashboardShell({
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors ${
+                className={`${item.hideBelowBuilderWidth ? 'hidden min-[900px]:flex' : 'flex'} h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors ${
                   active
                     ? 'bg-[#ECEBF7] text-[#2E297A]'
                     : 'text-[#4B4A5E] hover:bg-[#EFEFF3]'

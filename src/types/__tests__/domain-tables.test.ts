@@ -67,6 +67,7 @@ describe('core domain tables exist in generated types', () => {
     it('has core columns', () => {
       assertHasKey<ConversationRow, 'id'>(true)
       assertHasKey<ConversationRow, 'contact_id'>(true)
+      assertHasKey<ConversationRow, 'flow_id'>(true)
       assertHasKey<ConversationRow, 'status'>(true)
       assertHasKey<ConversationRow, 'prompt_version'>(true)
     })

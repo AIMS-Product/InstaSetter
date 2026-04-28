@@ -22,7 +22,17 @@ import PaletteDrawer from './palette-drawer'
 import { B } from './palette'
 import { buildSimulatorOverrides } from './simulator-overrides'
 
-function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
+function Shell({
+  flowId,
+  brand,
+  bookingUrl,
+  botEnabled,
+}: {
+  flowId: string
+  brand: string
+  bookingUrl: string
+  botEnabled: boolean
+}) {
   const state = useFlowState()
   const actions = useFlowActions()
   const { selectedBlock } = useFlowStore()
@@ -57,9 +67,11 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
       }}
     >
       <BHeader
+        flowId={flowId}
         page={page}
         simOpen={simOpen}
         onToggleSim={() => setSimOpen((s) => !s)}
+        botEnabled={botEnabled}
       />
       <div
         style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}
@@ -94,7 +106,7 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
             aria-labelledby="flow-builder-tab-runs"
             style={{ flex: 1, minWidth: 0 }}
           >
-            <PageRuns p={B} />
+            <PageRuns p={B} flowId={flowId} />
           </div>
         )}
         {page === 'variables' && (
@@ -134,13 +146,27 @@ function Toast({
   onDone: () => void
   onUndo: () => void
 }) {
+  const [paused, setPaused] = useState(false)
+
   useEffect(() => {
+    if (paused) return
     const timer = window.setTimeout(onDone, toast.action ? 6000 : 2400)
     return () => window.clearTimeout(timer)
-  }, [toast.action, toast.message, onDone])
+  }, [paused, toast.action, toast.message, onDone])
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setPaused(false)
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onDone()
+      }}
       style={{
         position: 'fixed',
         bottom: 20,
@@ -187,10 +213,12 @@ export default function DirectionB({
   flowId,
   brand,
   bookingUrl,
+  botEnabled,
 }: {
   flowId: string
   brand: string
   bookingUrl: string
+  botEnabled: boolean
 }) {
   return (
     <FlowStoreProvider
@@ -200,7 +228,12 @@ export default function DirectionB({
       bookingUrl={bookingUrl}
     >
       <FlowDraftSync flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
-      <Shell brand={brand} bookingUrl={bookingUrl} />
+      <Shell
+        flowId={flowId}
+        brand={brand}
+        bookingUrl={bookingUrl}
+        botEnabled={botEnabled}
+      />
     </FlowStoreProvider>
   )
 }

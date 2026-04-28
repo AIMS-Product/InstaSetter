@@ -45,6 +45,7 @@ type MessageRow = Database['public']['Tables']['messages']['Row']
 const stubConversation: ConversationRow = {
   id: 'conv-1',
   contact_id: 'contact-1',
+  flow_id: 'ig-organic-dm',
   status: 'active',
   prompt_version: 'setter-v1',
   summary: null,

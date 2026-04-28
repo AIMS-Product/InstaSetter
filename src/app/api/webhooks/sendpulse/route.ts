@@ -4,8 +4,10 @@ import { sendpulseWebhookSchema } from '@/types/sendpulse'
 import type { SendPulseWebhookPayload } from '@/types/sendpulse'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { getServerConfig, getSendPulseConfig, isBotEnabled } from '@/lib/config'
+import { DEFAULT_FLOW_ID } from '@/lib/flows'
 import { upsertSendPulseContact } from '@/lib/services/contact'
 import { processMessage } from '@/lib/services/engine'
+import { getFlowRuntimeControl } from '@/lib/services/flow-runtime'
 import { sendInstagramMessage, pauseAutomation } from '@/lib/services/sendpulse'
 import {
   extractSendPulseAttribution,
@@ -55,6 +57,7 @@ async function handleEvent(
       ),
     'sendpulse',
     {
+      flowId: DEFAULT_FLOW_ID,
       prepareInboundContext: async ({ conversationId }) => {
         const attribution = await persistSendPulseAttribution(client, {
           event,
@@ -126,6 +129,14 @@ export async function POST(request: Request) {
 
     // Step 4: Global kill switch — short-circuit before any processing.
     if (!isBotEnabled()) {
+      return NextResponse.json({
+        ok: true,
+        results: parsed.data.map(() => ({ ok: true, skipped: 'bot_paused' })),
+      })
+    }
+
+    const runtime = await getFlowRuntimeControl(DEFAULT_FLOW_ID)
+    if (runtime.botPaused) {
       return NextResponse.json({
         ok: true,
         results: parsed.data.map(() => ({ ok: true, skipped: 'bot_paused' })),

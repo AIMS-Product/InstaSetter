@@ -56,7 +56,7 @@ const sections = (
       insights: [
         'Generic affirmations ("Nice man", "Okay smooth") kill rapport',
         'Repeated canned phrases signal automation and erode trust',
-        'Peer-mentor tone outperforms salesperson tone 3:1 on bookings',
+        'Friendly expert tone booked roughly 3 times as often as sales-heavy tone',
         'Identity-verification standoffs caused trust collapse in 15+ convos',
       ],
     },
@@ -295,7 +295,7 @@ const PERSONA_HEADING_MAP: Array<{
     match: /^Voice/i,
     key: 'voice',
     locked: false,
-    why: 'Tone is customisable per brand. Peer-mentor beats salesperson 3:1.',
+    why: 'Tone can vary by brand. Friendly expert language booked roughly 3 times as often as sales-heavy language.',
   },
   {
     match: /^Message Length/i,
@@ -436,7 +436,7 @@ export function extractBotGuardrails({
     ...extractGuardrails(
       messageConstraintsText,
       'src/lib/prompts/sections/message-constraints.ts',
-      'Instagram DM format constraint — universal across every block.'
+      'Instagram DM format rule that applies to every conversation.'
     ),
     ...extractGuardrails(
       personaText,
@@ -1057,7 +1057,7 @@ function derivePerBlockGuardrails(
       ...extractGuardrails(
         section.text,
         section.source,
-        `Block-specific rule from ${section.title}.`
+        `Step-specific rule from ${section.title}.`
       )
     )
   }
