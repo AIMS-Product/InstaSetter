@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import DirectionB from './directions/b-stage'
 
 export default function FlowBuilder({
@@ -12,24 +13,44 @@ export default function FlowBuilder({
   brand: string
   bookingUrl: string
 }) {
-  return (
-    <>
-      {/* Desktop (>= 1024px): full flow builder. Mobile/tablet: dedicated gate.
-          The multi-panel canvas + inspector + simulator cannot usefully coexist
-          below 1024px — every attempt to responsive-collapse has reduced it to
-          a checklist that's slower to author with than pen-and-paper. Per the
-          UX persona review decision (#7), we gate instead of degrade. */}
-      <div className="hidden h-full w-full lg:block">
+  const [gateOverride, setGateOverride] = useState(false)
+
+  if (gateOverride) {
+    return (
+      <div className="h-full w-full">
         <DirectionB flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
       </div>
-      <div className="flex h-full w-full lg:hidden">
-        <MobileGate />
+    )
+  }
+
+  return (
+    <>
+      {/* Larger tablet/desktop (>= 900px): full flow builder. Mobile: dedicated gate.
+          The multi-panel canvas + inspector + simulator cannot usefully coexist
+          below 900px — every attempt to responsive-collapse has reduced it to
+          a checklist that's slower to author with than pen-and-paper. Per the
+          UX persona review decision (#7), we gate instead of degrade. */}
+      <div className="hidden h-full w-full min-[900px]:block">
+        <DirectionB flowId={flowId} brand={brand} bookingUrl={bookingUrl} />
+      </div>
+      <div className="flex h-full w-full min-[900px]:hidden">
+        <MobileGate flowId={flowId} onContinue={() => setGateOverride(true)} />
       </div>
     </>
   )
 }
 
-function MobileGate() {
+function MobileGate({
+  flowId,
+  onContinue,
+}: {
+  flowId: string
+  onContinue: () => void
+}) {
+  const subject = 'Open Flow Builder'
+  const body = `Open this Flow Builder on a larger screen: /dashboard/flows/${flowId}`
+  const shareHref = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
   return (
     <main
       id="main"
@@ -86,7 +107,7 @@ function MobileGate() {
         }}
       >
         Editing the flow uses a multi-panel canvas that doesn&rsquo;t fit on a
-        phone or small tablet. Open this page on a screen at least 1024px wide.
+        phone or small tablet. Open this page on a screen at least 900px wide.
       </p>
       <p
         style={{
@@ -99,21 +120,72 @@ function MobileGate() {
       >
         You can still monitor live conversations on your phone.
       </p>
-      <Link
-        href="/dashboard/conversations"
+      <div
         style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 10,
           marginTop: 8,
-          padding: '10px 18px',
-          borderRadius: 10,
-          background: '#161528',
-          color: 'white',
-          fontSize: 13,
-          fontWeight: 500,
-          textDecoration: 'none',
+          width: '100%',
+          maxWidth: 340,
         }}
       >
-        Open conversations →
-      </Link>
+        <Link
+          href="/dashboard/conversations"
+          style={{
+            minHeight: 48,
+            width: '100%',
+            maxWidth: 260,
+            padding: '14px 22px',
+            borderRadius: 10,
+            background: '#161528',
+            color: 'white',
+            fontSize: 14,
+            fontWeight: 500,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          Open conversations →
+        </Link>
+        <button
+          type="button"
+          onClick={onContinue}
+          style={{
+            minHeight: 48,
+            width: '100%',
+            maxWidth: 260,
+            padding: '13px 20px',
+            borderRadius: 10,
+            border: '1px solid #D9D8E6',
+            background: 'white',
+            color: '#161528',
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Continue anyway
+        </button>
+        <a
+          href={shareHref}
+          style={{
+            minHeight: 44,
+            color: '#5E52C7',
+            fontSize: 13,
+            fontWeight: 500,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          Email this link to myself
+        </a>
+      </div>
     </main>
   )
 }

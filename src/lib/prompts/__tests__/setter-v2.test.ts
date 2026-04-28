@@ -301,10 +301,16 @@ describe('setter-v2 buildSystemPrompt', () => {
     const prompt = buildSystemPrompt({
       brandName: 'VP',
       isReturningContact: true,
-      priorSummaries: ['Had 10 machines in Houston, interested in expansion'],
+      priorSummaries: [
+        'Had 10 machines in Houston, interested in expansion',
+        'Booked but missed the first discovery call',
+      ],
     })
     expect(prompt).toContain('Returning Contact')
-    expect(prompt).toContain('Had 10 machines in Houston')
+    expect(prompt).toContain(
+      '1. Had 10 machines in Houston, interested in expansion'
+    )
+    expect(prompt).toContain('2. Booked but missed the first discovery call')
   })
 
   it('omits returning contact section by default', () => {
@@ -325,6 +331,7 @@ describe('setter-v2 buildSystemPrompt', () => {
     const prompt = buildSystemPrompt({
       brandName: 'VP',
       leadSourceContext: {
+        label: 'April Masterclass Comment',
         channel: 'Instagram',
         campaign: 'Free Masterclass',
         material: 'Masterclass Reel',
@@ -334,9 +341,34 @@ describe('setter-v2 buildSystemPrompt', () => {
     })
 
     expect(prompt).toContain('Lead Source Context')
+    expect(prompt).toContain('Source label: April Masterclass Comment')
+    expect(prompt).toContain('Channel: Instagram')
+    expect(prompt).toContain('Campaign: Free Masterclass')
     expect(prompt).toContain('Material: Masterclass Reel')
+    expect(prompt).toContain('Entry action: Comment Reply')
+    expect(prompt).toContain('Trigger: apr24_comment')
     expect(prompt).toMatch(/short affirmative/i)
     expect(prompt).toMatch(/Do not quote raw tags, variables, IDs/i)
     expect(buildSystemPrompt(DEFAULT_OPTS)).not.toContain('Lead Source Context')
+  })
+
+  it('omits empty lead source context fields while retaining the affirmative instruction', () => {
+    const prompt = buildSystemPrompt({
+      brandName: 'VP',
+      leadSourceContext: {
+        channel: 'Instagram',
+      },
+    })
+    const leadSourceSection = prompt.slice(
+      prompt.indexOf('## Lead Source Context')
+    )
+
+    expect(leadSourceSection).toContain('Channel: Instagram')
+    expect(leadSourceSection).not.toContain('Source label:')
+    expect(leadSourceSection).not.toContain('Campaign:')
+    expect(leadSourceSection).not.toContain('Material:')
+    expect(leadSourceSection).not.toContain('Entry action:')
+    expect(leadSourceSection).not.toContain('Trigger:')
+    expect(leadSourceSection).toMatch(/short affirmative/i)
   })
 })

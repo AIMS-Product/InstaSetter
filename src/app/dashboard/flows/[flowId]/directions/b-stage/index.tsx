@@ -5,7 +5,6 @@ import PageNav from '../../page-nav'
 import PageBot from '../../related-pages/page-bot'
 import PageRuns from '../../related-pages/page-runs'
 import PageVariables from '../../related-pages/page-variables'
-import PageVersions from '../../related-pages/page-versions'
 import FlowDraftSync from '../../flow-draft-sync'
 import {
   FlowStoreProvider,
@@ -27,7 +26,7 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
   const state = useFlowState()
   const actions = useFlowActions()
   const { selectedBlock } = useFlowStore()
-  const [page, setPage] = useState<PageId>('flow')
+  const [page, setPage] = useState<PageId>('runs')
   const [simOpen, setSimOpen] = useState(false)
 
   const overrides = useMemo(
@@ -106,16 +105,6 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
             style={{ flex: 1, minWidth: 0 }}
           >
             <PageVariables p={B} />
-          </div>
-        )}
-        {page === 'versions' && (
-          <div
-            role="tabpanel"
-            id="flow-builder-panel-versions"
-            aria-labelledby="flow-builder-tab-versions"
-            style={{ flex: 1, minWidth: 0 }}
-          >
-            <PageVersions p={B} />
           </div>
         )}
         {page === 'bot' && (

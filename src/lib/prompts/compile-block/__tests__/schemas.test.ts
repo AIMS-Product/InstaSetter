@@ -58,6 +58,44 @@ describe('BlockOverridesSchema', () => {
     expect(result.success).toBe(true)
   })
 
+  it('trims nested capture, branch, and trigger string fields', () => {
+    const result = BlockOverridesSchema.safeParse({
+      activeBlockType: 'booking',
+      captures: [{ label: '  Email  ', variable: '  contact.email  ' }],
+      branches: [
+        {
+          label: '  Booked  ',
+          when: '  contact.email is set  ',
+          target: 'summary',
+        },
+      ],
+      triggers: [
+        {
+          name: '  Re-engage  ',
+          afterMinutes: 1440,
+          cancelOnReply: true,
+          mode: 'human_agent_tag',
+          target: 'followup',
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.captures?.[0]).toEqual({
+        label: 'Email',
+        variable: 'contact.email',
+      })
+      expect(result.data.branches?.[0]).toMatchObject({
+        label: 'Booked',
+        when: 'contact.email is set',
+      })
+      expect(result.data.triggers?.[0]).toMatchObject({
+        name: 'Re-engage',
+      })
+    }
+  })
+
   it('rejects unknown block type', () => {
     const result = BlockOverridesSchema.safeParse({
       activeBlockType: 'not-a-block',
@@ -97,6 +135,24 @@ describe('BlockOverridesSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects extra keys at the root and nested override levels', () => {
+    expect(
+      BlockOverridesSchema.safeParse({
+        activeBlockType: 'opening',
+        extra: 'nope',
+      }).success
+    ).toBe(false)
+
+    expect(
+      BlockOverridesSchema.safeParse({
+        activeBlockType: 'booking',
+        captures: [
+          { label: 'Email', variable: 'contact.email', extra: 'nope' },
+        ],
+      }).success
+    ).toBe(false)
+  })
+
   it('is optional-friendly on a parent schema', () => {
     const parent = BlockOverridesSchema.optional()
     expect(parent.safeParse(undefined).success).toBe(true)
@@ -119,5 +175,15 @@ describe('BlockOverridesSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) expect(result.data.goal).toBe('Ask for city')
+  })
+
+  it('trims padded guidance and preserves the meaningful content', () => {
+    const result = BlockOverridesSchema.safeParse({
+      activeBlockType: 'opening',
+      guidance: '  One question per message.  ',
+    })
+    expect(result.success).toBe(true)
+    if (result.success)
+      expect(result.data.guidance).toBe('One question per message.')
   })
 })

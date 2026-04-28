@@ -36,6 +36,8 @@ describe('parseClaudeResponse', () => {
     expect(result.toolCalls[0].name).toBe('capture_email')
     expect(result.toolCalls[0].toolUseId).toBe('toolu_1')
     expect(result.toolCalls[0].input).toEqual({ email: 'a@b.com' })
+    expect(result.replyText).toBe('Got it.')
+    expect(result.truncated).toBe(false)
   })
 
   it('handles no text blocks', () => {
@@ -51,6 +53,14 @@ describe('parseClaudeResponse', () => {
       ])
     )
     expect(result.replyText).toBe('')
+    expect(result.toolCalls).toEqual([
+      {
+        name: 'generate_summary',
+        toolUseId: 'toolu_1',
+        input: {},
+      },
+    ])
+    expect(result.truncated).toBe(false)
   })
 
   it('concatenates multiple text blocks with space', () => {
@@ -90,8 +100,18 @@ describe('parseClaudeResponse', () => {
     const result = parseClaudeResponse(
       makeMessage([{ type: 'text', text: 'A'.repeat(2500), citations: null }])
     )
-    expect(result.replyText.length).toBeLessThanOrEqual(2000)
+    expect(result.replyText).toBe('A'.repeat(2000))
+    expect(result.replyText.length).toBe(2000)
     expect(result.truncated).toBe(true)
+  })
+
+  it('does not truncate exactly at the message limit', () => {
+    const result = parseClaudeResponse(
+      makeMessage([{ type: 'text', text: 'A'.repeat(2000), citations: null }])
+    )
+
+    expect(result.replyText).toBe('A'.repeat(2000))
+    expect(result.truncated).toBe(false)
   })
 
   it('does not set truncated when under limit', () => {

@@ -27,9 +27,24 @@ describe('buildSystemPrompt', () => {
     const prompt = buildSystemPrompt({
       brandName: 'VP',
       isReturningContact: true,
-      priorSummaries: ['Had 10 machines, interested in expansion'],
+      priorSummaries: [
+        'Had 10 machines, interested in expansion',
+        'Asked for pricing before booking',
+      ],
     })
-    expect(prompt).toContain('Had 10 machines')
+    expect(prompt).toContain('## Returning Contact')
+    expect(prompt).toContain('1. Had 10 machines, interested in expansion')
+    expect(prompt).toContain('2. Asked for pricing before booking')
+  })
+
+  it('does not append returning contact section when the summary list is empty', () => {
+    const prompt = buildSystemPrompt({
+      brandName: 'VP',
+      isReturningContact: true,
+      priorSummaries: [],
+    })
+
+    expect(prompt).not.toMatch(/returning contact/i)
   })
 
   it('omits returning contact section by default', () => {
@@ -49,5 +64,19 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toMatch(/need to think/i)
     expect(prompt).toMatch(/already have/i)
     expect(prompt).toMatch(/just browsing/i)
+  })
+
+  it('includes concrete routing actions and required summary fields', () => {
+    const prompt = buildSystemPrompt({ brandName: 'VP' })
+
+    expect(prompt).toContain('qualify_lead')
+    expect(prompt).toContain('book_call')
+    expect(prompt).toContain('capture_email')
+    expect(prompt).toContain('generate_summary')
+    expect(prompt).toContain('instagram_handle (string, required)')
+    expect(prompt).toContain(
+      'qualification_status ("hot" | "warm" | "cold", required)'
+    )
+    expect(prompt).toContain('call_booked (boolean, required)')
   })
 })

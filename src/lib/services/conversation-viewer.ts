@@ -15,6 +15,14 @@ import type {
   ConversationListItem,
 } from './conversation-viewer-types'
 
+export interface ListConversationsOptions {
+  limit?: number
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+  status?: string
+}
+
 export async function countConversationsStartedSince(
   sinceIso: string
 ): Promise<number> {
@@ -31,17 +39,46 @@ export async function countConversationsStartedSince(
 }
 
 export async function listConversations(
-  limit: number = 50
+  opts: number | ListConversationsOptions = 50
 ): Promise<ConversationListItem[]> {
   const client = createServiceRoleClient()
+  const options = typeof opts === 'number' ? { limit: opts } : opts
+  const limit = options.limit ?? 50
+  const search = options.search?.trim()
 
-  const { data: convs, error } = await client
+  let contactIds: string[] | null = null
+  if (search) {
+    const safeSearch = search.replaceAll('%', '\\%').replaceAll('_', '\\_')
+    const { data: contacts, error: contactError } = await client
+      .from('contacts')
+      .select('id')
+      .or(`instagram_handle.ilike.%${safeSearch}%,name.ilike.%${safeSearch}%`)
+      .limit(200)
+
+    if (contactError) {
+      console.error('listConversations contact search failed', contactError)
+      return []
+    }
+
+    contactIds = (contacts ?? []).map((contact) => contact.id)
+    if (contactIds.length === 0) return []
+  }
+
+  let query = client
     .from('conversations')
     .select(
       'id, status, started_at, ended_at, summary, contact_id, contacts(id, instagram_handle, name)'
     )
     .order('started_at', { ascending: false })
-    .limit(limit)
+
+  if (contactIds) query = query.in('contact_id', contactIds)
+  if (options.dateFrom) query = query.gte('started_at', options.dateFrom)
+  if (options.dateTo) query = query.lte('started_at', options.dateTo)
+  if (options.status && options.status !== 'all') {
+    query = query.eq('status', options.status)
+  }
+
+  const { data: convs, error } = await query.limit(limit)
 
   if (error || !convs) {
     console.error('listConversations failed', error)

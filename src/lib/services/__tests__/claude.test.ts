@@ -2,12 +2,24 @@ import { describe, it, expect } from 'vitest'
 import { buildClaudeRequest } from '@/lib/services/claude'
 
 type SchemaProps = Record<string, unknown>
+type JsonSchemaProperty = {
+  type?: string
+  enum?: string[]
+  description?: string
+}
 
 /** Safely extract properties from a tool's input_schema (typed as unknown). */
 function getProps(
   tool: { input_schema: { properties?: unknown } } | undefined
 ): SchemaProps {
   return (tool?.input_schema.properties ?? {}) as SchemaProps
+}
+
+function getProp(
+  tool: { input_schema: { properties?: unknown } } | undefined,
+  name: string
+): JsonSchemaProperty {
+  return getProps(tool)[name] as JsonSchemaProperty
 }
 
 describe('buildClaudeRequest', () => {
@@ -51,7 +63,10 @@ describe('buildClaudeRequest', () => {
     const tool = buildClaudeRequest(prompt, msgs).tools.find(
       (t) => t.name === 'capture_email'
     )
-    expect(getProps(tool).email).toBeDefined()
+    expect(getProp(tool, 'email')).toMatchObject({
+      type: 'string',
+      description: expect.stringContaining('email address'),
+    })
     expect(tool?.input_schema.required).toContain('email')
   })
 
@@ -60,9 +75,19 @@ describe('buildClaudeRequest', () => {
       (t) => t.name === 'qualify_lead'
     )
     const props = getProps(tool)
-    expect(props.machine_count).toBeDefined()
-    expect(props.location_type).toBeDefined()
-    expect(props.revenue_range).toBeDefined()
+    expect(props.machine_count).toMatchObject({
+      type: 'number',
+      description: expect.stringContaining('Number of vending machines'),
+    })
+    expect(props.location_type).toMatchObject({
+      type: 'string',
+      description: expect.stringContaining('Type of location'),
+    })
+    expect(props.revenue_range).toMatchObject({
+      type: 'string',
+      description: expect.stringContaining('monthly revenue'),
+    })
+    expect(tool?.input_schema.required).toBeUndefined()
   })
 
   it('generate_summary has required fields', () => {
@@ -70,9 +95,15 @@ describe('buildClaudeRequest', () => {
       (t) => t.name === 'generate_summary'
     )
     const props = getProps(tool)
-    expect(props.instagram_handle).toBeDefined()
-    expect(props.qualification_status).toBeDefined()
-    expect(props.call_booked).toBeDefined()
+    expect(props.instagram_handle).toMatchObject({ type: 'string' })
+    expect(props.qualification_status).toMatchObject({
+      type: 'string',
+      enum: ['hot', 'warm', 'cold', 'out_of_area'],
+    })
+    expect(props.call_booked).toMatchObject({ type: 'boolean' })
+    expect(props.machine_count).toMatchObject({ type: 'number' })
+    expect(props.calendly_slot).toMatchObject({ type: 'string' })
+    expect(props.recommended_action).toMatchObject({ type: 'string' })
     expect(tool?.input_schema.required).toContain('instagram_handle')
     expect(tool?.input_schema.required).toContain('qualification_status')
     expect(tool?.input_schema.required).toContain('call_booked')
@@ -82,6 +113,10 @@ describe('buildClaudeRequest', () => {
     const tool = buildClaudeRequest(prompt, msgs).tools.find(
       (t) => t.name === 'book_call'
     )
-    expect(getProps(tool).calendly_slot).toBeDefined()
+    expect(getProp(tool, 'calendly_slot')).toMatchObject({
+      type: 'string',
+      description: expect.stringContaining('Calendly time slot'),
+    })
+    expect(tool?.input_schema.required).toBeUndefined()
   })
 })

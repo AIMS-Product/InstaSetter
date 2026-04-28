@@ -5,7 +5,6 @@ import {
   Activity,
   Bot as BotIcon,
   Braces,
-  History,
   Workflow,
   type LucideIcon,
 } from 'lucide-react'
@@ -29,12 +28,6 @@ const ITEMS: Array<{
     label: 'Variables',
     description: 'Check memory',
     Icon: Braces,
-  },
-  {
-    id: 'versions',
-    label: 'Release',
-    description: "What's live",
-    Icon: History,
   },
   {
     id: 'bot',

@@ -44,6 +44,7 @@ describe('SendPulse service', () => {
           method: 'POST',
           headers: expect.objectContaining({
             Authorization: 'Bearer test-api-key',
+            'Content-Type': 'application/json',
           }),
           body: JSON.stringify({
             contact_id: 'contact-1',
@@ -110,7 +111,11 @@ describe('SendPulse service', () => {
 
       const result = await setContactTags('contact-1', ['tag'])
 
-      expect(result.success).toBe(false)
+      expect(result).toEqual({
+        success: false,
+        error: 'Server Error',
+        status: 500,
+      })
     })
   })
 
@@ -131,6 +136,23 @@ describe('SendPulse service', () => {
           }),
         })
       )
+    })
+
+    it('returns response body and status when removing a tag fails', async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        statusText: 'Forbidden',
+        text: () => Promise.resolve('tag locked'),
+        status: 403,
+      })
+
+      const result = await removeContactTag('contact-1', 'old-tag')
+
+      expect(result).toEqual({
+        success: false,
+        error: 'tag locked',
+        status: 403,
+      })
     })
   })
 
@@ -166,6 +188,23 @@ describe('SendPulse service', () => {
           }),
         })
       )
+    })
+
+    it('returns status text when pause failure body cannot be read', async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        statusText: 'Too Many Requests',
+        text: () => Promise.reject(new Error('network read failed')),
+        status: 429,
+      })
+
+      const result = await pauseAutomation('contact-1')
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Too Many Requests',
+        status: 429,
+      })
     })
   })
 })

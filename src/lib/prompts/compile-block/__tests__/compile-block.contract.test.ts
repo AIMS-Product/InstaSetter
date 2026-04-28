@@ -41,6 +41,22 @@ describe('compileBlock — active block directive (no overrides)', () => {
     expect(compiled).toContain('Block: Opening')
   })
 
+  it('appends the directive as a stable suffix with heading spacing', () => {
+    const baseline = buildSystemPrompt({ brandName: BRAND })
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening' },
+    })
+    const directive = compiled.slice(baseline.length)
+
+    expect(directive).toBe(
+      '\n\n## Active Block Directive\n\n' +
+        'Block: Opening\n' +
+        'Goal: Greet warmly, detect initial interest, and ask for location as the first qualifier.\n' +
+        "Guidance: Match the prospect's energy. Don't interrogate. Ask ONE question — start with area. Run the location gate BEFORE qualification.\n"
+    )
+  })
+
   it('uses the default opening goal verbatim', () => {
     const compiled = compileBlock({
       brand: BRAND,
@@ -116,12 +132,30 @@ describe('compileBlock — goal/guidance overrides', () => {
     expect(compiled).toContain(DEFAULT_OPENING_GOAL)
   })
 
+  it('falls back to default goal when override.goal is only whitespace', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening', goal: '   ' },
+    })
+    expect(compiled).toContain(`Goal: ${DEFAULT_OPENING_GOAL}`)
+    expect(compiled).not.toContain('Goal:    ')
+  })
+
   it('falls back to default guidance when override.guidance is empty string', () => {
     const compiled = compileBlock({
       brand: BRAND,
       overrides: { activeBlockType: 'opening', guidance: '' },
     })
     expect(compiled).toContain(DEFAULT_OPENING_GUIDANCE)
+  })
+
+  it('falls back to default guidance when override.guidance is only whitespace', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: { activeBlockType: 'opening', guidance: '   ' },
+    })
+    expect(compiled).toContain(`Guidance: ${DEFAULT_OPENING_GUIDANCE}`)
+    expect(compiled).not.toContain('Guidance:    ')
   })
 
   it('appends capture overrides when provided', () => {
@@ -175,6 +209,60 @@ describe('compileBlock — goal/guidance overrides', () => {
       '- Nudge: after 1440 minutes, cancel on reply, send with the HUMAN_AGENT tag, then Booking'
     )
   })
+
+  it('marks explicitly empty override arrays as none', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'booking',
+        captures: [],
+        branches: [],
+        triggers: [],
+      },
+    })
+
+    expect(compiled).toContain('Captures:\n- none')
+    expect(compiled).toContain('Routes:\n- none')
+    expect(compiled).toContain('Ambient triggers:\n- none')
+  })
+
+  it('uses display fallbacks for blank capture and route fields', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'booking',
+        captures: [{ label: '', variable: '' }],
+        branches: [{ label: '', when: '', target: 'summary' }],
+      },
+    })
+
+    expect(compiled).toContain('- (unnamed capture) -> (missing variable)')
+    expect(compiled).toContain(
+      '- (unnamed route) -> Summary when (no condition provided)'
+    )
+  })
+
+  it('uses trigger display text for non-cancelling triggers', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'followup',
+        triggers: [
+          {
+            name: '',
+            afterMinutes: 30,
+            cancelOnReply: false,
+            mode: 'in_window_only',
+            target: 'summary',
+          },
+        ],
+      },
+    })
+
+    expect(compiled).toContain(
+      '- (unnamed trigger): after 30 minutes, keep running after reply, send only within the 24h window, then Summary'
+    )
+  })
 })
 
 describe('compileBlock contract — no overrides matches buildSystemPrompt across all block types', () => {
@@ -219,4 +307,26 @@ describe('compileBlock contract — no overrides matches buildSystemPrompt acros
       expect(compiled).toContain('## Active Block Directive')
     })
   }
+
+  it('renders each block label in the directive', () => {
+    const expectedLabels = {
+      opening: 'Opening',
+      qualifier: 'Qualifier',
+      objection: 'Objection',
+      booking: 'Booking',
+      email: 'Email Capture',
+      followup: 'Follow-up',
+      escalation: 'Escalation',
+      summary: 'Summary',
+    } as const
+
+    for (const type of TYPES) {
+      const compiled = compileBlock({
+        brand: BRAND,
+        overrides: { activeBlockType: type },
+      })
+
+      expect(compiled).toContain(`Block: ${expectedLabels[type]}`)
+    }
+  })
 })

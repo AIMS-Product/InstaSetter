@@ -7,6 +7,7 @@ import {
   listConversations,
   type ConversationDetail,
   type ConversationListItem,
+  type ListConversationsOptions,
 } from '@/lib/services/conversation-viewer'
 import {
   loadFlowDraft,
@@ -61,10 +62,23 @@ const saveFlowDraftArgsSchema = flowDraftKeySchema.extend({
   state: persistedFlowDraftSchema,
 })
 
+const flowRunsFilterSchema = z
+  .object({
+    limit: z.number().int().min(1).max(200).optional(),
+    search: z.string().trim().max(80).optional(),
+    dateFrom: z.string().datetime().optional(),
+    dateTo: z.string().datetime().optional(),
+    status: z.enum(['all', 'active', 'stalled', 'completed']).optional(),
+  })
+  .strict()
+
 export async function fetchFlowRunsAction(
-  limit: number = 50
+  args: number | ListConversationsOptions = 50
 ): Promise<ConversationListItem[]> {
-  return listConversations(limit)
+  if (typeof args === 'number') return listConversations(args)
+  const parsed = flowRunsFilterSchema.safeParse(args)
+  if (!parsed.success) return []
+  return listConversations(parsed.data)
 }
 
 export async function fetchConversationAction(

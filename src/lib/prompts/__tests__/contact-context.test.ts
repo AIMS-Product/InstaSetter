@@ -45,6 +45,23 @@ describe('buildSystemPrompt with contactContext', () => {
     expect(prompt).toContain('Status: warm')
   })
 
+  it('keeps known qualification heading out when only identity fields exist', () => {
+    const ctx: ContactContext = {
+      tags: [],
+      name: 'James',
+      email: 'james@test.com',
+    }
+
+    const prompt = buildSystemPrompt({ ...baseOpts, contactContext: ctx })
+
+    expect(prompt).toContain('Contact Context')
+    expect(prompt).toContain('Name: James')
+    expect(prompt).toContain('Email: james@test.com')
+    expect(prompt).not.toContain('Tags:')
+    expect(prompt).not.toContain('Known qualification data')
+    expect(prompt).not.toContain('MUST include the booking link')
+  })
+
   it('injects booking directive when location AND motivation are in tags', () => {
     const ctx: ContactContext = {
       tags: ['location:Sydney', 'motivation:full-time'],
@@ -88,6 +105,38 @@ describe('buildSystemPrompt with contactContext', () => {
     const prompt = buildSystemPrompt({ ...baseOpts, contactContext: ctx })
 
     expect(prompt).not.toContain('MUST include the booking link')
+  })
+
+  it('injects booking directive when location is in tags and motivation is in lastQualification', () => {
+    const ctx: ContactContext = {
+      tags: ['location:Sydney'],
+      lastQualification: {
+        status: 'in-progress',
+        motivation: 'replace income',
+      },
+    }
+
+    const prompt = buildSystemPrompt({ ...baseOpts, contactContext: ctx })
+
+    expect(prompt).toContain('Tags: location:Sydney')
+    expect(prompt).toContain('Motivation: replace income')
+    expect(prompt).toContain('MUST include the booking link')
+  })
+
+  it('injects booking directive when motivation is in tags and location is in lastQualification', () => {
+    const ctx: ContactContext = {
+      tags: ['motivation:side-income'],
+      lastQualification: {
+        status: 'warm',
+        location: 'Toronto',
+      },
+    }
+
+    const prompt = buildSystemPrompt({ ...baseOpts, contactContext: ctx })
+
+    expect(prompt).toContain('Tags: motivation:side-income')
+    expect(prompt).toContain('Location: Toronto')
+    expect(prompt).toContain('MUST include the booking link')
   })
 
   it('omits empty optional fields', () => {

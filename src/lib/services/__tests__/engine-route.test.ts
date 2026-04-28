@@ -131,6 +131,17 @@ describe('routeLeadEvents', () => {
 
     expect(createLead).not.toHaveBeenCalled()
     expect(result.eventsProcessed).toBe(1)
+    expect(client.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact_id: 'c1',
+        conversation_id: 'cv1',
+        integration: 'sendpulse',
+        action: 'generate_summary',
+        status: 'failed',
+        error_message: expect.stringContaining('instagram_handle'),
+        payload: { bad: 'data' },
+      })
+    )
   })
 
   it('handles qualify_lead — stores tags on contact and syncs to SendPulse', async () => {
@@ -190,6 +201,13 @@ describe('routeLeadEvents', () => {
     )
 
     expect(result.eventsProcessed).toBe(1)
+    expect(client.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'book_call',
+        status: 'pending',
+        payload: { calendly_slot: '2026-04-15T14:00:00Z' },
+      })
+    )
   })
 
   it('handles capture_email with missing email — no update', async () => {
@@ -239,6 +257,47 @@ describe('routeLeadEvents', () => {
     )
 
     expect(result.eventsProcessed).toBe(0)
+    expect(client.insert).not.toHaveBeenCalled()
+  })
+
+  it('logs failed status when a tool side effect throws', async () => {
+    vi.mocked(createLead).mockRejectedValueOnce(new Error('write failed'))
+    client.single.mockResolvedValueOnce({ data: {}, error: null })
+
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'generate_summary',
+          toolUseId: 'tu2',
+          input: {
+            instagram_handle: 'x',
+            qualification_status: 'hot',
+            call_booked: true,
+          },
+        },
+      ],
+      'custom-source'
+    )
+
+    expect(result).toEqual({ success: true, eventsProcessed: 1 })
+    expect(client.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact_id: 'c1',
+        conversation_id: 'cv1',
+        integration: 'custom-source',
+        action: 'generate_summary',
+        status: 'failed',
+        error_message: 'Unexpected error processing tool call',
+        payload: {
+          instagram_handle: 'x',
+          qualification_status: 'hot',
+          call_booked: true,
+        },
+      })
+    )
   })
 
   it('continues processing after individual tool failure', async () => {

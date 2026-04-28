@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { SANS_FAMILY, SERIF_FAMILY } from '../shared-data'
 import type { Palette } from '../types'
 import { fetchConversationAction, fetchFlowRunsAction } from '../actions'
@@ -26,6 +27,27 @@ const STATUS_TONE = (
 })
 
 const FALLBACK_TONE_KEY = 'stalled'
+const STATUS_OPTIONS = ['all', 'active', 'stalled', 'completed'] as const
+
+type InboxStatusFilter = (typeof STATUS_OPTIONS)[number]
+
+function getInitialParam(name: string): string {
+  if (typeof window === 'undefined') return ''
+  return new URLSearchParams(window.location.search).get(name) ?? ''
+}
+
+function getInitialStatus(): InboxStatusFilter {
+  const value = getInitialParam('status')
+  return STATUS_OPTIONS.includes(value as InboxStatusFilter)
+    ? (value as InboxStatusFilter)
+    : 'all'
+}
+
+function dateInputToIso(value: string, endOfDay = false): string | undefined {
+  if (!value) return undefined
+  const date = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00'}`)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
 
 function timeAgo(iso: string | null): string {
   if (!iso) return '—'
@@ -60,6 +82,12 @@ export default function PageRuns({ p }: { p: Palette }) {
   const [runs, setRuns] = useState<ConversationListItem[] | null>(null)
   const [sel, setSel] = useState<string | null>(null)
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null)
+  const [searchInput, setSearchInput] = useState(() => getInitialParam('q'))
+  const [search, setSearch] = useState(() => getInitialParam('q'))
+  const [dateFrom, setDateFrom] = useState(() => getInitialParam('from'))
+  const [dateTo, setDateTo] = useState(() => getInitialParam('to'))
+  const [statusFilter, setStatusFilter] =
+    useState<InboxStatusFilter>(getInitialStatus)
 
   // The panel is "loading" when a selection exists but no result for THIS id
   // has come back yet. If the last result is for a different id, we're mid-
@@ -75,17 +103,57 @@ export default function PageRuns({ p }: { p: Palette }) {
       ? detailResult.detail
       : null
 
+  const filters = useMemo(
+    () => ({
+      limit: 50,
+      search: search || undefined,
+      dateFrom: dateInputToIso(dateFrom),
+      dateTo: dateInputToIso(dateTo, true),
+      status: statusFilter,
+    }),
+    [dateFrom, dateTo, search, statusFilter]
+  )
+  const hasFilters = Boolean(
+    search || dateFrom || dateTo || statusFilter !== 'all'
+  )
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setRuns(null)
+      setSearch(searchInput.trim())
+    }, 200)
+    return () => window.clearTimeout(timer)
+  }, [searchInput])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (search) params.set('q', search)
+    else params.delete('q')
+    if (dateFrom) params.set('from', dateFrom)
+    else params.delete('from')
+    if (dateTo) params.set('to', dateTo)
+    else params.delete('to')
+    if (statusFilter !== 'all') params.set('status', statusFilter)
+    else params.delete('status')
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`
+    window.history.replaceState(null, '', nextUrl)
+  }, [dateFrom, dateTo, search, statusFilter])
+
   useEffect(() => {
     let alive = true
-    fetchFlowRunsAction(50).then((rows) => {
+    fetchFlowRunsAction(filters).then((rows) => {
       if (!alive) return
       setRuns(rows)
-      if (rows[0]) setSel(rows[0].id)
+      setSel((current) => {
+        if (current && rows.some((row) => row.id === current)) return current
+        return rows[0]?.id ?? null
+      })
     })
     return () => {
       alive = false
     }
-  }, [])
+  }, [filters])
 
   useEffect(() => {
     if (!sel) return
@@ -127,8 +195,8 @@ export default function PageRuns({ p }: { p: Palette }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <RPHeader
         p={p}
-        eyebrow="Brand-wide data"
-        title="Brand inbox"
+        eyebrow="Inbox"
+        title="Inbox"
         description="Spot reply quality issues, stalled leads, and bookings as they happen. Per-flow filtering is coming soon."
         right={
           <div
@@ -140,6 +208,70 @@ export default function PageRuns({ p }: { p: Palette }) {
               justifyContent: 'flex-end',
             }}
           >
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                minWidth: 220,
+                padding: '8px 10px',
+                borderRadius: 10,
+                border: `1px solid ${p.line}`,
+                background: p.panel,
+                color: p.ink2,
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 600 }}>Search</span>
+              <input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="@handle or name"
+                style={{
+                  minWidth: 0,
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  color: p.ink,
+                  font: 'inherit',
+                  fontSize: 12,
+                }}
+              />
+            </label>
+            <input
+              type="date"
+              aria-label="From date"
+              value={dateFrom}
+              onChange={(e) => {
+                setRuns(null)
+                setDateFrom(e.target.value)
+              }}
+              style={filterInputStyle(p)}
+            />
+            <input
+              type="date"
+              aria-label="To date"
+              value={dateTo}
+              onChange={(e) => {
+                setRuns(null)
+                setDateTo(e.target.value)
+              }}
+              style={filterInputStyle(p)}
+            />
+            <select
+              aria-label="Conversation status"
+              value={statusFilter}
+              onChange={(e) => {
+                setRuns(null)
+                setStatusFilter(e.target.value as InboxStatusFilter)
+              }}
+              style={filterInputStyle(p)}
+            >
+              <option value="all">All status</option>
+              <option value="active">Active</option>
+              <option value="stalled">Stalled</option>
+              <option value="completed">Completed</option>
+            </select>
             <StatusBadge
               p={p}
               label={BRAND_INBOX_STATUS.label}
@@ -176,43 +308,43 @@ export default function PageRuns({ p }: { p: Palette }) {
         <Kpi
           p={p}
           label="Started today"
-          value={runs === null ? '—' : String(startedToday)}
-          detail={runs === null ? '' : `${runs.length} total in brand list`}
+          value={runs === null ? null : String(startedToday)}
+          detail={runs === null ? null : `${runs.length} total in inbox`}
         />
         <Kpi
           p={p}
           label="Booked"
-          value={runs === null ? '—' : String(bookedCount)}
+          value={runs === null ? null : String(bookedCount)}
           detail={
             runs === null
-              ? ''
+              ? null
               : bookedCount === 0
-                ? 'no brand-wide book_call events yet'
-                : `${bookedCount} brand-wide book_call calls`
+                ? 'no book_call events yet'
+                : `${bookedCount} book_call calls`
           }
         />
         <Kpi
           p={p}
           label="Completed"
-          value={runs === null ? '—' : String(completedCount)}
+          value={runs === null ? null : String(completedCount)}
           detail={
             runs === null
-              ? ''
+              ? null
               : completedCount === 0
-                ? 'none completed in brand list'
-                : `${completedCount} brand-wide summary-generated`
+                ? 'none completed in inbox'
+                : `${completedCount} summary-generated`
           }
         />
         <Kpi
           p={p}
-          label="Stalled"
-          value={runs === null ? '—' : String(stalledCount)}
+          label="No reply"
+          value={runs === null ? null : String(stalledCount)}
           detail={
             runs === null
-              ? ''
+              ? null
               : stalledCount === 0
-                ? 'none stalled in brand list'
-                : `${stalledCount} brand-wide inactive`
+                ? 'none inactive'
+                : `${stalledCount} inactive`
           }
           bad={stalledCount > 0}
         />
@@ -227,22 +359,12 @@ export default function PageRuns({ p }: { p: Palette }) {
             background: p.panel,
           }}
         >
-          {runs === null && (
-            <div
-              style={{
-                padding: 24,
-                fontSize: 12.5,
-                color: p.ink3,
-                textAlign: 'center',
-              }}
-            >
-              Loading conversations…
-            </div>
-          )}
+          {runs === null && <ConversationSkeletonList p={p} />}
           {runs !== null && runs.length === 0 && (
             <div style={{ padding: 24, color: p.ink2, fontSize: 13 }}>
-              No brand conversations yet. Real inbound DMs across
-              VendingPreneurs appear here once the bot starts handling them.
+              {hasFilters
+                ? 'No conversations match those filters.'
+                : 'No conversations yet. Real inbound DMs appear here once the bot starts handling them.'}
             </div>
           )}
           {runs?.map((r) => {
@@ -387,6 +509,71 @@ function CenteredNote({
   )
 }
 
+function filterInputStyle(p: Palette): CSSProperties {
+  return {
+    minHeight: 34,
+    borderRadius: 10,
+    border: `1px solid ${p.line}`,
+    background: p.panel,
+    color: p.ink,
+    font: 'inherit',
+    fontSize: 12,
+    padding: '7px 9px',
+  }
+}
+
+function SkeletonBar({
+  p,
+  width = '100%',
+  height = 12,
+}: {
+  p: Palette
+  width?: string | number
+  height?: number
+}) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: 'block',
+        width,
+        height,
+        borderRadius: 999,
+        background: `linear-gradient(90deg, ${p.lineSoft}, ${p.line}, ${p.lineSoft})`,
+      }}
+    />
+  )
+}
+
+function ConversationSkeletonList({ p }: { p: Palette }) {
+  return (
+    <div aria-label="Loading conversations" style={{ padding: '8px 18px' }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <div
+          key={i}
+          style={{
+            padding: '14px 0',
+            borderBottom: `1px solid ${p.lineSoft}`,
+          }}
+        >
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <SkeletonBar p={p} width="44%" height={13} />
+            <SkeletonBar p={p} width={42} height={10} />
+            <span style={{ flex: 1 }} />
+            <SkeletonBar p={p} width={56} height={18} />
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <SkeletonBar p={p} width="82%" height={11} />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <SkeletonBar p={p} width="28%" height={10} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function Kpi({
   p,
   label,
@@ -396,8 +583,8 @@ function Kpi({
 }: {
   p: Palette
   label: string
-  value: string
-  detail: string
+  value: string | null
+  detail: string | null
   bad?: boolean
 }) {
   return (
@@ -429,7 +616,7 @@ function Kpi({
           letterSpacing: -0.3,
         }}
       >
-        {value}
+        {value === null ? <SkeletonBar p={p} width={44} height={28} /> : value}
       </div>
       <div
         style={{
@@ -438,7 +625,11 @@ function Kpi({
           marginTop: 2,
         }}
       >
-        {detail || '\u00A0'}
+        {detail === null ? (
+          <SkeletonBar p={p} width="70%" height={11} />
+        ) : (
+          detail || '\u00A0'
+        )}
       </div>
     </div>
   )
