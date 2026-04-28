@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import PageNav from '../../page-nav'
 import PageBot from '../../related-pages/page-bot'
 import PageRuns from '../../related-pages/page-runs'
@@ -40,6 +40,9 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
       }),
     [bookingUrl, brand, selectedBlock, state.triggers]
   )
+
+  const dismissToast = useCallback(() => actions.toast(null), [actions])
+  const undoDelete = useCallback(() => actions.undoLastDelete(), [actions])
 
   return (
     <main
@@ -127,11 +130,7 @@ function Shell({ brand, bookingUrl }: { brand: string; bookingUrl: string }) {
         )}
       </div>
       {state.toast && (
-        <Toast
-          toast={state.toast}
-          onDone={() => actions.toast(null)}
-          onUndo={() => actions.undoLastDelete()}
-        />
+        <Toast toast={state.toast} onDone={dismissToast} onUndo={undoDelete} />
       )}
     </main>
   )

@@ -123,6 +123,9 @@ export default function PaletteDrawer() {
         overflow: 'hidden',
         zIndex: 15,
         transition: 'width .15s',
+        // Cosmetic frame doesn't intercept canvas pointer events; controls
+        // re-enable themselves below.
+        pointerEvents: 'none',
       }}
     >
       <button
@@ -141,6 +144,7 @@ export default function PaletteDrawer() {
           cursor: 'pointer',
           fontSize: 12,
           fontWeight: 500,
+          pointerEvents: 'auto',
         }}
         title={state.paletteOpen ? 'Hide palette' : 'Add block'}
         aria-label={state.paletteOpen ? 'Hide palette' : 'Add block'}
@@ -154,7 +158,14 @@ export default function PaletteDrawer() {
         {state.paletteOpen && <span>Blocks</span>}
       </button>
       {state.paletteOpen && (
-        <div style={{ padding: '10px 8px', overflow: 'auto', flex: 1 }}>
+        <div
+          style={{
+            padding: '10px 8px',
+            overflow: 'auto',
+            flex: 1,
+            pointerEvents: 'auto',
+          }}
+        >
           <div
             style={{
               fontSize: 10,

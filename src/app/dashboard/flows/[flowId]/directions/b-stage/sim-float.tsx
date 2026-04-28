@@ -43,6 +43,7 @@ export default function BSimFloat({
   const [input, setInput] = useState('')
   const [pending, setPending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const compileEnabled = isFlowCompileEnabled()
   const simulatorStatus = getSimulatorStatus(compileEnabled)
   const activeBlock = state.selectedId
@@ -56,6 +57,10 @@ export default function BSimFloat({
       behavior: 'smooth',
     })
   }, [state.conversation.length, pending])
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus()
+  }, [open])
 
   if (!open) return null
 
@@ -403,6 +408,7 @@ export default function BSimFloat({
         }}
       >
         <input
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
