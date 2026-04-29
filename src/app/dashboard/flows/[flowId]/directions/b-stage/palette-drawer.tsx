@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { PanelLeftClose, Plus, PlusCircle } from 'lucide-react'
+import { getBlockDisplayLabel } from '@/lib/dashboard/flow-builder-labels'
 import { BLOCK_CATALOG, blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import type { BlockCatalogEntry, BlockType, FlowNode } from '../../types'
@@ -79,12 +80,13 @@ export default function PaletteDrawer() {
 
     const idParts = String(id).split('_')
     const duplicateSuffix = idParts[idParts.length - 1]
+    const displayLabel = getBlockDisplayLabel(entry.type)
 
     actions.addNode({
       id,
       type: entry.type,
       name:
-        id === entry.type ? entry.label : `${entry.label} ${duplicateSuffix}`,
+        id === entry.type ? displayLabel : `${displayLabel} ${duplicateSuffix}`,
       goal: entry.blurb,
       guidance: '',
       examples: [],
@@ -96,15 +98,15 @@ export default function PaletteDrawer() {
     if (selectedNode) {
       actions.addBranch(selectedNode.id, {
         id: nextBranchId(selectedNode.id, id),
-        label: entry.label,
+        label: displayLabel,
         when: 'next step',
         target: id,
       })
-      actions.toast(`Added ${entry.label} after ${selectedNode.name}.`)
+      actions.toast(`Added ${displayLabel} after ${selectedNode.name}.`)
       return
     }
 
-    actions.toast(`Added ${entry.label}.`)
+    actions.toast(`Added ${displayLabel}.`)
   }
 
   return (
@@ -245,7 +247,7 @@ export default function PaletteDrawer() {
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: B.ink }}>
-                  {b.label}
+                  {getBlockDisplayLabel(b.type)}
                 </div>
                 <div
                   style={{

@@ -1,7 +1,7 @@
 'use client'
 
+import { getBlockDisplayLabel } from '@/lib/dashboard/flow-builder-labels'
 import {
-  BLOCK_BY_TYPE,
   MONO_FAMILY,
   SANS_FAMILY,
   SERIF_FAMILY,
@@ -236,7 +236,7 @@ export default function PageVariables({ p }: { p: Palette }) {
                               background: blockColor(capturedById),
                             }}
                           />
-                          {BLOCK_BY_TYPE[capturedById]?.label ?? capturedById}
+                          {getBlockDisplayLabel(capturedById)}
                         </span>
                       ) : v.scope === 'brand' ? (
                         'Set manually'

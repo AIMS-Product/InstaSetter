@@ -3,7 +3,12 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, ChevronRight, Trash2, X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
-import { BLOCK_BY_TYPE, blockColor } from '../../shared-data'
+import {
+  FLOW_BUILDER_LABELS,
+  getBlockDisplayLabel,
+  type InspectorTabKey,
+} from '@/lib/dashboard/flow-builder-labels'
+import { blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
 import type { FlowNode } from '../../types'
 import { BlockConfigPanel } from './block-config-panel'
@@ -19,20 +24,29 @@ import { FloatingPanel } from './floating-panel'
 // can use that id as `aria-labelledby` so the label is announced to screen
 // readers — P0.10 fix. Non-accessible children (multi-item rows that have
 // their own inline labelling) can still pass a plain ReactNode.
+//
+// `tooltip` is the operator-facing helper text from
+// `FLOW_BUILDER_LABELS.inspectorFields[*].tooltip`. When present, it renders
+// as a `title=` on the label (visible on hover) AND as a visually-hidden
+// span linked via `aria-describedby` so screen readers announce it alongside
+// the label. Keep tooltips short — they should never crowd the inspector.
 function Field({
   label,
   children,
   action,
   hint,
   onAction,
+  tooltip,
 }: {
   label: string
   children: ReactNode | ((labelId: string) => ReactNode)
   action?: string
   hint?: string
   onAction?: () => void
+  tooltip?: string
 }) {
   const labelId = useId()
+  const tooltipId = useId()
   return (
     <div style={{ marginBottom: 18 }}>
       <div
@@ -45,6 +59,9 @@ function Field({
       >
         <div
           id={labelId}
+          {...(tooltip
+            ? { title: tooltip, 'aria-describedby': tooltipId }
+            : {})}
           style={{
             fontSize: 11,
             fontWeight: 600,
@@ -72,6 +89,24 @@ function Field({
           </button>
         )}
       </div>
+      {tooltip && (
+        <span
+          id={tooltipId}
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
+          {tooltip}
+        </span>
+      )}
       {hint && (
         <div style={{ fontSize: 11, color: B.ink3, marginBottom: 6 }}>
           {hint}
@@ -223,7 +258,10 @@ function DesignTab({
 
   return (
     <>
-      <Field label="Goal">
+      <Field
+        label={FLOW_BUILDER_LABELS.inspectorFields.goal.display}
+        tooltip={FLOW_BUILDER_LABELS.inspectorFields.goal.tooltip}
+      >
         {(labelId) => (
           <textarea
             aria-labelledby={labelId}
@@ -237,7 +275,8 @@ function DesignTab({
         )}
       </Field>
       <Field
-        label="Guidance"
+        label={FLOW_BUILDER_LABELS.inspectorFields.guidance.display}
+        tooltip={FLOW_BUILDER_LABELS.inspectorFields.guidance.tooltip}
         action="↗ View Persona"
         onAction={() => onOpenPrompt('persona')}
         hint="Uses the global voice by default. Add step-specific guidance here."
@@ -254,12 +293,13 @@ function DesignTab({
           />
         )}
       </Field>
-      <CollapsibleSection title="Why This Exists" summary={whySummary}>
+      <CollapsibleSection title="Why this step exists" summary={whySummary}>
         <RationaleBanner rationale={block.rationale ?? []} stat={block.stat} />
       </CollapsibleSection>
       <CollapsibleSection title="Examples" summary={exampleSummary}>
         <Field
-          label={`Good ↔ Bad examples · ${examplePairCount}`}
+          label={`${FLOW_BUILDER_LABELS.inspectorFields.examples.display} · ${examplePairCount}`}
+          tooltip={FLOW_BUILDER_LABELS.inspectorFields.examples.tooltip}
           hint="Side-by-side pairs parsed from the source section. Read-only today."
         >
           <ExamplePairs
@@ -268,7 +308,8 @@ function DesignTab({
           />
         </Field>
         <Field
-          label="Marketer examples"
+          label={FLOW_BUILDER_LABELS.inspectorFields.marketerExamples.display}
+          tooltip={FLOW_BUILDER_LABELS.inspectorFields.marketerExamples.tooltip}
           action="+ add"
           hint="Draft examples for this step. Saved with the team draft."
           onAction={() => actions.addExample(block.id, 'New example — edit me')}
@@ -326,7 +367,8 @@ function DesignTab({
         }
       >
         <Field
-          label="Capture rules"
+          label={FLOW_BUILDER_LABELS.inspectorFields.captures.display}
+          tooltip={FLOW_BUILDER_LABELS.inspectorFields.captures.tooltip}
           action="+ rule"
           onAction={() =>
             actions.addCapture(block.id, {
@@ -433,7 +475,8 @@ function RoutingTab({ block }: { block: FlowNode }) {
 
   return (
     <Field
-      label="Routes out"
+      label={FLOW_BUILDER_LABELS.inspectorFields.routesOut.display}
+      tooltip={FLOW_BUILDER_LABELS.inspectorFields.routesOut.tooltip}
       action="+ route"
       onAction={() => {
         const target = otherNodes[0]?.id ?? block.id
@@ -454,7 +497,7 @@ function RoutingTab({ block }: { block: FlowNode }) {
             marginBottom: 6,
           }}
         >
-          No next path yet. Add one, or leave this step as an ending.
+          {FLOW_BUILDER_LABELS.inspectorFields.routesOutEmpty.display}
         </div>
       )}
       {block.branches.map((br) => {
@@ -601,7 +644,7 @@ function DeleteBlockPanel({ block }: { block: FlowNode }) {
           marginBottom: 8,
         }}
       >
-        Step actions
+        {FLOW_BUILDER_LABELS.panelSections.stepActions.display}
       </div>
       <button
         type="button"
@@ -648,7 +691,8 @@ function TriggersTab({ block }: { block: FlowNode }) {
 
   return (
     <Field
-      label="Ambient triggers"
+      label={FLOW_BUILDER_LABELS.inspectorFields.triggers.display}
+      tooltip={FLOW_BUILDER_LABELS.inspectorFields.triggers.tooltip}
       hint="Send later after this step starts. Respect Meta's 24-hour messaging window."
       action="+ trigger"
       onAction={() => {
@@ -666,7 +710,7 @@ function TriggersTab({ block }: { block: FlowNode }) {
     >
       {mine.length === 0 && (
         <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
-          No scheduled follow-ups on this step.
+          {FLOW_BUILDER_LABELS.inspectorFields.triggersEmpty.display}
         </div>
       )}
       {mine.map((t) => (
@@ -821,7 +865,7 @@ function DataTab({ block }: { block: FlowNode }) {
   const writeVars = block.captures
   return (
     <>
-      <Field label="This step saves">
+      <Field label={FLOW_BUILDER_LABELS.inspectorFields.memorySaves.display}>
         {writeVars.length === 0 && (
           <div style={{ fontSize: 12, color: B.ink3, fontStyle: 'italic' }}>
             Nothing.
@@ -858,7 +902,8 @@ function DataTab({ block }: { block: FlowNode }) {
         ))}
       </Field>
       <Field
-        label="This step checks"
+        label={FLOW_BUILDER_LABELS.inspectorFields.memoryReads.display}
+        tooltip={FLOW_BUILDER_LABELS.inspectorFields.memoryReads.tooltip}
         hint="Saved details used by this step's path rules."
       >
         {readVars.length === 0 && (
@@ -910,11 +955,23 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
   const [reader, setReader] = useState<{ target?: string } | null>(null)
   if (!block) return null
   const color = blockColor(block.type, { l: 0.58, c: 0.14 })
-  const tabs: Array<{ key: typeof state.activeTab; label: string }> = [
-    { key: 'design', label: 'Design' },
-    { key: 'routing', label: 'Paths' },
-    { key: 'triggers', label: 'Follow-ups' },
-    { key: 'data', label: 'Memory' },
+  const tabs: Array<{ key: InspectorTabKey; label: string }> = [
+    {
+      key: 'design',
+      label: FLOW_BUILDER_LABELS.inspectorTabs.design.display,
+    },
+    {
+      key: 'routing',
+      label: FLOW_BUILDER_LABELS.inspectorTabs.routing.display,
+    },
+    {
+      key: 'triggers',
+      label: FLOW_BUILDER_LABELS.inspectorTabs.triggers.display,
+    },
+    {
+      key: 'data',
+      label: FLOW_BUILDER_LABELS.inspectorTabs.data.display,
+    },
   ]
   const titleId = 'flow-inspector-title'
   return (
@@ -960,7 +1017,7 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
               fontWeight: 600,
             }}
           >
-            {BLOCK_BY_TYPE[block.type]?.label}
+            {getBlockDisplayLabel(block.type)}
           </div>
           <input
             id={titleId}

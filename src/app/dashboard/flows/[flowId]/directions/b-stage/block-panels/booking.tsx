@@ -1,5 +1,6 @@
 'use client'
 
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import type { BookingConfig } from '../../../types'
 import { B } from '../palette'
 import { LockPill, PanelCard, ReadOnlyText } from './shared'
@@ -8,7 +9,7 @@ export function BookingPanel({ config }: { config: BookingConfig }) {
   return (
     <>
       <PanelCard
-        title="Mirror template"
+        title={FLOW_BUILDER_LABELS.panelSections.bookingMirrorTemplate.display}
         subtitle="Reflect what's known before sending the link."
       >
         <ReadOnlyText value={config.mirrorTemplate} rows={2} />
@@ -25,7 +26,9 @@ export function BookingPanel({ config }: { config: BookingConfig }) {
         </div>
       </PanelCard>
 
-      <PanelCard title="Booking link + email ask (combined)">
+      <PanelCard
+        title={FLOW_BUILDER_LABELS.panelSections.bookingLinkCopy.display}
+      >
         <ReadOnlyText value={config.emailAskCombined} rows={2} />
         <div
           style={{
@@ -39,7 +42,10 @@ export function BookingPanel({ config }: { config: BookingConfig }) {
         </div>
       </PanelCard>
 
-      <PanelCard title="Re-engagement" locked>
+      <PanelCard
+        title={FLOW_BUILDER_LABELS.panelSections.bookingReengagement.display}
+        locked
+      >
         <div
           style={{
             display: 'grid',

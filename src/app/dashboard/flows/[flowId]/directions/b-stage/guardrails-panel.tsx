@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Lock, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import type { Guardrail } from '../../types'
 import { B } from './palette'
 
@@ -47,11 +48,17 @@ export function GuardrailsPanel({
           <ChevronRight size={14} color={B.ink3} />
         )}
         <Lock size={13} color={B.ink3} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: B.ink2 }}>
-          Fixed safety rules · {guardrails.length}
+        <span
+          style={{ fontSize: 12, fontWeight: 600, color: B.ink2 }}
+          title={FLOW_BUILDER_LABELS.panelSections.lockedSafetyRules.tooltip}
+        >
+          {FLOW_BUILDER_LABELS.panelSections.lockedSafetyRules.display} ·{' '}
+          {guardrails.length}
         </span>
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: B.ink3 }}>set by InstaSetter</span>
+        <span style={{ fontSize: 11, color: B.ink3 }}>
+          {FLOW_BUILDER_LABELS.panelSections.lockedSafetyRulesNote.display}
+        </span>
       </button>
       {open && (
         <ul

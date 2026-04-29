@@ -7,6 +7,7 @@ import {
   useReducer,
   type ReactNode,
 } from 'react'
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
 import { deriveBlock } from './directions/b-stage/block-sections'
@@ -142,15 +143,20 @@ const BLOCK_POSITIONS: Record<BlockType, { x: number; y: number }> = {
   summary: { x: 0, y: 3 },
 }
 
+// Display labels for FlowNode.name. Reads from the flow-builder-labels catalog
+// so a single source of truth governs every operator-facing block name.
+// Note: distinct from `BLOCK_BY_TYPE[type].label` in `shared-data.ts`, which
+// feeds the compiled prompt directive and is asserted byte-for-byte by the
+// compile-block contract test. Display labels are UI-only.
 const BLOCK_LABELS: Record<BlockType, string> = {
-  opening: 'Opening',
-  qualifier: 'Qualifier',
-  objection: 'Objection Handler',
-  booking: 'Booking Handoff',
-  email: 'Email Capture',
-  followup: 'Post-Call Follow-up',
-  escalation: 'Escalation',
-  summary: 'Summary',
+  opening: FLOW_BUILDER_LABELS.blocks.opening.display,
+  qualifier: FLOW_BUILDER_LABELS.blocks.qualifier.display,
+  objection: FLOW_BUILDER_LABELS.blocks.objection.display,
+  booking: FLOW_BUILDER_LABELS.blocks.booking.display,
+  email: FLOW_BUILDER_LABELS.blocks.email.display,
+  followup: FLOW_BUILDER_LABELS.blocks.followup.display,
+  escalation: FLOW_BUILDER_LABELS.blocks.escalation.display,
+  summary: FLOW_BUILDER_LABELS.blocks.summary.display,
 }
 
 export function buildInitialFlow(
