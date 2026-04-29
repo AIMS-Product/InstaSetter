@@ -95,6 +95,7 @@ export default function PageRuns({
   allScopeLabel = 'All flows',
   description = 'Spot reply quality issues, stalled leads, and bookings as they happen.',
   showAllFlowsNote = true,
+  surfaceLabelKey,
 }: {
   p: Palette
   flowId: string
@@ -103,6 +104,7 @@ export default function PageRuns({
   allScopeLabel?: string
   description?: React.ReactNode
   showAllFlowsNote?: boolean
+  surfaceLabelKey?: import('@/lib/dashboard/surface-labels').SurfaceLabelKey
 }) {
   const [runs, setRuns] = useState<ConversationListItem[] | null>(null)
   const [sel, setSel] = useState<string | null>(null)
@@ -274,6 +276,7 @@ export default function PageRuns({
         eyebrow="Inbox"
         title="Inbox"
         description={description}
+        surfaceLabelKey={surfaceLabelKey}
         right={
           <div
             className="flow-inbox__filters"

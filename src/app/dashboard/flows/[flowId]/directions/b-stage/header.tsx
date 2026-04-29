@@ -2,6 +2,11 @@
 
 import { useEffect, useState, type CSSProperties } from 'react'
 import { MessageSquareText, Undo2 } from 'lucide-react'
+import { SurfaceBadge } from '@/components/ui/surface-badge'
+import {
+  getSurfaceLabel,
+  type SurfaceLabelKey,
+} from '@/lib/dashboard/surface-labels'
 import { fetchFlowRuntimeAction, setFlowRuntimeAction } from '../../actions'
 import { useFlowActions, useFlowState } from '../../store'
 import {
@@ -12,6 +17,13 @@ import {
 import type { PageId } from '../../types'
 import { HeaderHelpMenu } from './header-help-menu'
 import { B } from './palette'
+
+const PAGE_SURFACE_KEY: Record<PageId, SurfaceLabelKey> = {
+  flow: 'dashboard.flows.detail',
+  bot: 'dashboard.flows.detail.bot',
+  variables: 'dashboard.flows.detail.variables',
+  versions: 'dashboard.flows.detail',
+}
 
 const PAGE_SUMMARY: Record<PageId, string> = {
   flow: 'Edit the team draft and check the tone before publishing.',
@@ -47,6 +59,7 @@ export default function BHeader({
         ? 'success'
         : 'info'
   const draftSummary = `${draftStatus.label} · ${saveStatus.label}`
+  const surface = getSurfaceLabel(PAGE_SURFACE_KEY[page])
 
   useEffect(() => {
     let alive = true
@@ -153,6 +166,11 @@ export default function BHeader({
           flexWrap: 'wrap',
         }}
       >
+        <SurfaceBadge
+          state={surface.state}
+          display={surface.display}
+          detail={surface.detail}
+        />
         <StatusBadge
           p={B}
           label={`Draft: ${draftSummary}`}

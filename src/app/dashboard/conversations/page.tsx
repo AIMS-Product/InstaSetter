@@ -14,6 +14,7 @@ export default function ConversationsPage() {
         flowScopeLabel="Instagram DM"
         description="Search every conversation, inspect the transcript, and spot reply quality issues without switching screens."
         showAllFlowsNote={false}
+        surfaceLabelKey="dashboard.conversations.list"
       />
     </main>
   )

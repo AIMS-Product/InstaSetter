@@ -12,6 +12,8 @@ import {
   buildSourceSetupValues,
   listMarketingSources,
 } from '@/lib/services/marketing-sources'
+import { SurfaceBadge } from '@/components/ui/surface-badge'
+import { getSurfaceLabel } from '@/lib/dashboard/surface-labels'
 import {
   archiveMarketingSourceAction,
   createMarketingSourceAction,
@@ -155,6 +157,7 @@ function WorkflowStep({
 export default async function MarketingSourcesPage() {
   const sourceResult = await listMarketingSources()
   const sources = sourceResult.sources
+  const surface = getSurfaceLabel('dashboard.marketing-sources')
 
   return (
     <main
@@ -194,12 +197,19 @@ export default async function MarketingSourcesPage() {
               reply, or comment trigger you want to recognize in conversations.
             </p>
           </div>
-          <Link
-            href="/dashboard/conversations"
-            style={{ fontSize: 12, color: '#6B6A7E', textDecoration: 'none' }}
-          >
-            Conversations
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <SurfaceBadge
+              state={surface.state}
+              display={surface.display}
+              detail={surface.detail}
+            />
+            <Link
+              href="/dashboard/conversations"
+              style={{ fontSize: 12, color: '#6B6A7E', textDecoration: 'none' }}
+            >
+              Conversations
+            </Link>
+          </div>
         </div>
 
         <section

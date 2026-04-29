@@ -38,6 +38,7 @@ export default function PageBot({ p }: { p: Palette }) {
         title="Appointment Setter"
         description="These rules apply across every conversation. Use this page to understand voice, safety limits, and connected channels."
         right={null}
+        surfaceLabelKey="dashboard.flows.detail.bot"
       />
       <div
         style={{ padding: '28px 32px 60px', maxWidth: 820, margin: '0 auto' }}
