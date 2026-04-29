@@ -36,6 +36,22 @@ const sendpulseEnvSchema = z.object({
   SENDPULSE_WEBHOOK_SECRET: z.string().min(1),
 })
 
+// Email provider (Resend) — added by P2.01. All fields are optional/nullable
+// today: P2.04 wires the real send and tightens validation when the channel
+// goes live. Until then, missing vars must NOT crash unrelated routes that
+// transitively load this slice. The single env-var-per-concern pattern
+// (`RESEND_API_KEY` rather than `_LIVE` / `_TEST`) relies on Vercel's
+// per-environment scope for sandbox-vs-production separation; the runtime
+// guard is the `livemode` flag on incoming Resend webhook events
+// (cross-checked against NODE_ENV in the P2.04 webhook route).
+const emailProviderEnvSchema = z.object({
+  RESEND_API_KEY: z.string().min(1).nullable().optional(),
+  RESEND_WEBHOOK_SECRET: z.string().min(1).nullable().optional(),
+  RESEND_FROM_ADDRESS: z.string().email().nullable().optional(),
+  RESEND_FROM_DISPLAY_NAME: z.string().min(1).nullable().optional(),
+  RESEND_REPLY_TO: z.string().email().nullable().optional(),
+})
+
 // Client-safe config — validated at import time
 export const config = envSchema.parse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -78,6 +94,21 @@ export function getSendPulseConfig() {
     SENDPULSE_API_KEY: process.env.SENDPULSE_API_KEY,
     SENDPULSE_BOT_ID: process.env.SENDPULSE_BOT_ID,
     SENDPULSE_WEBHOOK_SECRET: process.env.SENDPULSE_WEBHOOK_SECRET,
+  })
+}
+
+// Email provider (Resend) config — added by P2.01. Returns all-null when env
+// vars are unset so that routes which transitively touch this slice keep
+// working until P2.04 wires the live send path. P2.04 will introduce a
+// stricter `getResendLiveConfig()` getter that requires the full set when
+// the per-brand `EMAIL_DELIVERY_LIVE` flag flips on.
+export function getEmailProviderConfig() {
+  return emailProviderEnvSchema.parse({
+    RESEND_API_KEY: process.env.RESEND_API_KEY ?? null,
+    RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET ?? null,
+    RESEND_FROM_ADDRESS: process.env.RESEND_FROM_ADDRESS ?? null,
+    RESEND_FROM_DISPLAY_NAME: process.env.RESEND_FROM_DISPLAY_NAME ?? null,
+    RESEND_REPLY_TO: process.env.RESEND_REPLY_TO ?? null,
   })
 }
 
