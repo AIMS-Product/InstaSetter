@@ -18,6 +18,7 @@ export default function RPHeader({
 }) {
   return (
     <div
+      className="related-page-header"
       style={{
         padding: '24px 32px 18px',
         borderBottom: `1px solid ${p.line}`,

@@ -1,13 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import {
-  Activity,
-  Bot as BotIcon,
-  Braces,
-  Workflow,
-  type LucideIcon,
-} from 'lucide-react'
+import { Bot as BotIcon, Braces, Workflow, type LucideIcon } from 'lucide-react'
 import type { PageId, Palette } from './types'
 
 const ITEMS: Array<{
@@ -17,12 +11,6 @@ const ITEMS: Array<{
   Icon: LucideIcon
 }> = [
   { id: 'flow', label: 'Flow', description: 'Edit the draft', Icon: Workflow },
-  {
-    id: 'runs',
-    label: 'Inbox',
-    description: 'Review real chats',
-    Icon: Activity,
-  },
   {
     id: 'variables',
     label: 'Variables',

@@ -45,11 +45,11 @@ function getInitialStatus(): InboxStatusFilter {
     : 'all'
 }
 
-function getInitialScope(): InboxScopeFilter {
+function getInitialScope(defaultScope: InboxScopeFilter): InboxScopeFilter {
   const value = getInitialParam('scope')
   return SCOPE_OPTIONS.includes(value as InboxScopeFilter)
     ? (value as InboxScopeFilter)
-    : 'flow'
+    : defaultScope
 }
 
 function dateInputToIso(value: string, endOfDay = false): string | undefined {
@@ -90,9 +90,19 @@ type DetailResult =
 export default function PageRuns({
   p,
   flowId,
+  defaultScope = 'flow',
+  flowScopeLabel = 'This flow',
+  allScopeLabel = 'All flows',
+  description = 'Spot reply quality issues, stalled leads, and bookings as they happen.',
+  showAllFlowsNote = true,
 }: {
   p: Palette
   flowId: string
+  defaultScope?: InboxScopeFilter
+  flowScopeLabel?: string
+  allScopeLabel?: string
+  description?: React.ReactNode
+  showAllFlowsNote?: boolean
 }) {
   const [runs, setRuns] = useState<ConversationListItem[] | null>(null)
   const [sel, setSel] = useState<string | null>(null)
@@ -103,8 +113,9 @@ export default function PageRuns({
   const [dateTo, setDateTo] = useState(() => getInitialParam('to'))
   const [statusFilter, setStatusFilter] =
     useState<InboxStatusFilter>(getInitialStatus)
-  const [scopeFilter, setScopeFilter] =
-    useState<InboxScopeFilter>(getInitialScope)
+  const [scopeFilter, setScopeFilter] = useState<InboxScopeFilter>(() =>
+    getInitialScope(defaultScope)
+  )
 
   // The panel is "loading" when a selection exists but no result for THIS id
   // has come back yet. If the last result is for a different id, we're mid-
@@ -136,7 +147,7 @@ export default function PageRuns({
     dateFrom ||
     dateTo ||
     statusFilter !== 'all' ||
-    scopeFilter !== 'flow'
+    scopeFilter !== defaultScope
   )
 
   useEffect(() => {
@@ -158,11 +169,11 @@ export default function PageRuns({
     else params.delete('to')
     if (statusFilter !== 'all') params.set('status', statusFilter)
     else params.delete('status')
-    if (scopeFilter !== 'flow') params.set('scope', scopeFilter)
+    if (scopeFilter !== defaultScope) params.set('scope', scopeFilter)
     else params.delete('scope')
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`
     window.history.replaceState(null, '', nextUrl)
-  }, [dateFrom, dateTo, scopeFilter, search, statusFilter])
+  }, [dateFrom, dateTo, defaultScope, scopeFilter, search, statusFilter])
 
   useEffect(() => {
     let alive = true
@@ -254,14 +265,18 @@ export default function PageRuns({
   const stalledCount = runs?.filter((r) => r.status === 'stalled').length ?? 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div
+      className="flow-inbox"
+      style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+    >
       <RPHeader
         p={p}
         eyebrow="Inbox"
         title="Inbox"
-        description="Spot reply quality issues, stalled leads, and bookings as they happen."
+        description={description}
         right={
           <div
+            className="flow-inbox__filters"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -302,7 +317,7 @@ export default function PageRuns({
                     fontWeight: 650,
                   }}
                 >
-                  {scope === 'flow' ? 'This flow' : 'All flows'}
+                  {scope === 'flow' ? flowScopeLabel : allScopeLabel}
                 </button>
               ))}
             </div>
@@ -379,7 +394,7 @@ export default function PageRuns({
         }
       />
 
-      {scopeFilter === 'all' && (
+      {showAllFlowsNote && scopeFilter === 'all' && (
         <StatusNote
           p={p}
           label={BRAND_INBOX_STATUS.label}
@@ -391,6 +406,7 @@ export default function PageRuns({
       )}
 
       <div
+        className="flow-inbox__kpis"
         style={{
           padding: '18px 32px',
           display: 'grid',
@@ -449,8 +465,12 @@ export default function PageRuns({
         />
       </div>
 
-      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+      <div
+        className="flow-inbox__body"
+        style={{ flex: 1, display: 'flex', minHeight: 0 }}
+      >
         <div
+          className="flow-inbox__list"
           style={{
             width: 360,
             borderRight: `1px solid ${p.line}`,
@@ -551,6 +571,7 @@ export default function PageRuns({
         </div>
 
         <div
+          className="flow-inbox__detail"
           style={{
             flex: 1,
             background: p.bg,

@@ -125,3 +125,62 @@ a:focus-visible,
 .skip-link:focus {
   top: 8px;
 }
+
+@media (max-width: 899px) {
+  .related-page-header {
+    flex-direction: column;
+    gap: 16px !important;
+    padding: 20px 16px 14px !important;
+  }
+
+  .flow-inbox {
+    min-height: 100%;
+    overflow: auto;
+  }
+
+  .flow-inbox__filters {
+    width: 100%;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+
+  .flow-inbox__filters label {
+    flex: 1 1 100%;
+    min-width: min(100%, 220px) !important;
+  }
+
+  .flow-inbox__filters input[type='date'],
+  .flow-inbox__filters select {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  .flow-inbox__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    padding: 12px 16px !important;
+  }
+
+  .flow-inbox__body {
+    flex-direction: column !important;
+    min-height: auto !important;
+    overflow: visible;
+  }
+
+  .flow-inbox__list {
+    width: 100% !important;
+    max-height: 42vh;
+    border-right: none !important;
+    border-bottom: 1px solid #e5e6ec;
+  }
+
+  .flow-inbox__detail {
+    min-height: 420px;
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .flow-inbox__kpis {
+    grid-template-columns: 1fr !important;
+  }
+}

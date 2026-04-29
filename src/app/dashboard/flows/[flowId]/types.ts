@@ -227,7 +227,7 @@ export interface Turn {
 }
 
 export type DirectionId = 'a' | 'b' | 'c'
-export type PageId = 'flow' | 'runs' | 'variables' | 'versions' | 'bot'
+export type PageId = 'flow' | 'variables' | 'versions' | 'bot'
 
 export interface Palette {
   bg: string

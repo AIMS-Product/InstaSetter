@@ -15,7 +15,6 @@ import { B } from './palette'
 
 const PAGE_SUMMARY: Record<PageId, string> = {
   flow: 'Edit the team draft and check the tone before publishing.',
-  runs: 'Review brand-wide conversations and booking signals.',
   variables: 'Check what the bot remembers and where each value comes from.',
   versions: 'See what is saved in draft versus what powers live replies.',
   bot: 'Inspect the global persona and guardrails behind every reply.',

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import PageNav from '../../page-nav'
 import PageBot from '../../related-pages/page-bot'
-import PageRuns from '../../related-pages/page-runs'
 import PageVariables from '../../related-pages/page-variables'
 import FlowDraftSync from '../../flow-draft-sync'
 import {
@@ -36,7 +35,7 @@ function Shell({
   const state = useFlowState()
   const actions = useFlowActions()
   const { selectedBlock } = useFlowStore()
-  const [page, setPage] = useState<PageId>('runs')
+  const [page, setPage] = useState<PageId>('flow')
   const [simOpen, setSimOpen] = useState(false)
 
   const overrides = useMemo(
@@ -97,16 +96,6 @@ function Shell({
               onClose={() => setSimOpen(false)}
               overrides={overrides}
             />
-          </div>
-        )}
-        {page === 'runs' && (
-          <div
-            role="tabpanel"
-            id="flow-builder-panel-runs"
-            aria-labelledby="flow-builder-tab-runs"
-            style={{ flex: 1, minWidth: 0 }}
-          >
-            <PageRuns p={B} flowId={flowId} />
           </div>
         )}
         {page === 'variables' && (
