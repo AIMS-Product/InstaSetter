@@ -408,6 +408,36 @@ export type Database = {
           },
         ]
       }
+      ins_feature_flags: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          key: string
+          scope: string
+          scope_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          key: string
+          scope: string
+          scope_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          key?: string
+          scope?: string
+          scope_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           calculator_sent: boolean
@@ -417,6 +447,10 @@ export type Database = {
           call_outcome_at: string | null
           call_outcome_notes: string | null
           close_crm_id: string | null
+          close_sync_attempted_at: string | null
+          close_sync_attempts: number
+          close_sync_error_message: string | null
+          close_sync_status: string
           contact_id: string
           conversation_id: string
           created_at: string
@@ -442,6 +476,10 @@ export type Database = {
           call_outcome_at?: string | null
           call_outcome_notes?: string | null
           close_crm_id?: string | null
+          close_sync_attempted_at?: string | null
+          close_sync_attempts?: number
+          close_sync_error_message?: string | null
+          close_sync_status?: string
           contact_id: string
           conversation_id: string
           created_at?: string
@@ -467,6 +505,10 @@ export type Database = {
           call_outcome_at?: string | null
           call_outcome_notes?: string | null
           close_crm_id?: string | null
+          close_sync_attempted_at?: string | null
+          close_sync_attempts?: number
+          close_sync_error_message?: string | null
+          close_sync_status?: string
           contact_id?: string
           conversation_id?: string
           created_at?: string
