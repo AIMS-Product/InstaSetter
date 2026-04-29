@@ -156,11 +156,13 @@ export async function syncLeadToClose(
 
   // Resolve the supabase client. Importing lazily avoids loading the
   // service-role module during unit tests that don't supply a client.
-  const client =
-    input.client ??
-    (await import('@/lib/supabase/service-role').then((m) =>
-      m.createServiceRoleClient()
-    ))
+  let client: SupabaseClient<Database>
+  if (input.client) {
+    client = input.client
+  } else {
+    const mod = await import('@/lib/supabase/service-role')
+    client = mod.createServiceRoleClient()
+  }
 
   // Step 1: feature-flag gate.
   const enabled = await flagOn('close_sync.enabled', { brand }, client)
@@ -247,13 +249,15 @@ export async function syncLeadToClose(
     }
   }
 
-  // Failure paths: transient → leave at pending+failed (so cron retries
-  // pick it up); permanent → failed immediately.
-  const newStatus = result.transient ? 'failed' : 'failed'
+  // Failure paths: both transient and permanent map to status='failed'
+  // for v1 — the orchestrator's transient flag is exposed via the
+  // SyncLeadToCloseResult so the cron can decide whether to retry. The
+  // hard cap (close_sync_attempts >= 24) is what flips a row to
+  // failed_permanent eventually.
   await client
     .from('leads')
     .update({
-      close_sync_status: newStatus,
+      close_sync_status: 'failed',
       close_sync_attempted_at: new Date().toISOString(),
       close_sync_attempts: attemptsSoFar,
       close_sync_error_message: result.error,
