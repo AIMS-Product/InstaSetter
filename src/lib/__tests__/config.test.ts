@@ -80,3 +80,56 @@ describe('split server-env getters', () => {
     expect(() => getSupabaseServerConfig()).toThrow()
   })
 })
+
+describe('getEmailProviderConfig (P2.01 — Resend)', () => {
+  // The slice is intentionally permissive: until P2.04 wires the live send,
+  // all fields must be optional/nullable so deploys without the env vars
+  // do not crash unrelated routes that touch this getter transitively.
+
+  it('returns all-null when no RESEND_* env vars are set', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    const { getEmailProviderConfig } = await import('@/lib/config')
+    const cfg = getEmailProviderConfig()
+    expect(cfg.RESEND_API_KEY).toBeNull()
+    expect(cfg.RESEND_WEBHOOK_SECRET).toBeNull()
+    expect(cfg.RESEND_FROM_ADDRESS).toBeNull()
+    expect(cfg.RESEND_FROM_DISPLAY_NAME).toBeNull()
+    expect(cfg.RESEND_REPLY_TO).toBeNull()
+  })
+
+  it('returns the values when env vars are set', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('RESEND_API_KEY', 're_test_key')
+    vi.stubEnv('RESEND_WEBHOOK_SECRET', 'whsec_test')
+    vi.stubEnv('RESEND_FROM_ADDRESS', 'team@vendingpreneurs.com')
+    vi.stubEnv('RESEND_FROM_DISPLAY_NAME', 'Anthony from VendingPreneurs')
+    vi.stubEnv('RESEND_REPLY_TO', 'sales@vendingpreneurs.com')
+    const { getEmailProviderConfig } = await import('@/lib/config')
+    const cfg = getEmailProviderConfig()
+    expect(cfg.RESEND_API_KEY).toBe('re_test_key')
+    expect(cfg.RESEND_WEBHOOK_SECRET).toBe('whsec_test')
+    expect(cfg.RESEND_FROM_ADDRESS).toBe('team@vendingpreneurs.com')
+    expect(cfg.RESEND_FROM_DISPLAY_NAME).toBe('Anthony from VendingPreneurs')
+    expect(cfg.RESEND_REPLY_TO).toBe('sales@vendingpreneurs.com')
+  })
+
+  it('throws when RESEND_FROM_ADDRESS is set but is not a valid email', async () => {
+    // Optional fields are still type-validated when present — partial config
+    // with malformed values must surface a Zod error, not silently pass.
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('RESEND_FROM_ADDRESS', 'not-an-email')
+    const { getEmailProviderConfig } = await import('@/lib/config')
+    expect(() => getEmailProviderConfig()).toThrow()
+  })
+
+  it('does not require unrelated env vars (slice isolation)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    // ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, BRAND_NAME all absent.
+    const { getEmailProviderConfig } = await import('@/lib/config')
+    expect(() => getEmailProviderConfig()).not.toThrow()
+  })
+})
