@@ -1,5 +1,9 @@
 import { isGlobalGuardrailSource } from './directions/b-stage/block-sections'
-import type { AmbientTrigger, Flow, Variable } from './types'
+import {
+  DEFAULT_POST_EMAIL_BEHAVIOR,
+  PostEmailBehaviorSchema,
+} from '@/lib/prompts/post-email-behavior'
+import type { AmbientTrigger, Flow, FlowNode, Variable } from './types'
 
 export interface BotSettings {
   name: string
@@ -68,13 +72,52 @@ function stripBotLevelGuardrails(flow: Flow): Flow {
   }
 }
 
+function normalizeEmailPostBehavior(node: FlowNode): FlowNode {
+  if (node.blockConfig?.kind !== 'email') return node
+
+  const parsed = PostEmailBehaviorSchema.safeParse(
+    node.blockConfig.postEmailBehavior
+  )
+
+  if (parsed.success) {
+    return node.blockConfig.postEmailBehavior === parsed.data
+      ? node
+      : {
+          ...node,
+          blockConfig: {
+            ...node.blockConfig,
+            postEmailBehavior: parsed.data,
+          },
+        }
+  }
+
+  return {
+    ...node,
+    blockConfig: {
+      ...node.blockConfig,
+      postEmailBehavior: DEFAULT_POST_EMAIL_BEHAVIOR,
+    },
+  }
+}
+
+function normalizeFlowDraft(flow: Flow): Flow {
+  const withoutBotGuardrails = stripBotLevelGuardrails(flow)
+  const nodes = withoutBotGuardrails.nodes.map(normalizeEmailPostBehavior)
+
+  return nodes.every(
+    (node, index) => node === withoutBotGuardrails.nodes[index]
+  )
+    ? withoutBotGuardrails
+    : { ...withoutBotGuardrails, nodes }
+}
+
 export function normalizePersistedFlowDraft(
   state: Partial<PersistedFlowDraft>
 ): Partial<PersistedFlowDraft> {
   const next: Partial<PersistedFlowDraft> = { ...state }
 
   if (state.flow) {
-    next.flow = stripBotLevelGuardrails(state.flow)
+    next.flow = normalizeFlowDraft(state.flow)
   }
 
   if (state.versions) {
@@ -82,7 +125,7 @@ export function normalizePersistedFlowDraft(
       ...version,
       snapshot: {
         ...version.snapshot,
-        flow: stripBotLevelGuardrails(version.snapshot.flow),
+        flow: normalizeFlowDraft(version.snapshot.flow),
       },
     }))
   }

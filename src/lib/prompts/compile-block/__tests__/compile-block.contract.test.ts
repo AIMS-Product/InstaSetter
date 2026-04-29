@@ -263,6 +263,36 @@ describe('compileBlock — goal/guidance overrides', () => {
       '- (unnamed trigger): after 30 minutes, keep running after reply, send only within the 24h window, then Summary'
     )
   })
+
+  it('appends post-email behavior overrides when provided', () => {
+    const compiled = compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'email',
+        postEmailBehavior: {
+          confirmationMessage: "Got it, I've saved that email.",
+          deliveryMode: 'none',
+          resourceLabel: null,
+          nextStep: 'summary',
+          emailTemplate: {
+            subject: 'Your vending call prep',
+            body: 'Here are the details we discussed.',
+            attachment: {
+              fileName: 'prep-checklist.pdf',
+              url: 'https://assets.example.com/prep-checklist.pdf',
+              description: 'Prep checklist PDF',
+            },
+          },
+        },
+      },
+    })
+
+    expect(compiled).toContain('Post-email behavior:')
+    expect(compiled).toContain("Confirmation: Got it, I've saved that email.")
+    expect(compiled).toContain('Delivery mode: none')
+    expect(compiled).toContain('Email subject: Your vending call prep')
+    expect(compiled).toContain('Attachment: prep-checklist.pdf')
+  })
 })
 
 describe('compileBlock contract — no overrides matches buildSystemPrompt across all block types', () => {

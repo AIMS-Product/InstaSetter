@@ -1,3 +1,5 @@
+import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
+
 export const BLOCK_TYPES = [
   'opening',
   'qualifier',
@@ -134,6 +136,7 @@ export interface EmailConfig {
   kind: 'email'
   triggers: EmailTrigger[]
   confirmationScript: string
+  postEmailBehavior: PostEmailBehavior
   hesitationScript: string
 }
 

@@ -111,6 +111,43 @@ describe('buildSimulatorOverrides', () => {
 
     expect(overrides).not.toHaveProperty('goal')
   })
+
+  it('passes edited post-email behavior through simulator overrides', () => {
+    const email = getNode('email')
+    const overrides = buildSimulatorOverrides({
+      selectedBlock: {
+        ...email,
+        blockConfig:
+          email.blockConfig?.kind === 'email'
+            ? {
+                ...email.blockConfig,
+                postEmailBehavior: {
+                  ...email.blockConfig.postEmailBehavior,
+                  confirmationMessage: "Got it, I've saved that email.",
+                },
+              }
+            : email.blockConfig,
+      },
+      brand: BRAND,
+      bookingUrl: BOOKING_URL,
+      triggers: [],
+    })
+
+    expect(overrides?.postEmailBehavior?.confirmationMessage).toBe(
+      "Got it, I've saved that email."
+    )
+  })
+
+  it('omits unchanged default post-email behavior from simulator overrides', () => {
+    const overrides = buildSimulatorOverrides({
+      selectedBlock: getNode('email'),
+      brand: BRAND,
+      bookingUrl: BOOKING_URL,
+      triggers: [],
+    })
+
+    expect(overrides).not.toHaveProperty('postEmailBehavior')
+  })
 })
 
 describe('isFlowCompileEnabled', () => {

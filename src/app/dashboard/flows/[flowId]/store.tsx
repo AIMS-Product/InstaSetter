@@ -21,6 +21,7 @@ import { BLOCK_TYPES } from './types'
 import type {
   AmbientTrigger,
   BlockType,
+  BlockConfig,
   Branch,
   Capture,
   Flow,
@@ -95,6 +96,7 @@ type Action =
       field: 'goal' | 'guidance' | 'name'
       value: string
     }
+  | { type: 'update_block_config'; id: BlockType; config: BlockConfig }
   | { type: 'add_example'; id: BlockType; text: string }
   | { type: 'edit_example'; id: BlockType; index: number; text: string }
   | { type: 'delete_example'; id: BlockType; index: number }
@@ -311,6 +313,7 @@ export const INITIAL_STATE: FlowState = buildInitialState('VendingPreneurs')
 
 const CONTENT_EDIT_ACTIONS: ReadonlySet<Action['type']> = new Set([
   'update_block_field',
+  'update_block_config',
   'add_example',
   'edit_example',
   'delete_example',
@@ -471,6 +474,11 @@ export function reducer(state: FlowState, action: Action): FlowState {
       return replaceNode(state, action.id, (n) => ({
         ...n,
         [action.field]: action.value,
+      }))
+    case 'update_block_config':
+      return replaceNode(state, action.id, (n) => ({
+        ...n,
+        blockConfig: action.config,
       }))
     case 'add_example':
       return replaceNode(state, action.id, (n) => ({
@@ -787,6 +795,8 @@ export function useFlowActions() {
         field: 'goal' | 'guidance' | 'name',
         value: string
       ) => dispatch({ type: 'update_block_field', id, field, value }),
+      updateBlockConfig: (id: BlockType, config: BlockConfig) =>
+        dispatch({ type: 'update_block_config', id, config }),
       addExample: (id: BlockType, text: string) =>
         dispatch({ type: 'add_example', id, text }),
       editExample: (id: BlockType, index: number, text: string) =>

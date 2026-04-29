@@ -383,7 +383,10 @@ function DesignTab({
         title="Runtime Details"
         summary={runtimeSummary || 'Step settings and fixed safety rules'}
       >
-        <BlockConfigPanel config={block.blockConfig} />
+        <BlockConfigPanel
+          config={block.blockConfig}
+          onChange={(config) => actions.updateBlockConfig(block.id, config)}
+        />
         <GuardrailsPanel
           guardrails={block.guardrails ?? []}
           onOpenSource={(source) => {

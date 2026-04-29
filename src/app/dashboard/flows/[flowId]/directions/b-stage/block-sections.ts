@@ -7,6 +7,7 @@ import { buildObjectionHandling } from '@/lib/prompts/sections/objections'
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildQualificationCriteria } from '@/lib/prompts/sections/qualification'
 import { buildSummaryGeneration } from '@/lib/prompts/sections/summary-generation'
+import { DEFAULT_POST_EMAIL_BEHAVIOR } from '@/lib/prompts/post-email-behavior'
 
 import type {
   BlockConfig,
@@ -1112,6 +1113,7 @@ function deriveBlockConfig(
         kind: 'email',
         triggers: parseEmailTriggers(text),
         confirmationScript: parseConfirmationScript(text),
+        postEmailBehavior: DEFAULT_POST_EMAIL_BEHAVIOR,
         hesitationScript: parseHesitationScript(text),
       }
     }

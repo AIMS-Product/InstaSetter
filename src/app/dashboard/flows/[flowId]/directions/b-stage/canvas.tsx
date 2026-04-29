@@ -71,6 +71,7 @@ function Node({
       aria-pressed={selected}
       onPointerDown={(e) => {
         if (e.button !== 0) return
+        onSelect(node.id)
         onDragStart(node.id, e)
       }}
       onClick={() => onSelect(node.id)}

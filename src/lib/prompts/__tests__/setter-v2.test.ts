@@ -197,7 +197,8 @@ describe('setter-v2 buildSystemPrompt', () => {
 
   it('includes confirmation loop', () => {
     const prompt = buildSystemPrompt(DEFAULT_OPTS)
-    expect(prompt).toMatch(/Got it.*send.*pre-call resources/i)
+    expect(prompt).toMatch(/Got it.*saved.*pre-call resources/i)
+    expect(prompt).toContain('No automatic email delivery is configured')
   })
 
   it('references the 0.4% capture rate for urgency', () => {

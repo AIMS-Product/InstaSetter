@@ -9,6 +9,7 @@ import {
 } from '../block-sections'
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
+import { DEFAULT_POST_EMAIL_BEHAVIOR } from '@/lib/prompts/post-email-behavior'
 
 const BRAND = 'VendingPreneurs'
 
@@ -184,6 +185,13 @@ describe('deriveBlock', () => {
       const backup = b.blockConfig.triggers.find((t) => t.priority === 'backup')
       expect(backup?.mandatory).toBe(true)
       expect(b.blockConfig.confirmationScript.length).toBeGreaterThan(0)
+      expect(b.blockConfig.postEmailBehavior).toEqual(
+        DEFAULT_POST_EMAIL_BEHAVIOR
+      )
+      expect(b.blockConfig.postEmailBehavior.confirmationMessage).toContain(
+        'saved'
+      )
+      expect(b.blockConfig.postEmailBehavior.deliveryMode).toBe('none')
     }
   })
 

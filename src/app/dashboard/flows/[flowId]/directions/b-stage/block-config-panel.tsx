@@ -12,8 +12,10 @@ import { SummaryPanel } from './block-panels/summary'
 
 export function BlockConfigPanel({
   config,
+  onChange,
 }: {
   config: BlockConfig | undefined
+  onChange?: (config: BlockConfig) => void
 }) {
   if (!config) return null
   switch (config.kind) {
@@ -26,7 +28,7 @@ export function BlockConfigPanel({
     case 'booking':
       return <BookingPanel config={config} />
     case 'email':
-      return <EmailPanel config={config} />
+      return <EmailPanel config={config} onChange={onChange} />
     case 'followup':
       return <FollowupPanel config={config} />
     case 'escalation':

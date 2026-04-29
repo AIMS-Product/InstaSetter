@@ -9,9 +9,21 @@
  * - Explicit confirmation loop validates data
  */
 
+import {
+  DEFAULT_POST_EMAIL_BEHAVIOR,
+  PostEmailBehaviorSchema,
+  type PostEmailBehavior,
+  type PostEmailBehaviorInput,
+} from '../post-email-behavior'
+
 export function buildEmailCapture(
-  bookingUrl: string = 'https://booking.vendingpreneurs.com/AK-DM'
+  bookingUrl: string = 'https://booking.vendingpreneurs.com/AK-DM',
+  postEmailBehavior: PostEmailBehaviorInput = DEFAULT_POST_EMAIL_BEHAVIOR
 ): string {
+  const behavior = PostEmailBehaviorSchema.parse(postEmailBehavior)
+  const deliveryContext = buildDeliveryContext(behavior)
+  const emailTemplateContext = buildEmailTemplateContext(behavior)
+
   return `## Email Capture
 
 Email capture is mandatory in every conversation that reaches booking confirmation. This is a critical gap, only 0.4% of historical conversations captured an email.
@@ -37,7 +49,12 @@ If a prospect confirms they watched the masterclass content but a booking has no
 
 ### Confirmation Loop
 After the prospect provides their email, ALWAYS confirm receipt explicitly:
-"Got it, I'll send your pre-call resources to [email]. Check your spam folder if you don't see it within a few minutes."
+"${behavior.confirmationMessage}"
+
+Delivery context: ${deliveryContext}
+
+Email to send:
+${emailTemplateContext}
 
 This closes the loop, validates the data is correct, and adds perceived value.
 
@@ -47,4 +64,34 @@ This closes the loop, validates the data is correct, and adds perceived value.
 - Never ask for email while an objection is unresolved. Resolve the objection first.
 - If the prospect hesitates: "No spam, just the details we talked about so you have them handy."
 - Always call the capture_email tool immediately after receiving the email address.`
+}
+
+function buildDeliveryContext(behavior: PostEmailBehavior): string {
+  switch (behavior.deliveryMode) {
+    case 'none':
+      return 'No automatic email delivery is configured. Do not promise that resources will be sent automatically.'
+    case 'manual':
+      return `Operator will manually follow up${formatResourceLabel(behavior)}.`
+    case 'customerio':
+      return `Customer.io is configured for follow-up${formatResourceLabel(behavior)}.`
+    case 'close':
+      return `Close CRM follow-up is configured${formatResourceLabel(behavior)}.`
+    case 'webhook':
+      return `A webhook follow-up is configured${formatResourceLabel(behavior)}.`
+  }
+}
+
+function formatResourceLabel(behavior: PostEmailBehavior): string {
+  return behavior.resourceLabel ? ` with ${behavior.resourceLabel}` : ''
+}
+
+function buildEmailTemplateContext(behavior: PostEmailBehavior): string {
+  const { emailTemplate } = behavior
+  return [
+    `- Subject: ${emailTemplate.subject}`,
+    `- Body: ${emailTemplate.body}`,
+    emailTemplate.attachment
+      ? `- Attachment: ${emailTemplate.attachment.fileName} (${emailTemplate.attachment.url})`
+      : '- Attachment: none',
+  ].join('\n')
 }

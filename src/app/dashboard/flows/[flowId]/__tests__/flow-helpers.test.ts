@@ -20,7 +20,8 @@ import {
   normalizePersistedFlowDraft,
   type PersistedFlowDraft,
 } from '../draft-persistence'
-import type { Flow, FlowNode, Variable } from '../types'
+import { DEFAULT_POST_EMAIL_BEHAVIOR } from '@/lib/prompts/post-email-behavior'
+import type { EmailConfig, Flow, FlowNode, Variable } from '../types'
 
 const baseNode: FlowNode = {
   id: 'opening',
@@ -42,6 +43,20 @@ const baseFlow: Flow = {
   draft: 4,
   published: 3,
   nodes: [baseNode],
+}
+
+const emailNode: FlowNode = {
+  ...baseNode,
+  id: 'email',
+  type: 'email',
+  name: 'Email Capture',
+  blockConfig: {
+    kind: 'email',
+    triggers: [],
+    confirmationScript: DEFAULT_POST_EMAIL_BEHAVIOR.confirmationMessage,
+    postEmailBehavior: DEFAULT_POST_EMAIL_BEHAVIOR,
+    hesitationScript: 'No spam, just the details we talked about.',
+  } satisfies EmailConfig,
 }
 
 function persistedDraft(overrides: Partial<PersistedFlowDraft> = {}) {
@@ -121,6 +136,91 @@ describe('draft persistence helpers', () => {
     }
 
     expect(extractPersistedFlowDraft(source)).toEqual(persistedDraft())
+  })
+
+  it('preserves email post-email behavior in persisted drafts', () => {
+    const customConfirmation = "Got it, I've saved that email."
+    const draft = persistedDraft({
+      flow: {
+        ...baseFlow,
+        nodes: [
+          {
+            ...emailNode,
+            blockConfig: {
+              ...(emailNode.blockConfig as EmailConfig),
+              kind: 'email',
+              postEmailBehavior: {
+                ...DEFAULT_POST_EMAIL_BEHAVIOR,
+                confirmationMessage: customConfirmation,
+              },
+            },
+          },
+        ],
+      },
+    })
+
+    const persisted = extractPersistedFlowDraft(draft)
+    const email = persisted.flow.nodes.find((node) => node.id === 'email')
+
+    expect(email?.blockConfig?.kind).toBe('email')
+    if (email?.blockConfig?.kind === 'email') {
+      expect(email.blockConfig.postEmailBehavior.confirmationMessage).toBe(
+        customConfirmation
+      )
+    }
+  })
+
+  it('backfills default post-email behavior for older email drafts', () => {
+    const legacyEmailNode = {
+      ...emailNode,
+      blockConfig: {
+        kind: 'email',
+        triggers: [],
+        confirmationScript: 'Legacy confirmation script',
+        hesitationScript: 'No spam.',
+      },
+    } as unknown as FlowNode
+    const normalized = normalizePersistedFlowDraft({
+      flow: { ...baseFlow, nodes: [legacyEmailNode] },
+    })
+    const email = normalized.flow?.nodes.find((node) => node.id === 'email')
+
+    expect(email?.blockConfig?.kind).toBe('email')
+    if (email?.blockConfig?.kind === 'email') {
+      expect(email.blockConfig.postEmailBehavior).toEqual(
+        DEFAULT_POST_EMAIL_BEHAVIOR
+      )
+    }
+  })
+
+  it('backfills default email template for drafts with legacy post-email behavior', () => {
+    const legacyEmailNode = {
+      ...emailNode,
+      blockConfig: {
+        ...(emailNode.blockConfig as EmailConfig),
+        kind: 'email',
+        postEmailBehavior: {
+          confirmationMessage: "Got it, I've saved that email.",
+          deliveryMode: 'manual',
+          resourceLabel: null,
+          nextStep: 'human_review',
+        },
+      },
+    } as unknown as FlowNode
+    const normalized = normalizePersistedFlowDraft({
+      flow: { ...baseFlow, nodes: [legacyEmailNode] },
+    })
+    const email = normalized.flow?.nodes.find((node) => node.id === 'email')
+
+    expect(email?.blockConfig?.kind).toBe('email')
+    if (email?.blockConfig?.kind === 'email') {
+      expect(email.blockConfig.postEmailBehavior.confirmationMessage).toBe(
+        "Got it, I've saved that email."
+      )
+      expect(email.blockConfig.postEmailBehavior.emailTemplate).toEqual(
+        DEFAULT_POST_EMAIL_BEHAVIOR.emailTemplate
+      )
+    }
   })
 
   it('strips bot-level guardrails from current flow and version snapshots', () => {

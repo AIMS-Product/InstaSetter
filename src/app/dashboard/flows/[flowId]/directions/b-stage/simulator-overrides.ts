@@ -1,5 +1,6 @@
 import type { AmbientTrigger, Branch, Capture, FlowNode } from '../../types'
 import { deriveBlock } from './block-sections'
+import { DEFAULT_POST_EMAIL_BEHAVIOR } from '@/lib/prompts/post-email-behavior'
 import type {
   BlockOverrides,
   BranchOverride,
@@ -71,6 +72,16 @@ export function buildSimulatorOverrides({
     overrides.triggers = blockTriggers
   }
 
+  if (
+    selectedBlock.blockConfig?.kind === 'email' &&
+    !isPostEmailBehaviorEqual(
+      selectedBlock.blockConfig.postEmailBehavior,
+      DEFAULT_POST_EMAIL_BEHAVIOR
+    )
+  ) {
+    overrides.postEmailBehavior = selectedBlock.blockConfig.postEmailBehavior
+  }
+
   return overrides
 }
 
@@ -118,6 +129,40 @@ function isBranch(left: BranchOverride, right: BranchOverride): boolean {
     left.label === right.label &&
     left.when === right.when &&
     left.target === right.target
+  )
+}
+
+function isPostEmailBehaviorEqual(
+  left: NonNullable<BlockOverrides['postEmailBehavior']>,
+  right: NonNullable<BlockOverrides['postEmailBehavior']>
+): boolean {
+  return (
+    left.confirmationMessage === right.confirmationMessage &&
+    left.deliveryMode === right.deliveryMode &&
+    left.resourceLabel === right.resourceLabel &&
+    left.nextStep === right.nextStep &&
+    left.emailTemplate.subject === right.emailTemplate.subject &&
+    left.emailTemplate.body === right.emailTemplate.body &&
+    isEmailAttachmentEqual(
+      left.emailTemplate.attachment,
+      right.emailTemplate.attachment
+    )
+  )
+}
+
+function isEmailAttachmentEqual(
+  left: NonNullable<
+    BlockOverrides['postEmailBehavior']
+  >['emailTemplate']['attachment'],
+  right: NonNullable<
+    BlockOverrides['postEmailBehavior']
+  >['emailTemplate']['attachment']
+): boolean {
+  if (!left || !right) return left === right
+  return (
+    left.fileName === right.fileName &&
+    left.url === right.url &&
+    left.description === right.description
   )
 }
 

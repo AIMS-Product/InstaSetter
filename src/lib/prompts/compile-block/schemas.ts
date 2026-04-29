@@ -3,6 +3,7 @@ import {
   BLOCK_TYPES,
   TRIGGER_MODES,
 } from '@/app/dashboard/flows/[flowId]/types'
+import { PostEmailBehaviorSchema } from '@/lib/prompts/post-email-behavior'
 
 export const CaptureOverrideSchema = z
   .object({
@@ -39,6 +40,7 @@ export const BlockOverridesSchema = z
     captures: z.array(CaptureOverrideSchema).optional(),
     branches: z.array(BranchOverrideSchema).optional(),
     triggers: z.array(TriggerOverrideSchema).optional(),
+    postEmailBehavior: PostEmailBehaviorSchema.optional(),
   })
   .strict()
 

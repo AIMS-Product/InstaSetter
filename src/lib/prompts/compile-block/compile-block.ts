@@ -5,6 +5,7 @@ import type {
   CaptureOverride,
   TriggerOverride,
 } from '@/lib/prompts/compile-block/schemas'
+import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
 import {
   BLOCK_GOALS,
   BLOCK_GUIDANCE,
@@ -45,6 +46,7 @@ export function compileBlock(input: CompileBlockInput): string {
   appendCaptureLines(lines, input.overrides.captures)
   appendBranchLines(lines, input.overrides.branches)
   appendTriggerLines(lines, input.overrides.triggers)
+  appendPostEmailBehaviorLines(lines, input.overrides.postEmailBehavior)
 
   // Directive is appended as a suffix. Effective for blocks whose source
   // sections are thin or conditional (Opening, Booking, Email, Follow-up,
@@ -53,6 +55,26 @@ export function compileBlock(input: CompileBlockInput): string {
   // outweigh an end-of-prompt directive. The v2 plan is section replacement —
   // see docs/flow-builder/FUTURE.md.
   return `${baseline}\n\n${lines.join('\n')}\n`
+}
+
+function appendPostEmailBehaviorLines(
+  lines: string[],
+  behavior: PostEmailBehavior | undefined
+): void {
+  if (!behavior) return
+  lines.push(
+    '',
+    'Post-email behavior:',
+    `- Confirmation: ${behavior.confirmationMessage}`,
+    `- Delivery mode: ${behavior.deliveryMode}`,
+    `- Resource: ${behavior.resourceLabel ?? 'none'}`,
+    `- Next step: ${behavior.nextStep}`,
+    `- Email subject: ${behavior.emailTemplate.subject}`,
+    `- Email body: ${behavior.emailTemplate.body}`,
+    behavior.emailTemplate.attachment
+      ? `- Attachment: ${behavior.emailTemplate.attachment.fileName} (${behavior.emailTemplate.attachment.url})`
+      : '- Attachment: none'
+  )
 }
 
 function appendCaptureLines(

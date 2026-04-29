@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
 vi.mock('@/lib/services/conversation')
@@ -392,5 +391,57 @@ describe('processMessage', () => {
         }),
       })
     )
+  })
+
+  it('does not load draft flow config for live inbound prompt building', async () => {
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: '',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockResolvedValue({
+      content: [{ type: 'text', text: 'Hey!' }],
+    })
+    vi.mocked(parseClaudeResponse).mockReturnValue({
+      replyText: 'Hey!',
+      toolCalls: [],
+      truncated: false,
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      '2026-04-09T10:00:00Z',
+      mockClaude
+    )
+
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        postEmailBehavior: expect.anything(),
+      })
+    )
+    expect(mockClient.from).not.toHaveBeenCalledWith('ins_flow_drafts')
   })
 })

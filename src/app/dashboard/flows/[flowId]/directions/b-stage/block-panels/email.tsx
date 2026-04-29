@@ -1,6 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
+import {
+  PostEmailBehaviorSchema,
+  type PostEmailBehavior,
+} from '@/lib/prompts/post-email-behavior'
 import type { EmailConfig, EmailTrigger } from '../../../types'
 import { B } from '../palette'
 import { LockPill, PanelCard, ReadOnlyText } from './shared'
@@ -11,12 +15,97 @@ const LABEL: Record<EmailTrigger['priority'], string> = {
   secondary: 'Secondary',
 }
 
-export function EmailPanel({ config }: { config: EmailConfig }) {
+export function EmailPanel({
+  config,
+  onChange,
+}: {
+  config: EmailConfig
+  onChange?: (config: EmailConfig) => void
+}) {
   const [tab, setTab] = useState<EmailTrigger['priority']>(
     config.triggers[0]?.priority ?? 'primary'
   )
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [emailTemplateDraft, setEmailTemplateDraft] = useState(
+    config.postEmailBehavior.emailTemplate
+  )
   const trigger =
     config.triggers.find((t) => t.priority === tab) ?? config.triggers[0]
+
+  function commitPostEmailBehavior(next: PostEmailBehavior) {
+    const parsed = PostEmailBehaviorSchema.safeParse(next)
+
+    if (!parsed.success) {
+      setValidationError(parsed.error.issues[0]?.message ?? 'Invalid settings.')
+      return
+    }
+
+    setValidationError(null)
+    onChange?.({
+      ...config,
+      confirmationScript: parsed.data.confirmationMessage,
+      postEmailBehavior: parsed.data,
+    })
+  }
+
+  function updatePostEmailBehavior(patch: Partial<PostEmailBehavior>) {
+    commitPostEmailBehavior({
+      ...config.postEmailBehavior,
+      ...patch,
+    })
+  }
+
+  function updateEmailTemplate(
+    patch: Partial<PostEmailBehavior['emailTemplate']>
+  ) {
+    setEmailTemplateDraft((current) => {
+      const next = {
+        ...current,
+        ...patch,
+      }
+
+      commitPostEmailBehavior({
+        ...config.postEmailBehavior,
+        emailTemplate: next,
+      })
+
+      return next
+    })
+  }
+
+  function updateAttachment(
+    patch: Partial<
+      NonNullable<PostEmailBehavior['emailTemplate']['attachment']>
+    >
+  ) {
+    setEmailTemplateDraft((currentTemplate) => {
+      const current = currentTemplate.attachment ?? {
+        fileName: '',
+        url: '',
+        description: null,
+      }
+      const next = {
+        ...current,
+        ...patch,
+      }
+      const attachment =
+        next.fileName.trim() || next.url.trim() || next.description?.trim()
+          ? next
+          : null
+      const nextTemplate = {
+        ...currentTemplate,
+        attachment,
+      }
+
+      commitPostEmailBehavior({
+        ...config.postEmailBehavior,
+        emailTemplate: nextTemplate,
+      })
+
+      return nextTemplate
+    })
+  }
+
   return (
     <>
       <PanelCard
@@ -135,11 +224,266 @@ export function EmailPanel({ config }: { config: EmailConfig }) {
       </PanelCard>
 
       <PanelCard
-        title="Confirmation loop"
-        locked
-        subtitle="Always confirm receipt of the email. Closes the loop + adds perceived value."
+        title="After email is captured"
+        subtitle="Operator-owned confirmation copy and delivery context."
       >
-        <ReadOnlyText value={config.confirmationScript} />
+        <label
+          htmlFor="email-post-confirmation"
+          style={{
+            display: 'block',
+            marginBottom: 4,
+            fontSize: 10.5,
+            fontWeight: 700,
+            letterSpacing: 0.5,
+            textTransform: 'uppercase',
+            color: B.ink3,
+          }}
+        >
+          After email is captured
+        </label>
+        <textarea
+          id="email-post-confirmation"
+          defaultValue={config.postEmailBehavior.confirmationMessage}
+          rows={3}
+          onChange={(e) =>
+            updatePostEmailBehavior({ confirmationMessage: e.target.value })
+          }
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            padding: '9px 11px',
+            border: `1px solid ${validationError ? '#B42318' : B.line}`,
+            borderRadius: 7,
+            background: B.panel,
+            color: B.ink,
+            fontSize: 12.5,
+            lineHeight: 1.5,
+            fontFamily: 'inherit',
+            resize: 'vertical',
+          }}
+        />
+        {validationError && (
+          <div
+            role="alert"
+            style={{
+              marginTop: 6,
+              color: '#B42318',
+              fontSize: 11,
+              lineHeight: 1.4,
+            }}
+          >
+            {validationError}
+          </div>
+        )}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 8,
+            marginTop: 10,
+          }}
+        >
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}>
+              Delivery mode
+            </span>
+            <select
+              value={config.postEmailBehavior.deliveryMode}
+              onChange={(e) =>
+                updatePostEmailBehavior({
+                  deliveryMode: e.target
+                    .value as PostEmailBehavior['deliveryMode'],
+                })
+              }
+              style={selectStyle}
+            >
+              <option value="none">None</option>
+              <option value="manual">Manual</option>
+              <option value="customerio">Customer.io</option>
+              <option value="close">Close</option>
+              <option value="webhook">Webhook</option>
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}>
+              Next step
+            </span>
+            <select
+              value={config.postEmailBehavior.nextStep}
+              onChange={(e) =>
+                updatePostEmailBehavior({
+                  nextStep: e.target.value as PostEmailBehavior['nextStep'],
+                })
+              }
+              style={selectStyle}
+            >
+              <option value="summary">Summary</option>
+              <option value="booking">Booking</option>
+              <option value="nurture">Nurture</option>
+              <option value="human_review">Human review</option>
+            </select>
+          </label>
+        </div>
+        <label
+          style={{
+            display: 'grid',
+            gap: 4,
+            marginTop: 8,
+          }}
+        >
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}>
+            Resource label
+          </span>
+          <input
+            value={config.postEmailBehavior.resourceLabel ?? ''}
+            onChange={(e) =>
+              updatePostEmailBehavior({
+                resourceLabel: e.target.value.trim() || null,
+              })
+            }
+            placeholder="No live resource"
+            style={selectStyle}
+          />
+        </label>
+        {config.postEmailBehavior.deliveryMode === 'none' && (
+          <div
+            style={{
+              marginTop: 8,
+              padding: '8px 10px',
+              borderRadius: 7,
+              background: '#FFF7E6',
+              color: '#7A4B00',
+              fontSize: 11.5,
+              lineHeight: 1.4,
+            }}
+          >
+            No automatic delivery is live.
+          </div>
+        )}
+      </PanelCard>
+
+      <PanelCard
+        title="Email to send"
+        subtitle="Draft content for the configured follow-up email."
+      >
+        <label
+          htmlFor="email-template-subject"
+          style={{
+            display: 'block',
+            marginBottom: 4,
+            fontSize: 10.5,
+            fontWeight: 700,
+            letterSpacing: 0.5,
+            textTransform: 'uppercase',
+            color: B.ink3,
+          }}
+        >
+          Email subject
+        </label>
+        <input
+          id="email-template-subject"
+          value={emailTemplateDraft.subject}
+          onChange={(e) => updateEmailTemplate({ subject: e.target.value })}
+          style={selectStyle}
+        />
+        <label
+          htmlFor="email-template-body"
+          style={{
+            display: 'block',
+            marginTop: 10,
+            marginBottom: 4,
+            fontSize: 10.5,
+            fontWeight: 700,
+            letterSpacing: 0.5,
+            textTransform: 'uppercase',
+            color: B.ink3,
+          }}
+        >
+          Email body
+        </label>
+        <textarea
+          id="email-template-body"
+          value={emailTemplateDraft.body}
+          rows={5}
+          onChange={(e) => updateEmailTemplate({ body: e.target.value })}
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            padding: '9px 11px',
+            border: `1px solid ${B.line}`,
+            borderRadius: 7,
+            background: B.panel,
+            color: B.ink,
+            fontSize: 12.5,
+            lineHeight: 1.5,
+            fontFamily: 'inherit',
+            resize: 'vertical',
+          }}
+        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 8,
+            marginTop: 10,
+          }}
+        >
+          <div style={{ display: 'grid', gap: 4 }}>
+            <label
+              htmlFor="email-attachment-file-name"
+              style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}
+            >
+              Attachment file name
+            </label>
+            <input
+              id="email-attachment-file-name"
+              value={emailTemplateDraft.attachment?.fileName ?? ''}
+              onChange={(e) => updateAttachment({ fileName: e.target.value })}
+              placeholder="prep-checklist.pdf"
+              style={selectStyle}
+            />
+          </div>
+          <div style={{ display: 'grid', gap: 4 }}>
+            <label
+              htmlFor="email-attachment-url"
+              style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}
+            >
+              Attachment URL
+            </label>
+            <input
+              id="email-attachment-url"
+              value={emailTemplateDraft.attachment?.url ?? ''}
+              onChange={(e) => updateAttachment({ url: e.target.value })}
+              placeholder="https://..."
+              style={selectStyle}
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gap: 4,
+            marginTop: 8,
+          }}
+        >
+          <label
+            htmlFor="email-attachment-description"
+            style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}
+          >
+            Attachment description
+          </label>
+          <input
+            id="email-attachment-description"
+            value={emailTemplateDraft.attachment?.description ?? ''}
+            onChange={(e) =>
+              updateAttachment({
+                description: e.target.value.trim() || null,
+              })
+            }
+            placeholder="Optional"
+            style={selectStyle}
+          />
+        </div>
       </PanelCard>
 
       {config.hesitationScript && (
@@ -163,3 +507,15 @@ export function EmailPanel({ config }: { config: EmailConfig }) {
     </>
   )
 }
+
+const selectStyle = {
+  width: '100%',
+  boxSizing: 'border-box',
+  border: `1px solid ${B.line}`,
+  borderRadius: 7,
+  padding: '7px 9px',
+  background: B.panel,
+  color: B.ink,
+  fontSize: 12.5,
+  fontFamily: 'inherit',
+} satisfies CSSProperties

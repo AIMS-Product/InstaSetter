@@ -23,6 +23,10 @@ export default function FlowDraftSync({
   const bootReadyRef = useRef(false)
   const lastSavedJsonRef = useRef<string | null>(null)
   const saveErrorShownRef = useRef(false)
+  const actionsRef = useRef(actions)
+  const draftRef = useRef<ReturnType<typeof extractPersistedFlowDraft> | null>(
+    null
+  )
   const draft = useMemo(
     () =>
       extractPersistedFlowDraft({
@@ -49,6 +53,14 @@ export default function FlowDraftSync({
   const serializedDraft = JSON.stringify(draft)
 
   useEffect(() => {
+    actionsRef.current = actions
+  }, [actions])
+
+  useEffect(() => {
+    draftRef.current = draft
+  }, [draft])
+
+  useEffect(() => {
     let alive = true
     const seedDraft = extractPersistedFlowDraft(
       buildInitialState(brand, bookingUrl, flowId)
@@ -58,7 +70,7 @@ export default function FlowDraftSync({
     bootReadyRef.current = false
     lastSavedJsonRef.current = null
     saveErrorShownRef.current = false
-    actions.setDraftSyncStatus('loading')
+    actionsRef.current.setDraftSyncStatus('loading')
 
     async function bootstrap() {
       try {
@@ -67,10 +79,10 @@ export default function FlowDraftSync({
 
         if (remote) {
           lastSavedJsonRef.current = JSON.stringify(remote)
-          actions.hydrate(remote)
+          actionsRef.current.hydrate(remote)
           clearLegacyLocalFlowDraft({ brand, flowId })
           bootReadyRef.current = true
-          actions.setDraftSyncStatus('saved')
+          actionsRef.current.setDraftSyncStatus('saved')
           return
         }
 
@@ -80,7 +92,7 @@ export default function FlowDraftSync({
         if (local) {
           const localJson = JSON.stringify(local)
           lastSavedJsonRef.current = localJson
-          actions.hydrate(local)
+          actionsRef.current.hydrate(local)
 
           const saved = await saveFlowDraftAction({
             brand,
@@ -93,10 +105,12 @@ export default function FlowDraftSync({
 
           if (saved) {
             clearLegacyLocalFlowDraft({ brand, flowId })
-            actions.setDraftSyncStatus('saved')
+            actionsRef.current.setDraftSyncStatus('saved')
           } else {
-            actions.toast('Could not save this draft yet — we will retry.')
-            actions.setDraftSyncStatus('error')
+            actionsRef.current.toast(
+              'Could not save this draft yet — we will retry.'
+            )
+            actionsRef.current.setDraftSyncStatus('error')
             saveErrorShownRef.current = true
           }
 
@@ -110,7 +124,7 @@ export default function FlowDraftSync({
       if (!alive) return
       lastSavedJsonRef.current = seedDraftJson
       bootReadyRef.current = true
-      actions.setDraftSyncStatus('saved')
+      actionsRef.current.setDraftSyncStatus('saved')
     }
 
     void bootstrap()
@@ -118,40 +132,46 @@ export default function FlowDraftSync({
     return () => {
       alive = false
     }
-  }, [actions, brand, bookingUrl, flowId])
+  }, [brand, bookingUrl, flowId])
 
   useEffect(() => {
     if (!bootReadyRef.current) return
     if (serializedDraft === lastSavedJsonRef.current) return
-    actions.setDraftSyncStatus('pending')
+    const draftToSave = draftRef.current
+    if (!draftToSave) return
+    actionsRef.current.setDraftSyncStatus('pending')
 
     const timer = window.setTimeout(() => {
-      actions.setDraftSyncStatus('saving')
+      actionsRef.current.setDraftSyncStatus('saving')
       void saveFlowDraftAction({
         brand,
         flowId,
         bookingUrl,
-        state: draft,
+        state: draftToSave,
       })
         .then((saved) => {
           if (!saved) {
             if (!saveErrorShownRef.current) {
-              actions.toast('Could not save this draft yet — we will retry.')
+              actionsRef.current.toast(
+                'Could not save this draft yet — we will retry.'
+              )
               saveErrorShownRef.current = true
             }
-            actions.setDraftSyncStatus('error')
+            actionsRef.current.setDraftSyncStatus('error')
             return
           }
 
           lastSavedJsonRef.current = serializedDraft
           saveErrorShownRef.current = false
-          actions.setDraftSyncStatus('saved')
+          actionsRef.current.setDraftSyncStatus('saved')
         })
         .catch((error) => {
           console.error('Flow draft save failed', error)
-          actions.setDraftSyncStatus('error')
+          actionsRef.current.setDraftSyncStatus('error')
           if (!saveErrorShownRef.current) {
-            actions.toast('Could not save this draft yet — we will retry.')
+            actionsRef.current.toast(
+              'Could not save this draft yet — we will retry.'
+            )
             saveErrorShownRef.current = true
           }
         })
@@ -160,7 +180,7 @@ export default function FlowDraftSync({
     return () => {
       window.clearTimeout(timer)
     }
-  }, [actions, bookingUrl, brand, draft, flowId, serializedDraft])
+  }, [bookingUrl, brand, flowId, serializedDraft])
 
   return null
 }
