@@ -19,6 +19,7 @@ import { leadSummarySchema } from '@/types/lead'
 import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
 import { getServerConfig } from '@/lib/config'
 import { setContactTags } from '@/lib/services/sendpulse'
+import { syncLeadToClose } from '@/lib/services/sync-lead-to-close'
 import type { Json } from '@/types/database'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
@@ -304,8 +305,22 @@ export async function routeLeadEvents(
             continue
           }
 
-          await createLead(contactId, conversationId, parsed.data)
+          const leadResult = await createLead(
+            contactId,
+            conversationId,
+            parsed.data
+          )
           await closeConversation(conversationId, JSON.stringify(parsed.data))
+
+          // P3.01: fire-and-forget Close sync. Cold leads are skipped inside
+          // syncLeadToClose itself — we don't gate here so the orchestrator
+          // owns the full skip-policy. The orchestrator never throws and is
+          // gated by the `close_sync.enabled` per-brand flag, so this stays
+          // a no-op in production until the flag is flipped.
+          if (leadResult.success) {
+            const newLeadId = leadResult.data.id
+            syncLeadToClose({ leadId: newLeadId }).catch(() => {})
+          }
           break
         }
 
