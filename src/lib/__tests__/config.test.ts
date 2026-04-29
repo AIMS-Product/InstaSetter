@@ -80,3 +80,72 @@ describe('split server-env getters', () => {
     expect(() => getSupabaseServerConfig()).toThrow()
   })
 })
+
+describe('getCloseConfig', () => {
+  it('parses all keys when set', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('CLOSE_API_KEY', 'api_test_xxx')
+    vi.stubEnv('CLOSE_BASE_URL', 'https://api.close.com/api/v1')
+    vi.stubEnv('CLOSE_LEAD_STATUS_NEW_ID', 'stat_abc')
+    vi.stubEnv(
+      'CLOSE_CUSTOM_FIELD_IDS',
+      '{"instagram_handle":"lcf_aaa","qualification_status":"lcf_bbb"}'
+    )
+    vi.stubEnv('CLOSE_CRON_SECRET', 'secret-xyz')
+    const { getCloseConfig } = await import('@/lib/config')
+    const cfg = getCloseConfig()
+    expect(cfg.CLOSE_API_KEY).toBe('api_test_xxx')
+    expect(cfg.CLOSE_BASE_URL).toBe('https://api.close.com/api/v1')
+    expect(cfg.CLOSE_LEAD_STATUS_NEW_ID).toBe('stat_abc')
+    expect(cfg.CLOSE_CUSTOM_FIELD_IDS).toEqual({
+      instagram_handle: 'lcf_aaa',
+      qualification_status: 'lcf_bbb',
+    })
+    expect(cfg.CLOSE_CRON_SECRET).toBe('secret-xyz')
+  })
+
+  it('does not require CLOSE_API_KEY (flag-gated; flag lives in DB)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    // No Close env vars at all
+    const { getCloseConfig } = await import('@/lib/config')
+    expect(() => getCloseConfig()).not.toThrow()
+    const cfg = getCloseConfig()
+    expect(cfg.CLOSE_API_KEY).toBeUndefined()
+    expect(cfg.CLOSE_BASE_URL).toBe('https://api.close.com/api/v1')
+    expect(cfg.CLOSE_CUSTOM_FIELD_IDS).toEqual({})
+  })
+
+  it('strips trailing newline from CLOSE_API_KEY (vercel env pull artifact)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('CLOSE_API_KEY', 'api_test_xxx\n')
+    const { getCloseConfig } = await import('@/lib/config')
+    expect(getCloseConfig().CLOSE_API_KEY).toBe('api_test_xxx')
+  })
+
+  it('throws when CLOSE_CUSTOM_FIELD_IDS is malformed JSON', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('CLOSE_CUSTOM_FIELD_IDS', '{not valid json')
+    const { getCloseConfig } = await import('@/lib/config')
+    expect(() => getCloseConfig()).toThrow()
+  })
+
+  it('throws when CLOSE_CUSTOM_FIELD_IDS values are non-strings', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('CLOSE_CUSTOM_FIELD_IDS', '{"foo":42}')
+    const { getCloseConfig } = await import('@/lib/config')
+    expect(() => getCloseConfig()).toThrow()
+  })
+
+  it('rejects an array under CLOSE_CUSTOM_FIELD_IDS', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('CLOSE_CUSTOM_FIELD_IDS', '["a","b"]')
+    const { getCloseConfig } = await import('@/lib/config')
+    expect(() => getCloseConfig()).toThrow()
+  })
+})

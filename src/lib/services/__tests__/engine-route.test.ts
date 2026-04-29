@@ -15,6 +15,13 @@ vi.mock('@/lib/services/sendpulse', () => ({
   sendInstagramMessage: vi.fn(),
   pauseAutomation: vi.fn(),
 }))
+vi.mock('@/lib/services/sync-lead-to-close', () => ({
+  syncLeadToClose: vi.fn().mockResolvedValue({
+    success: true,
+    skipped: true,
+    reason: 'flag_off',
+  }),
+}))
 vi.mock('@/lib/config', () => ({
   config: {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -325,5 +332,129 @@ describe('routeLeadEvents', () => {
     )
 
     expect(result.eventsProcessed).toBe(3)
+  })
+})
+
+describe('routeLeadEvents — Close CRM sync wiring (P3.01)', () => {
+  let client: ReturnType<typeof createMockClient>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    client = createMockClient()
+  })
+
+  it('fires syncLeadToClose after generate_summary success', async () => {
+    vi.mocked(createLead).mockResolvedValue({
+      success: true,
+      data: { id: 'lead-warm-1' } as never,
+    })
+    vi.mocked(closeConversation).mockResolvedValue({
+      success: true,
+      data: {} as never,
+    })
+    client.single.mockResolvedValue({ data: {}, error: null })
+
+    const { syncLeadToClose } =
+      await import('@/lib/services/sync-lead-to-close')
+
+    await routeLeadEvents(asSupabaseClient(client), 'c1', 'cv1', [
+      {
+        name: 'generate_summary',
+        toolUseId: 'tu2',
+        input: {
+          instagram_handle: 'jess',
+          qualification_status: 'warm',
+          call_booked: false,
+          email: 'jess@example.com',
+        },
+      },
+    ])
+
+    // Engine fires the orchestrator with the new lead id; the orchestrator
+    // owns the cold-skip / flag-skip / no-email policy.
+    expect(syncLeadToClose).toHaveBeenCalledWith({ leadId: 'lead-warm-1' })
+  })
+
+  it('does not fire syncLeadToClose when createLead fails', async () => {
+    vi.mocked(createLead).mockResolvedValue({
+      success: false,
+      error: 'db error',
+    })
+    vi.mocked(closeConversation).mockResolvedValue({
+      success: true,
+      data: {} as never,
+    })
+    client.single.mockResolvedValue({ data: {}, error: null })
+
+    const { syncLeadToClose } =
+      await import('@/lib/services/sync-lead-to-close')
+
+    await routeLeadEvents(asSupabaseClient(client), 'c1', 'cv1', [
+      {
+        name: 'generate_summary',
+        toolUseId: 'tu2',
+        input: {
+          instagram_handle: 'jess',
+          qualification_status: 'hot',
+          call_booked: true,
+        },
+      },
+    ])
+
+    expect(syncLeadToClose).not.toHaveBeenCalled()
+  })
+
+  it('does not fire syncLeadToClose for capture_email or qualify_lead alone', async () => {
+    // capture_email
+    client.eq.mockResolvedValueOnce({ error: null })
+    client.single.mockResolvedValue({ data: {}, error: null })
+
+    const { syncLeadToClose } =
+      await import('@/lib/services/sync-lead-to-close')
+
+    await routeLeadEvents(asSupabaseClient(client), 'c1', 'cv1', [
+      {
+        name: 'capture_email',
+        toolUseId: 'tu1',
+        input: { email: 'a@b.com' },
+      },
+    ])
+
+    expect(syncLeadToClose).not.toHaveBeenCalled()
+  })
+
+  it('swallows syncLeadToClose rejections — never breaks the bot reply path', async () => {
+    vi.mocked(createLead).mockResolvedValue({
+      success: true,
+      data: { id: 'lead-1' } as never,
+    })
+    vi.mocked(closeConversation).mockResolvedValue({
+      success: true,
+      data: {} as never,
+    })
+    client.single.mockResolvedValue({ data: {}, error: null })
+
+    const { syncLeadToClose } =
+      await import('@/lib/services/sync-lead-to-close')
+    vi.mocked(syncLeadToClose).mockRejectedValueOnce(new Error('close burped'))
+
+    const result = await routeLeadEvents(
+      asSupabaseClient(client),
+      'c1',
+      'cv1',
+      [
+        {
+          name: 'generate_summary',
+          toolUseId: 'tu2',
+          input: {
+            instagram_handle: 'jess',
+            qualification_status: 'hot',
+            call_booked: true,
+          },
+        },
+      ]
+    )
+
+    expect(result).toEqual({ success: true, eventsProcessed: 1 })
   })
 })
