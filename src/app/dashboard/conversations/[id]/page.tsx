@@ -166,13 +166,39 @@ export default async function ConversationDetailPage({ params }: Params) {
             )}
           </div>
           {conversation.attribution ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              <span>Campaign: {conversation.attribution.campaign ?? '—'}</span>
-              <span>Material: {conversation.attribution.material ?? '—'}</span>
-              <span>
-                Trigger: {conversation.attribution.trigger_label ?? '—'}
-              </span>
-            </div>
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                <span>
+                  Campaign: {conversation.attribution.campaign ?? '—'}
+                </span>
+                <span>
+                  Material: {conversation.attribution.material ?? '—'}
+                </span>
+                <span>
+                  Trigger: {conversation.attribution.trigger_label ?? '—'}
+                </span>
+              </div>
+              {(conversation.attribution.utm_source ||
+                conversation.attribution.utm_medium ||
+                conversation.attribution.utm_campaign) && (
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 12,
+                    color: '#6B6A7E',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                  }}
+                >
+                  <span>{conversation.attribution.utm_source ?? '—'}</span>
+                  <span>·</span>
+                  <span>{conversation.attribution.utm_medium ?? '—'}</span>
+                  <span>·</span>
+                  <span>{conversation.attribution.utm_campaign ?? '—'}</span>
+                </div>
+              )}
+            </>
           ) : (
             <div>Unknown source for this conversation.</div>
           )}

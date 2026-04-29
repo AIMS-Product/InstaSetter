@@ -1,10 +1,10 @@
 'use client'
 
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy, Smartphone } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useState } from 'react'
 
-type CopyState = 'idle' | 'variables' | 'tag' | 'all' | 'error'
+type CopyState = 'idle' | 'variables' | 'tag' | 'all' | 'link' | 'error'
 
 const buttonStyle = {
   display: 'inline-flex',
@@ -33,9 +33,13 @@ function formatAll(variables: Record<string, string>, tag: string) {
 export function SetupCopyPanel({
   variables,
   tag,
+  refLink,
+  refLinkError,
 }: {
   variables: Record<string, string>
   tag: string
+  refLink?: string
+  refLinkError?: string
 }) {
   const [copied, setCopied] = useState<CopyState>('idle')
 
@@ -131,6 +135,82 @@ export function SetupCopyPanel({
             ? 'Confirm global incoming message webhooks are enabled. Manual flow trigger setup is required for v1.'
             : 'Copied.'}
       </div>
+
+      {(refLink || refLinkError) && (
+        <div
+          style={{
+            marginTop: 4,
+            paddingTop: 12,
+            borderTop: '1px dashed #D9DAE5',
+            display: 'grid',
+            gap: 8,
+          }}
+        >
+          <div style={{ fontWeight: 800, color: '#161528' }}>
+            Instagram deep link
+          </div>
+          {refLink ? (
+            <>
+              <div>
+                Paste this URL into the Meta Ads Manager destination field, the
+                IG bio link, or anywhere a click should hand the prospect over
+                to the SendPulse flow with this source&apos;s UTM tags pre-set.
+              </div>
+              <pre
+                style={{
+                  margin: 0,
+                  padding: 10,
+                  borderRadius: 8,
+                  background: '#F7F7FA',
+                  overflow: 'auto',
+                  lineHeight: 1.55,
+                  wordBreak: 'break-all',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {refLink}
+              </pre>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <button
+                  type="button"
+                  title="Copy the Instagram deep link"
+                  style={buttonStyle}
+                  onClick={() => copy(refLink, 'link')}
+                >
+                  {copied === 'link' ? (
+                    <Check aria-hidden size={13} />
+                  ) : (
+                    <Copy aria-hidden size={13} />
+                  )}
+                  Copy link
+                </button>
+              </div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: '#7C2D12',
+                  background: '#FFF7ED',
+                  border: '1px solid #FDBA74',
+                  borderRadius: 8,
+                  padding: '6px 10px',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                }}
+              >
+                <Smartphone aria-hidden size={13} />
+                Test on Instagram mobile only — desktop browsers ignore the ref
+                tag.
+              </div>
+            </>
+          ) : (
+            <div style={{ color: '#9B1C1C' }}>
+              Could not build deep link: {refLinkError}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
