@@ -87,9 +87,7 @@ describe('<SurfaceBadge>', () => {
   })
 
   it('omits aria-describedby when withDescription is false', () => {
-    render(
-      <SurfaceBadge state="LIVE" detail="Live." withDescription={false} />
-    )
+    render(<SurfaceBadge state="LIVE" detail="Live." withDescription={false} />)
     const badge = screen.getByRole('status', { name: /live/i })
     expect(badge.getAttribute('aria-describedby')).toBeNull()
   })
