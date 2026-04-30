@@ -3,6 +3,7 @@ import { buildCompanyContext } from './sections/company-context'
 import { buildLocationGate } from './sections/location-gate'
 import { buildQualificationCriteria } from './sections/qualification'
 import { buildObjectionHandling } from './sections/objections'
+import { buildSkepticalPlaybook } from './sections/skeptical-playbook'
 import { buildEmailCapture } from './sections/email-capture'
 import { buildDecisionRouting } from './sections/decision-routing'
 import { buildSummaryGeneration } from './sections/summary-generation'
@@ -68,6 +69,7 @@ export function buildSystemPrompt({
     buildLocationGate(brandName),
     buildQualificationCriteria(),
     buildObjectionHandling(brandName),
+    buildSkepticalPlaybook(),
     postEmailBehavior
       ? buildEmailCapture(bookingUrl, postEmailBehavior)
       : buildEmailCapture(bookingUrl),

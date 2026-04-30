@@ -5,6 +5,7 @@ import { ToolBadge } from '@/components/tool-badge'
 import { formatAttributionLabel } from '@/lib/services/marketing-attribution'
 import { SurfaceBadge } from '@/components/ui/surface-badge'
 import { getSurfaceLabel } from '@/lib/dashboard/surface-labels'
+import { HumanReviewBanner } from './human-review-banner'
 
 export const revalidate = 0
 
@@ -110,6 +111,13 @@ export default async function ConversationDetailPage({ params }: Params) {
             <span>Started {formatDate(conversation.started_at)}</span>
           </div>
         </header>
+
+        {conversation.human_review_pause && (
+          <HumanReviewBanner
+            conversationId={conversation.id}
+            pause={conversation.human_review_pause}
+          />
+        )}
 
         {conversation.summary && (
           <div

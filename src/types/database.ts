@@ -124,6 +124,47 @@ export type Database = {
           },
         ]
       }
+      conversation_human_review_pauses: {
+        Row: {
+          cleared_at: string | null
+          cleared_by: string | null
+          conversation_id: string
+          id: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          severity: string
+        }
+        Insert: {
+          cleared_at?: string | null
+          cleared_by?: string | null
+          conversation_id: string
+          id?: string
+          reason: string
+          requested_at?: string
+          requested_by?: string
+          severity?: string
+        }
+        Update: {
+          cleared_at?: string | null
+          cleared_by?: string | null
+          conversation_id?: string
+          id?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'conversation_human_review_pauses_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       flow_runtime_controls: {
         Row: {
           bot_paused: boolean

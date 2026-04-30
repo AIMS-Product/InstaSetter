@@ -13,7 +13,7 @@ describe('setter-v2 buildSystemPrompt', () => {
     expect(prompt).toContain('[setter-v2]')
   })
 
-  it('includes all 9 section headers', () => {
+  it('includes all 10 section headers', () => {
     const prompt = buildSystemPrompt(DEFAULT_OPTS)
     const expectedSections = [
       '## Persona',
@@ -21,6 +21,7 @@ describe('setter-v2 buildSystemPrompt', () => {
       '## Supported Markets',
       '## Qualification Criteria',
       '## Objection Handling',
+      '## Skeptical / Adversarial Playbook',
       '## Email Capture',
       '## Decision Routing',
       '## Summary Generation',
@@ -30,6 +31,21 @@ describe('setter-v2 buildSystemPrompt', () => {
     for (const section of expectedSections) {
       expect(prompt).toContain(section)
     }
+  })
+
+  it('places the skeptical playbook AFTER objections and BEFORE email capture', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    const objectionsIdx = prompt.indexOf('## Objection Handling')
+    const skepticalIdx = prompt.indexOf('## Skeptical / Adversarial Playbook')
+    const emailIdx = prompt.indexOf('## Email Capture')
+    expect(objectionsIdx).toBeGreaterThan(-1)
+    expect(skepticalIdx).toBeGreaterThan(objectionsIdx)
+    expect(skepticalIdx).toBeLessThan(emailIdx)
+  })
+
+  it('references the request_human_review tool inside the skeptical playbook', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toContain('request_human_review')
   })
 
   it('interpolates brand name into all relevant sections', () => {

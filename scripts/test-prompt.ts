@@ -25,6 +25,7 @@ async function loadPrompt(): Promise<string> {
     company,
     qualification,
     objections,
+    skeptical,
     emailCapture,
     routing,
     summary,
@@ -34,26 +35,21 @@ async function loadPrompt(): Promise<string> {
     import(join(sectionsDir, 'company-context')),
     import(join(sectionsDir, 'qualification')),
     import(join(sectionsDir, 'objections')),
+    import(join(sectionsDir, 'skeptical-playbook')),
     import(join(sectionsDir, 'email-capture')),
     import(join(sectionsDir, 'decision-routing')),
     import(join(sectionsDir, 'summary-generation')),
     import(join(sectionsDir, 'message-constraints')),
   ])
 
-  // P1.02 — load the pre-booking step via the resolver so the script mirrors
-  // what the live engine compiles (respects LIVE_PRE_BOOKING_STEP_ENABLED).
-  const preBookingResolverModule = await import(
-    join(process.cwd(), 'src/lib/services/pre-booking-resolver')
-  )
-  const preBookingStep =
-    preBookingResolverModule.resolveLivePreBookingStep('VendingPreneurs')
   const sections = [
     persona.buildPersona('VendingPreneurs'),
     company.buildCompanyContext('VendingPreneurs'),
     qualification.buildQualificationCriteria(),
     objections.buildObjectionHandling('VendingPreneurs'),
+    skeptical.buildSkepticalPlaybook(),
     emailCapture.buildEmailCapture(),
-    routing.buildDecisionRouting(undefined, preBookingStep),
+    routing.buildDecisionRouting(),
     summary.buildSummaryGeneration(),
     constraints.buildMessageConstraints(),
   ]
@@ -123,6 +119,22 @@ const TOOLS: Anthropic.Messages.Tool[] = [
       properties: {
         calendly_slot: { type: 'string' },
       },
+    },
+  },
+  {
+    name: 'request_human_review',
+    description:
+      "Use when the prospect's tone, pattern of questioning, or content escalates beyond what a peer-mentor reply can address. Pauses bot replies on this conversation until a human clears it.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        reason: { type: 'string' },
+        severity: {
+          type: 'string',
+          enum: ['concern', 'hostile', 'compliance'],
+        },
+      },
+      required: ['reason'],
     },
   },
 ]
@@ -548,121 +560,83 @@ const SCENARIOS: Scenario[] = [
     ],
   },
   {
-    // P1.02 — soft pre-booking rapport step
-    name: 'pre-booking-rapport-asked',
+    name: 'skeptical-answer-in-depth',
     description:
-      'Two qualifiers known with thin rapport — bot should ask ONE rapport question before sending the link, not the link itself',
+      'Spicy-but-recoverable skeptical question — bot should answer in depth and redirect, NOT escalate to human review.',
     messages: [
-      { role: 'user', content: 'hey saw your reel' },
       {
-        role: 'assistant',
-        content: "What's good! What area are you in?",
+        role: 'user',
+        content: 'How is this not just another scam course? Prove it to me.',
       },
-      { role: 'user', content: 'Dallas' },
-      {
-        role: 'assistant',
-        content:
-          'Dallas is a great market. Are you thinking side income or going full-time with this?',
-      },
-      { role: 'user', content: 'side income' },
     ],
     checks: [
       {
-        label: 'Does NOT send the booking link in this turn',
-        test: (r) => !/calendly|booking|grab a time|here.*link/i.test(r),
+        label: 'Does NOT call request_human_review',
+        test: (_r, tools) =>
+          !tools.some((t) => t.name === 'request_human_review'),
       },
       {
-        label:
-          'Asks a rapport-style question (interest, motivation, what got them looking)',
+        label: 'Acknowledges skepticism without being defensive',
         test: (r) =>
-          /\?/.test(r) &&
-          /interest|got you|drew you|why vending|what.*thinking|caught.*eye|sparked|why.*now|what.*looking/i.test(
+          /\bfair\b|skeptic|burned|understandable|been there|hear you|valid|real concern|comes up a lot/i.test(
             r
           ),
       },
       {
-        label: 'Single message, under 600 chars',
-        test: (r) => r.length < 600,
+        label:
+          'Mentions free/no-credit-card/booking call as a credibility move',
+        test: (r) =>
+          /free|no credit card|no \$|call|chat|talk it through|find out|see if/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Stays under 2 sentences (peer-mentor brevity)',
+        test: (r) => r.split(/(?<=[.!?])\s+/).length <= 3,
       },
     ],
   },
   {
-    // P1.02 — soft pre-booking rapport step (skip path)
-    name: 'pre-booking-rapport-skipped',
+    name: 'skeptical-escalate',
     description:
-      'Sofia case — prospect volunteered location + motivation + a story-quality detail. Bot should SKIP rapport and send the link.',
+      'Compliance-level escalation — prospect alleges fraud against a relative. Bot must call request_human_review and stop replying.',
     messages: [
       {
         role: 'user',
         content:
-          "Hey, I'm in Dallas and got about 7K saved up. I've been looking for something steady that doesn't take all my time, vending feels right.",
+          "your program scammed my brother last year and took $3000 from him. refund him now or i'm filing a complaint with the AG's office.",
       },
     ],
     checks: [
       {
-        label: 'Sends the booking link (or invites to book a call)',
-        test: (r) =>
-          /calendly|grab a time|here.*link|here['’]s.*link|book.*call|book.*time|jump on a call/i.test(
-            r
-          ),
+        label: 'Calls request_human_review in the same response',
+        test: (_r, tools) =>
+          tools.some((t) => t.name === 'request_human_review'),
       },
       {
-        label: 'Mirrors back location or motivation (Dallas / steady / 7K)',
-        test: (r) => /dallas|steady|7k|7,000|saved/i.test(r),
-      },
-      {
-        label: 'Does NOT ask another rapport question before the link',
-        test: (r) => {
-          const linkIdx = r.search(
-            /calendly|grab a time|here.*link|here['']s.*link|book.*call|book.*time|jump on a call/i
-          )
-          if (linkIdx === -1) return false
-          const before = r.slice(0, linkIdx)
-          // Allow the mirror-back, but reject another standalone "what got you" probe.
-          return !/what got you|what.*interest.*you|why.*vending\b/i.test(
-            before
-          )
+        label:
+          'request_human_review carries severity hostile or compliance (not concern)',
+        test: (_r, tools) => {
+          const tool = tools.find((t) => t.name === 'request_human_review')
+          if (!tool) return false
+          const severity = String(tool.input.severity ?? '')
+          return severity === 'hostile' || severity === 'compliance'
         },
       },
-    ],
-  },
-  {
-    // P1.02 — soft pre-booking rapport step (ignore path)
-    name: 'pre-booking-rapport-ignored',
-    description:
-      'Bot already asked the rapport question; prospect ignored or deflected. Bot must send the link in the next message — no looping.',
-    messages: [
-      { role: 'user', content: 'saw your vending stuff' },
-      { role: 'assistant', content: "What's good — where you based?" },
-      { role: 'user', content: 'phoenix' },
       {
-        role: 'assistant',
-        content:
-          'Phoenix is solid. Side income or looking to scale into something bigger?',
+        label: 'Includes a non-empty reason field for the operator',
+        test: (_r, tools) => {
+          const tool = tools.find((t) => t.name === 'request_human_review')
+          if (!tool) return false
+          const reason = String(tool.input.reason ?? '').trim()
+          return reason.length > 10
+        },
       },
-      { role: 'user', content: 'side income' },
       {
-        role: 'assistant',
-        content: 'Got it. Quick one — what got you interested in vending?',
-      },
-      { role: 'user', content: 'idk just looks easy' },
-    ],
-    checks: [
-      {
-        label: 'Sends the booking link (does not loop on rapport)',
+        label: 'Sends a short warm bridge message (no defensive arguing)',
         test: (r) =>
-          /calendly|grab a time|here.*link|here['’]?s the link|book.*time|jump on a call/i.test(
-            r
-          ),
-      },
-      {
-        label: 'Does NOT re-ask the rapport question',
-        test: (r) =>
-          !/what got you interested|why vending|what.*caught.*eye/i.test(r),
-      },
-      {
-        label: 'Mirrors known qualifiers (Phoenix / side income)',
-        test: (r) => /phoenix|side income|side.*income/i.test(r),
+          r.length < 400 &&
+          /team|come back|get back|reach (out|back)|someone/i.test(r),
       },
     ],
   },

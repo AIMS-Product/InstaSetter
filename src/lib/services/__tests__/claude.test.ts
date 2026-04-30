@@ -44,13 +44,14 @@ describe('buildClaudeRequest', () => {
     expect(buildClaudeRequest(prompt, msgs).max_tokens).toBe(1024)
   })
 
-  it('defines all 4 tools', () => {
+  it('defines all 5 tools', () => {
     const req = buildClaudeRequest(prompt, msgs)
     const names = req.tools.map((t) => t.name)
     expect(names).toContain('capture_email')
     expect(names).toContain('qualify_lead')
     expect(names).toContain('book_call')
     expect(names).toContain('generate_summary')
+    expect(names).toContain('request_human_review')
   })
 
   it('all tools have descriptions', () => {
@@ -118,5 +119,22 @@ describe('buildClaudeRequest', () => {
       description: expect.stringContaining('Calendly time slot'),
     })
     expect(tool?.input_schema.required).toBeUndefined()
+  })
+
+  it('request_human_review has required reason and optional severity enum', () => {
+    const tool = buildClaudeRequest(prompt, msgs).tools.find(
+      (t) => t.name === 'request_human_review'
+    )
+    expect(tool).toBeDefined()
+    expect(tool?.description).toMatch(/human/i)
+
+    const props = getProps(tool)
+    expect(props.reason).toMatchObject({ type: 'string' })
+    expect(props.severity).toMatchObject({
+      type: 'string',
+      enum: ['concern', 'hostile', 'compliance'],
+    })
+    expect(tool?.input_schema.required).toContain('reason')
+    expect(tool?.input_schema.required).not.toContain('severity')
   })
 })

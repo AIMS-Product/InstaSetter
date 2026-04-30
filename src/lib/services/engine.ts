@@ -24,6 +24,11 @@ import { syncLeadToClose } from '@/lib/services/sync-lead-to-close'
 import { flagOn } from '@/lib/services/flags'
 import { getActiveFlowVersion } from '@/lib/services/published-flows'
 import { DEFAULT_FLOW_ID } from '@/lib/flows'
+import {
+  getActiveConversationPause,
+  pauseConversationForHumanReview,
+  type HumanReviewSeverity,
+} from '@/lib/services/conversation-pauses'
 import type { Json } from '@/types/database'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
@@ -145,6 +150,15 @@ export async function processMessage(
 
   // If duplicate, skip processing
   if (storeResult.isDuplicate) {
+    return { success: true, data: { reply: undefined, conversationId } }
+  }
+
+  // Step 3b: Per-conversation human-review pause check. If this conversation
+  // was flagged via the `request_human_review` tool, the operator owns it
+  // until they clear the pause. The inbound is already stored so they have
+  // full context — we just skip Claude.
+  const activePause = await getActiveConversationPause(conversationId)
+  if (activePause) {
     return { success: true, data: { reply: undefined, conversationId } }
   }
 
@@ -299,7 +313,20 @@ const KNOWN_TOOLS = new Set([
   'generate_summary',
   'qualify_lead',
   'book_call',
+  'request_human_review',
 ])
+
+const VALID_SEVERITIES: HumanReviewSeverity[] = [
+  'concern',
+  'hostile',
+  'compliance',
+]
+
+function coerceSeverity(value: unknown): HumanReviewSeverity {
+  return VALID_SEVERITIES.includes(value as HumanReviewSeverity)
+    ? (value as HumanReviewSeverity)
+    : 'concern'
+}
 
 export async function routeLeadEvents(
   client: SupabaseClient<Database>,
@@ -401,6 +428,39 @@ export async function routeLeadEvents(
 
         case 'book_call': {
           // Logged to integration_events with status='pending'
+          break
+        }
+
+        case 'request_human_review': {
+          // Mirrors the setContactTags fire-and-forget pattern: the operator
+          // pause is the source of truth, and a write failure here is logged
+          // via integration_events but never propagates to the bot reply path.
+          const reason =
+            typeof call.input.reason === 'string' && call.input.reason.trim()
+              ? call.input.reason
+              : 'Bot requested human review (no reason provided).'
+          const severity = coerceSeverity(call.input.severity)
+
+          const pauseResult = await pauseConversationForHumanReview({
+            conversationId,
+            reason,
+            severity,
+            requestedBy: 'bot',
+          })
+
+          if (!pauseResult.success) {
+            await logIntegrationEvent(client, {
+              contactId,
+              conversationId,
+              integration,
+              action: 'request_human_review',
+              status: 'failed',
+              errorMessage: pauseResult.error,
+              payload: call.input,
+            })
+            eventsProcessed++
+            continue
+          }
           break
         }
       }
