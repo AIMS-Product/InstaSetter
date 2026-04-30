@@ -206,3 +206,11 @@ export function getFlowRationaleVariant(): FlowRationaleVariant {
     NEXT_PUBLIC_FLOW_RATIONALE: process.env.NEXT_PUBLIC_FLOW_RATIONALE,
   }).NEXT_PUBLIC_FLOW_RATIONALE
 }
+
+// Feature flag for the persisted version history + warning modal flow (P4.04).
+// Default: off. Flip via NEXT_PUBLIC_FLOW_VERSIONS=true on a per-environment
+// basis. The Versions page falls back to the existing release-status cards
+// when the flag is off, and the warning modal becomes inert.
+export function isFlowVersionsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_FLOW_VERSIONS === 'true'
+}

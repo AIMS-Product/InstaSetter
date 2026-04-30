@@ -21,6 +21,7 @@ import {
 import { buildInitialFlow } from '../store'
 import { BLOCK_TYPES, type BlockType } from '../types'
 import {
+  diffFlowDraft,
   extractPersistedFlowDraft,
   isSuspectFlowDraft,
   normalizePersistedFlowDraft,
@@ -362,5 +363,72 @@ describe('draft persistence helpers', () => {
     expect(
       isSuspectFlowDraft(persistedDraft(), { brand: 'VendingPreneurs' })
     ).toBe(false)
+  })
+})
+
+describe('diffFlowDraft', () => {
+  it('returns an empty list for identical drafts', () => {
+    const a = persistedDraft()
+    expect(diffFlowDraft(a, a)).toEqual([])
+  })
+
+  it('detects changes to bot.persona', () => {
+    const a = persistedDraft()
+    const b = persistedDraft({
+      bot: { ...a.bot, persona: 'New voice' },
+    })
+    expect(diffFlowDraft(a, b)).toContain('bot.persona')
+  })
+
+  it('detects changes to email post-email confirmation copy', () => {
+    const baseFlowWithEmail: Flow = {
+      ...baseFlow,
+      nodes: [emailNode],
+    }
+    const a = persistedDraft({ flow: baseFlowWithEmail })
+    const b = persistedDraft({
+      flow: {
+        ...baseFlowWithEmail,
+        nodes: [
+          {
+            ...emailNode,
+            blockConfig: {
+              ...(emailNode.blockConfig as EmailConfig),
+              kind: 'email',
+              postEmailBehavior: {
+                ...DEFAULT_POST_EMAIL_BEHAVIOR,
+                confirmationMessage: 'A new confirmation line.',
+              },
+            },
+          },
+        ],
+      },
+    })
+    const changes = diffFlowDraft(a, b)
+    expect(
+      changes.some((path) =>
+        path.startsWith('flow.nodes.email.blockConfig.postEmailBehavior')
+      )
+    ).toBe(true)
+  })
+
+  it('keys nodes by id so reordering does not show every node as dirty', () => {
+    const flowA: Flow = {
+      ...baseFlow,
+      nodes: [
+        { ...baseNode },
+        { ...baseNode, id: 'qualifier', type: 'qualifier' },
+      ],
+    }
+    const flowB: Flow = {
+      ...baseFlow,
+      nodes: [
+        { ...baseNode, id: 'qualifier', type: 'qualifier' },
+        { ...baseNode },
+      ],
+    }
+    const a = persistedDraft({ flow: flowA })
+    const b = persistedDraft({ flow: flowB })
+    expect(diffFlowDraft(a, b)).toEqual([])
   })
 })

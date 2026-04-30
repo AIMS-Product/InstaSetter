@@ -242,6 +242,78 @@ export type Database = {
         }
         Relationships: []
       }
+      ins_flow_draft_versions: {
+        Row: {
+          brand: string
+          created_at: string
+          created_by: string | null
+          flow_id: string
+          id: string
+          reason: string | null
+          schema_version: number
+          state: Json
+          version_number: number
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          created_by?: string | null
+          flow_id: string
+          id?: string
+          reason?: string | null
+          schema_version?: number
+          state: Json
+          version_number: number
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          created_by?: string | null
+          flow_id?: string
+          id?: string
+          reason?: string | null
+          schema_version?: number
+          state?: Json
+          version_number?: number
+        }
+        Relationships: []
+      }
+      ins_flow_draft_audit: {
+        Row: {
+          action: string
+          actor_email: string | null
+          brand: string
+          changed_field_ids: string[]
+          created_at: string
+          flow_id: string
+          id: string
+          reason: string | null
+          version_number: number | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          brand: string
+          changed_field_ids?: string[]
+          created_at?: string
+          flow_id: string
+          id?: string
+          reason?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          brand?: string
+          changed_field_ids?: string[]
+          created_at?: string
+          flow_id?: string
+          id?: string
+          reason?: string | null
+          version_number?: number | null
+        }
+        Relationships: []
+      }
       lead_events: {
         Row: {
           contact_id: string

@@ -1,8 +1,14 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { isFlowVersionsEnabled } from '@/lib/config'
+import { ConfirmHighImpactModal } from '@/components/ui/confirm-high-impact-modal'
+import {
+  listFlowDraftVersionsAction,
+  restoreFlowDraftVersionAction,
+} from '../actions'
 import { SANS_FAMILY, SERIF_FAMILY } from '../shared-data'
-import { useFlowState } from '../store'
+import { useFlowActions, useFlowState } from '../store'
 import {
   RELEASE_STATUS_INTRO,
   StatusBadge,
@@ -16,12 +22,99 @@ import type { Palette } from '../types'
 import { isFlowCompileEnabled } from '../directions/b-stage/simulator-overrides'
 import RPHeader from './header'
 
-export default function PageVersions({ p }: { p: Palette }) {
+interface VersionRowSummary {
+  versionNumber: number
+  reason: string | null
+  createdBy: string | null
+  createdAt: string
+}
+
+export default function PageVersions({
+  p,
+  brand,
+  flowId,
+  actorEmail = null,
+}: {
+  p: Palette
+  brand?: string
+  flowId?: string
+  actorEmail?: string | null
+}) {
   const state = useFlowState()
+  const actions = useFlowActions()
   const draftStatus = getDraftWorkspaceStatus(state.dirtySincePublish)
   const runtimeStatus = getLiveRuntimeStatus()
   const compileEnabled = isFlowCompileEnabled()
   const simulatorStatus = getSimulatorStatus(compileEnabled)
+  const versionsEnabled = isFlowVersionsEnabled()
+
+  const resolvedBrand = brand ?? state.flow.brand
+  const resolvedFlowId = flowId ?? state.flow.id
+
+  const [versions, setVersions] = useState<VersionRowSummary[]>([])
+  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>(
+    versionsEnabled ? 'loading' : 'idle'
+  )
+  const [error, setError] = useState<string | null>(null)
+  const [pendingRestore, setPendingRestore] = useState<number | null>(null)
+
+  const loadVersions = useCallback(() => {
+    if (!versionsEnabled) return
+    void listFlowDraftVersionsAction({
+      brand: resolvedBrand,
+      flowId: resolvedFlowId,
+    }).then((result) => {
+      if (!result.success) {
+        setError(result.error)
+        setStatus('error')
+        return
+      }
+      setVersions(
+        result.data.map((row) => ({
+          versionNumber: row.versionNumber,
+          reason: row.reason,
+          createdBy: row.createdBy,
+          createdAt: row.createdAt,
+        }))
+      )
+      setError(null)
+      setStatus('ready')
+    })
+  }, [resolvedBrand, resolvedFlowId, versionsEnabled])
+
+  useEffect(() => {
+    if (!versionsEnabled) return
+    loadVersions()
+  }, [loadVersions, versionsEnabled])
+
+  const handleRestore = useCallback(
+    async (reason: string) => {
+      if (pendingRestore === null) return
+      const result = await restoreFlowDraftVersionAction({
+        brand: resolvedBrand,
+        flowId: resolvedFlowId,
+        versionNumber: pendingRestore,
+        reason: reason || undefined,
+        actorEmail,
+      })
+      if (!result.success) {
+        actions.toast(result.error)
+        return
+      }
+      actions.hydrate(result.data.restored)
+      actions.toast(`Restored draft to v${pendingRestore}`)
+      setPendingRestore(null)
+      loadVersions()
+    },
+    [
+      actions,
+      actorEmail,
+      loadVersions,
+      pendingRestore,
+      resolvedBrand,
+      resolvedFlowId,
+    ]
+  )
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -114,6 +207,81 @@ export default function PageVersions({ p }: { p: Palette }) {
             </StatusCard>
           </div>
 
+          {versionsEnabled && (
+            <InfoSection p={p} title="Saved versions">
+              {status === 'loading' && (
+                <p style={{ color: p.ink3, fontSize: 13 }}>
+                  Loading saved versions…
+                </p>
+              )}
+              {status === 'error' && error && (
+                <p style={{ color: '#8E2A2A', fontSize: 13 }}>{error}</p>
+              )}
+              {status === 'ready' && versions.length === 0 && (
+                <p style={{ color: p.ink3, fontSize: 13 }}>
+                  No saved versions yet. The first high-impact save will create
+                  one.
+                </p>
+              )}
+              {versions.length > 0 && (
+                <table
+                  style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: 13,
+                    color: p.ink2,
+                  }}
+                >
+                  <thead>
+                    <tr style={{ textAlign: 'left' }}>
+                      <th style={cellHeaderStyle}>Version</th>
+                      <th style={cellHeaderStyle}>Saved by</th>
+                      <th style={cellHeaderStyle}>Reason</th>
+                      <th style={cellHeaderStyle}>When</th>
+                      <th style={{ ...cellHeaderStyle, textAlign: 'right' }} />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {versions.map((row) => (
+                      <tr
+                        key={row.versionNumber}
+                        style={{ borderTop: `1px solid ${p.line}` }}
+                      >
+                        <td style={cellStyle}>v{row.versionNumber}</td>
+                        <td style={cellStyle}>{row.createdBy ?? 'system'}</td>
+                        <td style={cellStyle}>
+                          {row.reason ?? (
+                            <span style={{ color: p.ink3 }}>(no reason)</span>
+                          )}
+                        </td>
+                        <td style={cellStyle}>
+                          {formatTimestamp(row.createdAt)}
+                        </td>
+                        <td style={{ ...cellStyle, textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            onClick={() => setPendingRestore(row.versionNumber)}
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: 6,
+                              border: `1px solid ${p.line}`,
+                              background: '#FFFFFF',
+                              color: p.ink,
+                              fontSize: 12,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Restore
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </InfoSection>
+          )}
+
           <InfoSection p={p} title="Recommended workflow today">
             <ol
               style={{
@@ -172,8 +340,39 @@ export default function PageVersions({ p }: { p: Palette }) {
           </InfoSection>
         </div>
       </div>
+
+      <ConfirmHighImpactModal
+        open={pendingRestore !== null}
+        mode="restore"
+        onConfirm={handleRestore}
+        onDiscard={() => setPendingRestore(null)}
+      />
     </div>
   )
+}
+
+const cellHeaderStyle = {
+  padding: '8px 12px',
+  fontSize: 11,
+  fontWeight: 600,
+  textTransform: 'uppercase' as const,
+  color: '#6B6A7E',
+  letterSpacing: 0.4,
+}
+
+const cellStyle = {
+  padding: '10px 12px',
+  fontSize: 13,
+  lineHeight: 1.5,
+}
+
+function formatTimestamp(iso: string): string {
+  try {
+    const date = new Date(iso)
+    return date.toLocaleString()
+  } catch {
+    return iso
+  }
 }
 
 function InfoSection({

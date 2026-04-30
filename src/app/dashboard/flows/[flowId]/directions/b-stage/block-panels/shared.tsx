@@ -152,6 +152,7 @@ export function LockPill({
             escalation: isAdmin
               ? FLOW_BUILDER_LABELS.locks.askJames.display
               : null,
+            highImpact: kind === 'safety',
           }}
           anchorRef={buttonRef}
           onClose={() => setOpen(false)}

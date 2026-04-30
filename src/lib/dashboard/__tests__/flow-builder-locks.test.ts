@@ -5,8 +5,11 @@ import { describe, expect, it } from 'vitest'
 import {
   FLOW_BUILDER_LOCKS,
   LOCK_KINDS,
+  getHighImpactAdminAllowlist,
   getLock,
   getLockBySourceHint,
+  isFieldPathHighImpact,
+  resolveLockIdForFieldPath,
   type LockEntry,
 } from '../flow-builder-locks'
 
@@ -163,6 +166,61 @@ describe('FLOW_BUILDER_LOCKS — helpers', () => {
 
   it('getLockBySourceHint returns undefined for unknown paths', () => {
     expect(getLockBySourceHint('nonexistent/path.ts')).toBeUndefined()
+  })
+})
+
+describe('FLOW_BUILDER_LOCKS — highImpact flag (P4.04)', () => {
+  it('every entry declares a boolean highImpact flag', () => {
+    for (const entry of Object.values(FLOW_BUILDER_LOCKS)) {
+      expect(typeof entry.highImpact, `${entry.id}.highImpact`).toBe('boolean')
+    }
+  })
+
+  it('every safety-locked entry is high-impact', () => {
+    for (const entry of Object.values(FLOW_BUILDER_LOCKS)) {
+      if (entry.kind === 'safety') {
+        expect(
+          entry.highImpact,
+          `${entry.id} is a safety lock and must be highImpact`
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('every high-impact admin entry is on the explicit allowlist', () => {
+    const allowlist = getHighImpactAdminAllowlist()
+    for (const entry of Object.values(FLOW_BUILDER_LOCKS)) {
+      if (entry.kind === 'admin' && entry.highImpact) {
+        expect(
+          allowlist.has(entry.id),
+          `${entry.id} is admin+highImpact but not on the allowlist`
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('resolveLockIdForFieldPath maps post-email confirmation to email captureTriggers', () => {
+    const id = resolveLockIdForFieldPath(
+      'flow.nodes.email.blockConfig.postEmailBehavior.confirmationMessage'
+    )
+    expect(id).toBe('email.captureTriggers')
+    expect(
+      isFieldPathHighImpact(
+        'flow.nodes.email.blockConfig.postEmailBehavior.confirmationMessage'
+      )
+    ).toBe(true)
+  })
+
+  it('resolveLockIdForFieldPath maps persona body to bot.persona.body', () => {
+    expect(resolveLockIdForFieldPath('bot.persona')).toBe('bot.persona.body')
+    expect(isFieldPathHighImpact('bot.persona')).toBe(true)
+  })
+
+  it('resolveLockIdForFieldPath returns undefined for unrelated paths', () => {
+    expect(
+      resolveLockIdForFieldPath('flow.nodes.opening.guidance')
+    ).toBeUndefined()
+    expect(isFieldPathHighImpact('flow.nodes.opening.guidance')).toBe(false)
   })
 })
 
