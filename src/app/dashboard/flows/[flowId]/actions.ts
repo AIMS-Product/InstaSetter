@@ -74,7 +74,9 @@ const flowRunsFilterSchema = z
     search: z.string().trim().max(80).optional(),
     dateFrom: z.string().datetime().optional(),
     dateTo: z.string().datetime().optional(),
-    status: z.enum(['all', 'active', 'stalled', 'completed']).optional(),
+    status: z
+      .enum(['all', 'active', 'stalled', 'completed', 'flagged'])
+      .optional(),
   })
   .strict()
 

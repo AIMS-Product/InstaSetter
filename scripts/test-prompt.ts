@@ -25,6 +25,7 @@ async function loadPrompt(): Promise<string> {
     company,
     qualification,
     objections,
+    skeptical,
     emailCapture,
     routing,
     summary,
@@ -34,6 +35,7 @@ async function loadPrompt(): Promise<string> {
     import(join(sectionsDir, 'company-context')),
     import(join(sectionsDir, 'qualification')),
     import(join(sectionsDir, 'objections')),
+    import(join(sectionsDir, 'skeptical-playbook')),
     import(join(sectionsDir, 'email-capture')),
     import(join(sectionsDir, 'decision-routing')),
     import(join(sectionsDir, 'summary-generation')),
@@ -45,6 +47,7 @@ async function loadPrompt(): Promise<string> {
     company.buildCompanyContext('VendingPreneurs'),
     qualification.buildQualificationCriteria(),
     objections.buildObjectionHandling('VendingPreneurs'),
+    skeptical.buildSkepticalPlaybook(),
     emailCapture.buildEmailCapture(),
     routing.buildDecisionRouting(),
     summary.buildSummaryGeneration(),
@@ -116,6 +119,22 @@ const TOOLS: Anthropic.Messages.Tool[] = [
       properties: {
         calendly_slot: { type: 'string' },
       },
+    },
+  },
+  {
+    name: 'request_human_review',
+    description:
+      "Use when the prospect's tone, pattern of questioning, or content escalates beyond what a peer-mentor reply can address. Pauses bot replies on this conversation until a human clears it.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        reason: { type: 'string' },
+        severity: {
+          type: 'string',
+          enum: ['concern', 'hostile', 'compliance'],
+        },
+      },
+      required: ['reason'],
     },
   },
 ]
@@ -537,6 +556,87 @@ const SCENARIOS: Scenario[] = [
           const notes = String(summary.input.key_notes ?? '')
           return /HUMAN_REVIEW_NEEDED/i.test(notes)
         },
+      },
+    ],
+  },
+  {
+    name: 'skeptical-answer-in-depth',
+    description:
+      'Spicy-but-recoverable skeptical question — bot should answer in depth and redirect, NOT escalate to human review.',
+    messages: [
+      {
+        role: 'user',
+        content: 'How is this not just another scam course? Prove it to me.',
+      },
+    ],
+    checks: [
+      {
+        label: 'Does NOT call request_human_review',
+        test: (_r, tools) =>
+          !tools.some((t) => t.name === 'request_human_review'),
+      },
+      {
+        label: 'Acknowledges skepticism without being defensive',
+        test: (r) =>
+          /\bfair\b|skeptic|burned|understandable|been there|hear you|valid|real concern|comes up a lot/i.test(
+            r
+          ),
+      },
+      {
+        label:
+          'Mentions free/no-credit-card/booking call as a credibility move',
+        test: (r) =>
+          /free|no credit card|no \$|call|chat|talk it through|find out|see if/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Stays under 2 sentences (peer-mentor brevity)',
+        test: (r) => r.split(/(?<=[.!?])\s+/).length <= 3,
+      },
+    ],
+  },
+  {
+    name: 'skeptical-escalate',
+    description:
+      'Compliance-level escalation — prospect alleges fraud against a relative. Bot must call request_human_review and stop replying.',
+    messages: [
+      {
+        role: 'user',
+        content:
+          "your program scammed my brother last year and took $3000 from him. refund him now or i'm filing a complaint with the AG's office.",
+      },
+    ],
+    checks: [
+      {
+        label: 'Calls request_human_review in the same response',
+        test: (_r, tools) =>
+          tools.some((t) => t.name === 'request_human_review'),
+      },
+      {
+        label:
+          'request_human_review carries severity hostile or compliance (not concern)',
+        test: (_r, tools) => {
+          const tool = tools.find((t) => t.name === 'request_human_review')
+          if (!tool) return false
+          const severity = String(tool.input.severity ?? '')
+          return severity === 'hostile' || severity === 'compliance'
+        },
+      },
+      {
+        label: 'Includes a non-empty reason field for the operator',
+        test: (_r, tools) => {
+          const tool = tools.find((t) => t.name === 'request_human_review')
+          if (!tool) return false
+          const reason = String(tool.input.reason ?? '').trim()
+          return reason.length > 10
+        },
+      },
+      {
+        label: 'Sends a short warm bridge message (no defensive arguing)',
+        test: (r) =>
+          r.length < 400 &&
+          /team|come back|get back|reach (out|back)|someone/i.test(r),
       },
     ],
   },

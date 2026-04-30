@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role'
 export type {
   ConversationDetail,
   ConversationEvent,
+  ConversationHumanReviewPauseSummary,
   ConversationListItem,
   ConversationMessage,
   TimelineItem,
@@ -12,6 +13,7 @@ export { interleave } from './conversation-viewer-types'
 
 import type {
   ConversationDetail,
+  ConversationHumanReviewPauseSummary,
   ConversationListItem,
 } from './conversation-viewer-types'
 
@@ -109,6 +111,14 @@ export async function listConversations(
     )
     .in('conversation_id', conversationIds)
 
+  const { data: pauseRows } = await client
+    .from('conversation_human_review_pauses')
+    .select(
+      'conversation_id, reason, severity, requested_at, requested_by, cleared_at'
+    )
+    .in('conversation_id', conversationIds)
+    .is('cleared_at', null)
+
   const messagesByConv = new Map<
     string,
     { content: string; created_at: string; count: number }
@@ -149,6 +159,12 @@ export async function listConversations(
     (attributions ?? []).map((row) => [row.conversation_id, row])
   )
 
+  const pauseByConv = new Map<string, ConversationHumanReviewPauseSummary>()
+  for (const row of pauseRows ?? []) {
+    if (row.cleared_at) continue
+    pauseByConv.set(row.conversation_id, normaliseRowPause(row))
+  }
+
   return convs.map((c) => {
     const lastMsg = messagesByConv.get(c.id)
     const contact = Array.isArray(c.contacts) ? c.contacts[0] : c.contacts
@@ -165,6 +181,7 @@ export async function listConversations(
       last_message_at: lastMsg?.created_at ?? null,
       last_message_preview: lastMsg?.content.slice(0, 120) ?? null,
       attribution: attributionByConv.get(c.id) ?? null,
+      human_review_pause: pauseByConv.get(c.id) ?? null,
       contact: {
         id: contact?.id ?? '',
         instagram_handle: contact?.instagram_handle ?? 'unknown',
@@ -172,6 +189,25 @@ export async function listConversations(
       },
     }
   })
+}
+
+function normaliseRowPause(row: {
+  reason: string
+  severity: string
+  requested_at: string
+  requested_by: string
+}): ConversationHumanReviewPauseSummary {
+  const severity =
+    row.severity === 'hostile' || row.severity === 'compliance'
+      ? row.severity
+      : 'concern'
+  const requestedBy = row.requested_by === 'operator' ? 'operator' : 'bot'
+  return {
+    reason: row.reason,
+    severity,
+    requestedAt: row.requested_at,
+    requestedBy,
+  }
 }
 
 export interface GetConversationOptions {
@@ -232,6 +268,15 @@ export async function getConversation(
     .eq('conversation_id', conversationId)
     .maybeSingle()
 
+  const { data: pauseRow } = await client
+    .from('conversation_human_review_pauses')
+    .select('reason, severity, requested_at, requested_by, cleared_at')
+    .eq('conversation_id', conversationId)
+    .is('cleared_at', null)
+    .order('requested_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   const contact = Array.isArray(conv.contacts)
     ? conv.contacts[0]
     : conv.contacts
@@ -251,6 +296,8 @@ export async function getConversation(
       email: contact?.email ?? null,
     },
     attribution: attribution ?? null,
+    human_review_pause:
+      pauseRow && !pauseRow.cleared_at ? normaliseRowPause(pauseRow) : null,
     // Re-sort ascending so callers receive chronological order — the desc
     // + limit query above is just a "keep the latest N" optimisation.
     messages: (messagesRes.data ?? [])

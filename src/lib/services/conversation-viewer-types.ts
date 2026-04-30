@@ -1,6 +1,13 @@
 // Pure types and client-safe helpers for conversation viewer.
 // The server-only fetchers live in ./conversation-viewer.ts.
 
+export interface ConversationHumanReviewPauseSummary {
+  reason: string
+  severity: 'concern' | 'hostile' | 'compliance'
+  requestedAt: string
+  requestedBy: 'bot' | 'operator'
+}
+
 export interface ConversationListItem {
   id: string
   flow_id: string | null
@@ -14,6 +21,7 @@ export interface ConversationListItem {
   last_message_at: string | null
   last_message_preview: string | null
   attribution: ConversationAttribution | null
+  human_review_pause: ConversationHumanReviewPauseSummary | null
   contact: {
     id: string
     instagram_handle: string
@@ -62,6 +70,7 @@ export interface ConversationDetail {
     email: string | null
   }
   attribution: ConversationAttribution | null
+  human_review_pause: ConversationHumanReviewPauseSummary | null
   messages: ConversationMessage[]
   events: ConversationEvent[]
 }

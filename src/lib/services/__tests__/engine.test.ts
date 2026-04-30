@@ -11,6 +11,15 @@ vi.mock('@/lib/services/sendpulse', () => ({
   sendInstagramMessage: vi.fn(),
   pauseAutomation: vi.fn(),
 }))
+vi.mock('@/lib/services/conversation-pauses', () => ({
+  getActiveConversationPause: vi.fn(() => Promise.resolve(null)),
+  pauseConversationForHumanReview: vi.fn(() =>
+    Promise.resolve({ success: true })
+  ),
+  resumeConversationFromHumanReview: vi.fn(() =>
+    Promise.resolve({ success: true })
+  ),
+}))
 vi.mock('@/lib/config', () => ({
   config: {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -28,7 +37,7 @@ vi.mock('@/lib/config', () => ({
   }),
 }))
 
-import { processMessage } from '@/lib/services/engine'
+import { processMessage, routeLeadEvents } from '@/lib/services/engine'
 import {
   findOrCreateActiveConversation,
   loadPriorSummaries,
@@ -36,6 +45,10 @@ import {
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
 import { buildClaudeRequest, parseClaudeResponse } from '@/lib/services/claude'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
+import {
+  getActiveConversationPause,
+  pauseConversationForHumanReview,
+} from '@/lib/services/conversation-pauses'
 import { createMockClient, asSupabaseClient } from '@/test/helpers'
 
 type ConversationRow = Database['public']['Tables']['conversations']['Row']
@@ -443,5 +456,113 @@ describe('processMessage', () => {
       })
     )
     expect(mockClient.from).not.toHaveBeenCalledWith('ins_flow_drafts')
+  })
+
+  it('short-circuits when an active human-review pause exists, but still stores the inbound', async () => {
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(getActiveConversationPause).mockResolvedValueOnce({
+      conversationId: 'conv-1',
+      reason: 'Hostile tone',
+      severity: 'hostile',
+      requestedAt: '2026-04-29T10:00:00Z',
+      requestedBy: 'bot',
+    })
+
+    const result = await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'still mad about this',
+      '2026-04-29T11:00:00Z',
+      mockClaude
+    )
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.reply).toBeUndefined()
+    }
+    // Inbound was stored so the human can see it
+    expect(storeMessage).toHaveBeenCalled()
+    // Claude was NOT called
+    expect(mockClaude).not.toHaveBeenCalled()
+  })
+})
+
+describe('routeLeadEvents — request_human_review', () => {
+  let mockClient: ReturnType<typeof createMockClient>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockClient = createMockClient()
+  })
+
+  it('writes a pause via pauseConversationForHumanReview when the bot calls request_human_review', async () => {
+    vi.mocked(pauseConversationForHumanReview).mockResolvedValueOnce({
+      success: true,
+    })
+
+    await routeLeadEvents(asSupabaseClient(mockClient), 'contact-1', 'conv-1', [
+      {
+        name: 'request_human_review',
+        toolUseId: 'tu-1',
+        input: { reason: 'Compliance flag', severity: 'compliance' },
+      },
+    ])
+
+    expect(pauseConversationForHumanReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'conv-1',
+        reason: 'Compliance flag',
+        severity: 'compliance',
+        requestedBy: 'bot',
+      })
+    )
+  })
+
+  it('defaults severity to "concern" when omitted', async () => {
+    vi.mocked(pauseConversationForHumanReview).mockResolvedValueOnce({
+      success: true,
+    })
+
+    await routeLeadEvents(asSupabaseClient(mockClient), 'contact-1', 'conv-1', [
+      {
+        name: 'request_human_review',
+        toolUseId: 'tu-2',
+        input: { reason: 'Just hard questions' },
+      },
+    ])
+
+    expect(pauseConversationForHumanReview).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'concern' })
+    )
+  })
+
+  it('does not throw when pause-write fails (fire-and-forget)', async () => {
+    vi.mocked(pauseConversationForHumanReview).mockResolvedValueOnce({
+      success: false,
+      error: 'db down',
+    })
+
+    await expect(
+      routeLeadEvents(asSupabaseClient(mockClient), 'contact-1', 'conv-1', [
+        {
+          name: 'request_human_review',
+          toolUseId: 'tu-3',
+          input: { reason: 'edge', severity: 'concern' },
+        },
+      ])
+    ).resolves.toEqual(expect.objectContaining({ success: true }))
   })
 })
