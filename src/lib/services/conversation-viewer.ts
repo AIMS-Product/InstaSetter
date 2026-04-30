@@ -76,6 +76,16 @@ export interface ListConversationsOptions {
    * counts stay exact. See P3.04 spec for rationale.
    */
   closeSyncStatus?: CloseSyncStatusFilter
+  /** Filter by `marketing_sources.id` — drives drill-through from the creative funnel report. */
+  sourceId?: string
+  /** Filter by `conversation_attributions.utm_source` — drill-through when the report groups by utm_source. */
+  utmSource?: string
+  /** Filter by `conversation_attributions.utm_medium`. */
+  utmMedium?: string
+  /** Filter by `conversation_attributions.utm_campaign`. */
+  utmCampaign?: string
+  /** Filter by `conversation_attributions.utm_content`. */
+  utmContent?: string
 }
 
 interface CloseSyncMatch {
@@ -189,6 +199,42 @@ export async function listConversations(
     }
   }
 
+  // When the caller filters by source/UTM, resolve the matching conversation
+  // IDs first via `conversation_attributions`, then narrow the conversations
+  // query with `.in('id', ...)`. Two queries instead of one join keeps the
+  // existing `select` projection (no nested attributes column) and dodges
+  // PostgREST's ambiguity around filtering through joined tables.
+  let attributionConversationIds: string[] | null = null
+  const hasAttributionFilter = Boolean(
+    options.sourceId ||
+    options.utmSource ||
+    options.utmMedium ||
+    options.utmCampaign ||
+    options.utmContent
+  )
+  if (hasAttributionFilter) {
+    let attrQuery = client
+      .from('conversation_attributions')
+      .select('conversation_id')
+    if (options.sourceId)
+      attrQuery = attrQuery.eq('source_id', options.sourceId)
+    if (options.utmSource)
+      attrQuery = attrQuery.eq('utm_source', options.utmSource)
+    if (options.utmMedium)
+      attrQuery = attrQuery.eq('utm_medium', options.utmMedium)
+    if (options.utmCampaign)
+      attrQuery = attrQuery.eq('utm_campaign', options.utmCampaign)
+    if (options.utmContent)
+      attrQuery = attrQuery.eq('utm_content', options.utmContent)
+    const { data: attrRows, error: attrError } = await attrQuery
+    if (attrError) {
+      console.error('listConversations attribution filter failed', attrError)
+      return []
+    }
+    attributionConversationIds = (attrRows ?? []).map((r) => r.conversation_id)
+    if (attributionConversationIds.length === 0) return []
+  }
+
   let query = client
     .from('conversations')
     .select(
@@ -198,6 +244,8 @@ export async function listConversations(
 
   if (options.flowId) query = query.eq('flow_id', options.flowId)
   if (contactIds) query = query.in('contact_id', contactIds)
+  if (attributionConversationIds)
+    query = query.in('id', attributionConversationIds)
   if (options.dateFrom) query = query.gte('started_at', options.dateFrom)
   if (options.dateTo) query = query.lte('started_at', options.dateTo)
   if (options.status && options.status !== 'all') {

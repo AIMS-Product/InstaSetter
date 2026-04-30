@@ -78,6 +78,11 @@ const flowRunsFilterSchema = z
     closeSyncStatus: z
       .enum(['sent', 'failed', 'pending', 'not_synced', 'any'])
       .optional(),
+    sourceId: z.string().trim().min(1).max(200).optional(),
+    utmSource: z.string().trim().min(1).max(200).optional(),
+    utmMedium: z.string().trim().min(1).max(200).optional(),
+    utmCampaign: z.string().trim().min(1).max(200).optional(),
+    utmContent: z.string().trim().min(1).max(200).optional(),
   })
   .strict()
 

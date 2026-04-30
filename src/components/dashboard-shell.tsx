@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  BarChart3,
   Home,
   Megaphone,
   MessageCircle,
@@ -32,6 +33,12 @@ const NAV: NavItem[] = [
     label: 'Lead Sources',
     Icon: Megaphone,
     matchPrefix: '/dashboard/marketing-sources',
+  },
+  {
+    href: '/dashboard/reports/creatives',
+    label: 'Reports',
+    Icon: BarChart3,
+    matchPrefix: '/dashboard/reports',
   },
   {
     href: '/dashboard/flows/ig-organic-dm',
@@ -66,6 +73,13 @@ function buildCrumbs(pathname: string): Crumb[] {
     return [
       { href: '/dashboard', label: 'Dashboard' },
       { label: 'Marketing Sources' },
+    ]
+  }
+  if (pathname === '/dashboard/reports/creatives') {
+    return [
+      { href: '/dashboard', label: 'Dashboard' },
+      { label: 'Reports' },
+      { label: 'Creative funnel' },
     ]
   }
   if (pathname.startsWith('/dashboard/flows/')) {
