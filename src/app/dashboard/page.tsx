@@ -1,10 +1,28 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { getDashboardMetrics } from '@/lib/services/dashboard-metrics'
+import {
+  getCloseHandoffMetric,
+  getDashboardMetrics,
+  type CloseHandoffWindow,
+} from '@/lib/services/dashboard-metrics'
 import { listConversations } from '@/lib/services/conversation-viewer'
 import { Chip } from '@/components/ui/chip'
+import { CloseHandoffTile } from './components/close-handoff-tile'
 
 export const revalidate = 0
+
+const VALID_WINDOWS: readonly CloseHandoffWindow[] = [
+  'this_week',
+  'last_week',
+  'this_month',
+] as const
+
+function parseWindow(value: string | undefined): CloseHandoffWindow {
+  if (value && (VALID_WINDOWS as readonly string[]).includes(value)) {
+    return value as CloseHandoffWindow
+  }
+  return 'this_week'
+}
 
 function timeAgo(iso: string | null): string {
   if (!iso) return '—'
@@ -18,7 +36,19 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(h / 24)}d ago`
 }
 
-export default function DashboardHome() {
+interface PageProps {
+  searchParams: Promise<{
+    window?: string | string[]
+  }>
+}
+
+export default async function DashboardHome({ searchParams }: PageProps) {
+  const params = await searchParams
+  const rawWindow = Array.isArray(params.window)
+    ? params.window[0]
+    : params.window
+  const window = parseWindow(rawWindow)
+
   return (
     <main
       id="main"
@@ -44,7 +74,7 @@ export default function DashboardHome() {
         </header>
 
         <Suspense fallback={<MetricsSkeleton />}>
-          <Metrics />
+          <Metrics window={window} />
         </Suspense>
 
         <Suspense fallback={<ActivitySkeleton />}>
@@ -55,8 +85,11 @@ export default function DashboardHome() {
   )
 }
 
-async function Metrics() {
-  const m = await getDashboardMetrics()
+async function Metrics({ window }: { window: CloseHandoffWindow }) {
+  const [m, closeHandoff] = await Promise.all([
+    getDashboardMetrics(),
+    getCloseHandoffMetric({ window }),
+  ])
   return (
     <section aria-labelledby="metrics-heading">
       <h2 id="metrics-heading" className="sr-only">
@@ -70,11 +103,12 @@ async function Metrics() {
           Last reply {timeAgo(m.lastMessageAt)}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard label="Active" value={m.conversations.active} />
         <KpiCard label="Today" value={m.conversations.today} />
         <KpiCard label="Last 7 days" value={m.conversations.last7d} />
         <KpiCard label="Last 30 days" value={m.conversations.last30d} />
+        <CloseHandoffTile metric={closeHandoff} window={window} />
       </div>
     </section>
   )
@@ -97,8 +131,8 @@ function MetricsSkeleton() {
   return (
     <section>
       <div className="mb-4 h-5 w-40 animate-pulse rounded bg-[#EEEFF3]" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
             className="h-20 animate-pulse rounded-xl border border-[#EEEFF3] bg-white"
