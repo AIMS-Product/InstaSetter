@@ -26,8 +26,7 @@ vi.mock('@/lib/config', () => ({
     SENDPULSE_BOT_ID: 'test',
     SENDPULSE_WEBHOOK_SECRET: 'test',
   }),
-  isLivePreBookingStepEnabled: () =>
-    process.env.LIVE_PRE_BOOKING_STEP_ENABLED !== 'false',
+  isLivePreBookingStepEnabled: () => true,
 }))
 
 import { processMessage } from '@/lib/services/engine'

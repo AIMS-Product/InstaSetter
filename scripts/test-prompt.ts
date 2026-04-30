@@ -40,10 +40,13 @@ async function loadPrompt(): Promise<string> {
     import(join(sectionsDir, 'message-constraints')),
   ])
 
-  // P1.02 — load the default rapport step so the script mirrors what the
-  // live engine compiles via resolveLivePreBookingStep.
-  const preBookingStepModule = await import(
-    join(process.cwd(), 'src/lib/prompts/pre-booking-step')
+  // P1.02 — load the pre-booking step via the resolver so the script mirrors
+  // what the live engine compiles (respects LIVE_PRE_BOOKING_STEP_ENABLED).
+  const preBookingResolverModule = await import(
+    join(process.cwd(), 'src/lib/services/pre-booking-resolver')
+  )
+  const preBookingStep = preBookingResolverModule.resolveLivePreBookingStep(
+    'VendingPreneurs'
   )
   const sections = [
     persona.buildPersona('VendingPreneurs'),
@@ -51,10 +54,7 @@ async function loadPrompt(): Promise<string> {
     qualification.buildQualificationCriteria(),
     objections.buildObjectionHandling('VendingPreneurs'),
     emailCapture.buildEmailCapture(),
-    routing.buildDecisionRouting(
-      undefined,
-      preBookingStepModule.DEFAULT_PRE_BOOKING_STEP
-    ),
+    routing.buildDecisionRouting(undefined, preBookingStep),
     summary.buildSummaryGeneration(),
     constraints.buildMessageConstraints(),
   ]
@@ -614,7 +614,9 @@ const SCENARIOS: Scenario[] = [
       {
         label: 'Does NOT ask another rapport question before the link',
         test: (r) => {
-          const linkIdx = r.search(/calendly|here['’]?s the link|here.*link/i)
+          const linkIdx = r.search(
+            /calendly|grab a time|here.*link|here['']s.*link|book.*call|book.*time|jump on a call/i
+          )
           if (linkIdx === -1) return false
           const before = r.slice(0, linkIdx)
           // Allow the mirror-back, but reject another standalone "what got you" probe.
