@@ -873,36 +873,6 @@ export type Database = {
           },
         ]
       }
-      ins_feature_flags: {
-        Row: {
-          created_at: string
-          enabled: boolean
-          key: string
-          scope: string
-          scope_id: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          created_at?: string
-          enabled?: boolean
-          key: string
-          scope: string
-          scope_id?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          created_at?: string
-          enabled?: boolean
-          key?: string
-          scope?: string
-          scope_id?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
       leads: {
         Row: {
           calculator_sent: boolean
