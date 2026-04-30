@@ -30,6 +30,7 @@ interface FlagCache {
   set(key: string, value: FlagCacheEntry): void
   delete(key: string): void
   clear(): void
+  keys(): IterableIterator<string>
 }
 
 function createMemoryCache(): FlagCache {
@@ -43,6 +44,7 @@ function createMemoryCache(): FlagCache {
       store.delete(key)
     },
     clear: () => store.clear(),
+    keys: () => store.keys(),
   }
 }
 
@@ -144,66 +146,21 @@ export async function setFlag(input: SetFlagInput): Promise<SetFlagResult> {
 
   const client = createServiceRoleClient()
 
-  const baseQuery = client
-    .from('ins_feature_flags')
-    .select('id, enabled')
-    .eq('key', key)
-    .eq('scope', scope)
+  // Call the DB-side RPC that atomically upserts the flag and inserts the audit
+  const { data: flagId, error } = await client.rpc('ins_set_feature_flag', {
+    p_key: key,
+    p_scope: scope,
+    p_scope_id: scopeId ?? null,
+    p_enabled: enabled,
+    p_actor: actor,
+    p_reason: reason ?? null,
+  })
 
-  const scopedQuery = scopeId
-    ? baseQuery.eq('scope_id', scopeId)
-    : baseQuery.is('scope_id', null)
-
-  const { data: existing } = await scopedQuery.maybeSingle()
-
-  const previouslyEnabled = existing?.enabled ?? false
-  const now = new Date().toISOString()
-
-  let flagId: string
-  if (existing) {
-    const { error } = await client
-      .from('ins_feature_flags')
-      .update({ enabled, updated_at: now, updated_by: actor })
-      .eq('id', existing.id)
-
-    if (error) {
-      return { success: false, error: error.message }
+  if (error || !flagId) {
+    return {
+      success: false,
+      error: error?.message ?? 'setFlag RPC returned no flag id',
     }
-    flagId = existing.id
-  } else {
-    const { data, error } = await client
-      .from('ins_feature_flags')
-      .insert({
-        key,
-        scope,
-        scope_id: scopeId ?? null,
-        enabled,
-        updated_at: now,
-        updated_by: actor,
-      })
-      .select('id')
-      .single()
-
-    if (error || !data) {
-      return { success: false, error: error?.message ?? 'insert failed' }
-    }
-    flagId = data.id
-  }
-
-  const action = deriveAuditAction({ enabled, previouslyEnabled, actor })
-
-  const { error: auditError } = await client
-    .from('ins_feature_flags_audit')
-    .insert({
-      flag_id: flagId,
-      brand: scope === 'brand' ? (scopeId ?? '') : 'global',
-      action,
-      actor,
-      reason: reason ?? null,
-    })
-
-  if (auditError) {
-    return { success: false, error: auditError.message }
   }
 
   // Invalidate the in-process cache so this server picks up the change
@@ -211,35 +168,16 @@ export async function setFlag(input: SetFlagInput): Promise<SetFlagResult> {
   if (scope === 'brand' && scopeId) {
     flagCache.delete(cacheKey(key, scopeId))
   } else {
+    // When updating a global flag, also invalidate any cached brand-scoped
+    // entries derived from that global key so brand reads don't remain stale.
     flagCache.delete(cacheKey(key))
-  }
-
-  return { success: true, data: { flagId } }
-}
-
-function deriveAuditAction(args: {
-  enabled: boolean
-  previouslyEnabled: boolean
-  actor: string
-}): FlagAction {
-  if (args.enabled) {
-    if (args.previouslyEnabled === false && args.actor.startsWith('system:')) {
-      return 'enabled'
+    const globalPrefix = `${key}::brand::`
+    for (const cachedKey of flagCache.keys()) {
+      if (cachedKey.startsWith(globalPrefix)) {
+        flagCache.delete(cachedKey)
+      }
     }
-    if (args.previouslyEnabled === false) {
-      return 'enabled'
-    }
-    return 'resumed'
   }
 
-  if (args.actor.startsWith('system:auto-pause')) {
-    return 'paused-auto'
-  }
-  if (args.actor.startsWith('system:')) {
-    return 'paused-auto'
-  }
-  if (args.previouslyEnabled) {
-    return 'paused-manual'
-  }
-  return 'disabled'
+  return { success: true, data: { flagId: flagId as string } }
 }

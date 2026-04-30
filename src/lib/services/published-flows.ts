@@ -183,6 +183,8 @@ export async function publishFlow(
 
   // The RPC returns just the new version id. Re-read the row so callers get
   // the assigned version_number without a second round-trip elsewhere.
+  // If the re-read fails transiently, the publish still succeeded; we just
+  // surface a warning instead of failing the entire operation.
   const { data: row, error: readError } = await client
     .from('ins_flow_versions')
     .select('id, version_number')
@@ -190,11 +192,24 @@ export async function publishFlow(
     .single()
 
   if (readError || !row) {
+    // The RPC succeeded (the version was created), but we couldn't read back
+    // the metadata. Return success with a placeholder version_number = 0.
+    console.warn(
+      '[published-flows] Publish succeeded but metadata read failed:',
+      {
+        brand: input.brand,
+        flowId: input.flowId,
+        versionId: data as unknown as string,
+        error: readError?.message,
+      }
+    )
     return {
-      success: false,
-      error:
-        readError?.message ??
-        'publishFlow succeeded but version row was not visible afterwards',
+      success: true,
+      data: {
+        versionId: data as unknown as string,
+        versionNumber: 0,
+        checksum,
+      },
     }
   }
 
@@ -266,11 +281,24 @@ export async function rollbackPublishedFlow(
     .single()
 
   if (readError || !row) {
+    // The RPC succeeded (the rollback was created), but we couldn't read back
+    // the metadata. Return success with a placeholder version_number = 0.
+    console.warn(
+      '[published-flows] Rollback succeeded but metadata read failed:',
+      {
+        brand: input.brand,
+        flowId: input.flowId,
+        versionId: data as unknown as string,
+        error: readError?.message,
+      }
+    )
     return {
-      success: false,
-      error:
-        readError?.message ??
-        'rollback succeeded but version row was not visible afterwards',
+      success: true,
+      data: {
+        versionId: data as unknown as string,
+        versionNumber: 0,
+        checksum: target.checksum,
+      },
     }
   }
 

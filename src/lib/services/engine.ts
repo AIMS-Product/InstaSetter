@@ -90,7 +90,7 @@ export async function processMessage(
   // Step 1: Find or create active conversation
   const convResult = await findOrCreateActiveConversation(contact.id, {
     promptVersion: PROMPT_VERSION,
-    flowId: options.flowId,
+    flowId,
     flowVersionId: stampVersionId,
   })
   if (!convResult.success) {

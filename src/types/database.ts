@@ -1050,6 +1050,17 @@ export type Database = {
         }
         Returns: string
       }
+      ins_set_feature_flag: {
+        Args: {
+          p_key: string
+          p_scope: string
+          p_scope_id: string | null
+          p_enabled: boolean
+          p_actor: string
+          p_reason: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

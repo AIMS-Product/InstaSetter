@@ -111,9 +111,23 @@ create table if not exists public.ins_feature_flags (
   updated_by  text,
   updated_at  timestamptz not null default now(),
 
-  constraint ins_feature_flags_unique unique (key, scope, scope_id)
+  constraint ins_feature_flags_scope_check check (
+    (scope = 'global' and scope_id is null) or
+    (scope = 'brand' and scope_id is not null)
+  )
 );
 
+-- Unique index for global flags (key must be unique where scope='global')
+create unique index if not exists idx_ins_feature_flags_global_unique
+  on public.ins_feature_flags (key)
+  where scope = 'global' and scope_id is null;
+
+-- Unique index for brand-scoped flags (key + scope_id must be unique where scope='brand')
+create unique index if not exists idx_ins_feature_flags_brand_unique
+  on public.ins_feature_flags (key, scope_id)
+  where scope = 'brand';
+
+-- General query index for lookups
 create index if not exists idx_ins_feature_flags_key_scope
   on public.ins_feature_flags (key, scope, scope_id);
 
@@ -215,6 +229,92 @@ $$;
 
 revoke all on function public.ins_publish_flow(text, text, text, jsonb, jsonb, text, text, text, text) from public;
 grant execute on function public.ins_publish_flow(text, text, text, jsonb, jsonb, text, text, text, text) to service_role;
+
+
+-- Atomic flag upsert + audit. Performs the flag upsert (ins_feature_flags) and
+-- the audit insert (ins_feature_flags_audit) atomically in a single transaction.
+-- Returns the flag_id. The function is `security definer` and granted only to
+-- service_role so it cannot be invoked by anon/authenticated clients.
+create or replace function public.ins_set_feature_flag(
+  p_key text,
+  p_scope text,
+  p_scope_id text,
+  p_enabled boolean,
+  p_actor text,
+  p_reason text
+) returns uuid
+language plpgsql
+security definer
+as $$
+declare
+  v_flag_id uuid;
+  v_previously_enabled boolean;
+  v_action text;
+  v_brand text;
+begin
+  -- Fetch existing flag (if any)
+  select id, enabled
+    into v_flag_id, v_previously_enabled
+    from public.ins_feature_flags
+    where key = p_key
+      and scope = p_scope
+      and (
+        (p_scope_id is null and scope_id is null) or
+        (scope_id = p_scope_id)
+      );
+
+  -- Upsert the flag row
+  if v_flag_id is not null then
+    update public.ins_feature_flags
+      set enabled = p_enabled,
+          updated_at = now(),
+          updated_by = p_actor
+      where id = v_flag_id;
+  else
+    insert into public.ins_feature_flags (key, scope, scope_id, enabled, updated_by, updated_at)
+      values (p_key, p_scope, p_scope_id, p_enabled, p_actor, now())
+      returning id into v_flag_id;
+    v_previously_enabled := false;
+  end if;
+
+  -- Derive audit action
+  if p_enabled then
+    if v_previously_enabled = false and p_actor like 'system:%' then
+      v_action := 'enabled';
+    elsif v_previously_enabled = false then
+      v_action := 'enabled';
+    else
+      v_action := 'resumed';
+    end if;
+  else
+    if p_actor like 'system:auto-pause%' then
+      v_action := 'paused-auto';
+    elsif p_actor like 'system:%' then
+      v_action := 'paused-auto';
+    elsif v_previously_enabled then
+      v_action := 'paused-manual';
+    else
+      v_action := 'disabled';
+    end if;
+  end if;
+
+  -- Determine brand for audit
+  if p_scope = 'brand' then
+    v_brand := coalesce(p_scope_id, '');
+  else
+    v_brand := 'global';
+  end if;
+
+  -- Insert audit row
+  insert into public.ins_feature_flags_audit (flag_id, brand, action, actor, reason)
+    values (v_flag_id, v_brand, v_action, p_actor, p_reason);
+
+  return v_flag_id;
+end;
+$$;
+
+revoke all on function public.ins_set_feature_flag(text, text, text, boolean, text, text) from public;
+grant execute on function public.ins_set_feature_flag(text, text, text, boolean, text, text) to service_role;
 
 
 -- Pin conversations to the published flow version that was active at creation.

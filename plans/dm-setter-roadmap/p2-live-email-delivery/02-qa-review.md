@@ -38,13 +38,13 @@ Manual + browser checks for the published-flow snapshot path. Run before flippin
 
 ## Pre-cutover carve-out (this is the safety story)
 
-- [ ] BEFORE flipping the flag: insert/update a `conversations` row with `status='active'`, `flow_version_id = NULL`. (You can scrape one from the production inbox.)
+- [ ] BEFORE flipping the flag: create a synthetic test conversation in staging or use a dedicated test contact (do NOT use production PII). Insert/update a `conversations` row with `status='active'`, `flow_version_id = NULL`.
 - [ ] Flip the flag ON for the brand.
-- [ ] Send a follow-up message on that contact. Verify:
+- [ ] Send a follow-up message on that test contact. Verify:
   - The pre-existing conversation reuses (no fresh row created).
   - `findOrCreateActiveConversation` does NOT back-fill `flow_version_id`.
   - The bot's reply uses the **default** code-owned confirmation copy, NOT the published snapshot.
-- [ ] This is the most important manual check in the suite. If this fails, ROLLOUT.md safety invariant #7 is violated.
+- [ ] This is the most important manual check in the suite. If this fails, ROLLOUT.md safety invariant #7 is violated. This check uses non-production test data only to avoid PII risk.
 
 ## Rollback (kill switch)
 
