@@ -3,6 +3,10 @@ import { Suspense } from 'react'
 import { getDashboardMetrics } from '@/lib/services/dashboard-metrics'
 import { listConversations } from '@/lib/services/conversation-viewer'
 import { Chip } from '@/components/ui/chip'
+import {
+  WeeklySummaryCard,
+  WeeklySummarySkeleton,
+} from './_components/weekly-summary-card'
 
 export const revalidate = 0
 
@@ -45,6 +49,10 @@ export default function DashboardHome() {
 
         <Suspense fallback={<MetricsSkeleton />}>
           <Metrics />
+        </Suspense>
+
+        <Suspense fallback={<WeeklySummarySkeleton />}>
+          <WeeklySummaryCard />
         </Suspense>
 
         <Suspense fallback={<ActivitySkeleton />}>
