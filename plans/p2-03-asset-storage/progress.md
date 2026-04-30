@@ -26,4 +26,4 @@
 - Migration timestamp `20260502010000` reserved per execution-protocol.md §a (P2 reserved range; second slot in phase since P2.02 owns `20260502000000`).
 - `compileBlock` is now async — only caller is `simulator-actions.ts`, which is already async. Tests updated accordingly.
 - Magic-byte sniff hand-rolled (PDF, PNG, JPEG, ZIP) — no new deps.
-- Bucket creation is manual on the Supabase dashboard (or via SQL editor). Documented in `## Third-party prerequisites` of the spec; included setup SQL in the migration as a separate `bucket-setup.sql` script for the user to run.
+- Bucket creation is manual on the Supabase dashboard (or via SQL editor). Documented in `## Third-party prerequisites` of the spec; included setup SQL in the migration as `supabase/migrations/_manual/20260502_email_assets_bucket.sql` for the user to run.

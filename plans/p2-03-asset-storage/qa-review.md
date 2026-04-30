@@ -26,6 +26,8 @@ values (
 )
 on conflict (id) do nothing;
 
+drop policy if exists "Service role manage email-assets bucket" on storage.objects;
+
 create policy "Service role manage email-assets bucket"
   on storage.objects
   for all

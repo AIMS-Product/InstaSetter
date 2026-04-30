@@ -126,10 +126,9 @@ export function sniffContentType(bytes: Uint8Array): AllowedContentType | null {
   }
   // ZIP: 50 4B 03 04 (and 50 4B 05 06 for empty / 50 4B 07 08 for spanned)
   if (
-    b0 === 0x50 &&
-    b1 === 0x4b &&
-    (b2 === 0x03 || b2 === 0x05 || b2 === 0x07) &&
-    (b3 === 0x04 || b3 === 0x06 || b3 === 0x08)
+    (b0 === 0x50 && b1 === 0x4b && b2 === 0x03 && b3 === 0x04) ||
+    (b0 === 0x50 && b1 === 0x4b && b2 === 0x05 && b3 === 0x06) ||
+    (b0 === 0x50 && b1 === 0x4b && b2 === 0x07 && b3 === 0x08)
   ) {
     return 'application/zip'
   }

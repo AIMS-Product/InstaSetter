@@ -26,25 +26,24 @@ values (
     'application/zip'
   ]
 )
-on conflict (id) do nothing;
+on conflict (id) do update set
+  public = false,
+  file_size_limit = 20971520,
+  allowed_mime_types = array[
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'application/zip'
+  ];
 
 -- 2. Restrict reads/writes to the service-role client. No anon access.
 --    All public-facing reads happen via short-lived signed URLs that
 --    `email-assets.ts` generates at send time.
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'Service role manage email-assets bucket'
-  ) then
-    create policy "Service role manage email-assets bucket"
-      on storage.objects
-      for all
-      to service_role
-      using (bucket_id = 'email-assets')
-      with check (bucket_id = 'email-assets');
-  end if;
-end $$;
+drop policy if exists "Service role manage email-assets bucket" on storage.objects;
+
+create policy "Service role manage email-assets bucket"
+  on storage.objects
+  for all
+  to service_role
+  using (bucket_id = 'email-assets')
+  with check (bucket_id = 'email-assets');
