@@ -7,26 +7,56 @@
  * - No post-call follow-up branch existed, conversations dropped after call
  * - Post-call price objections handled by AI instead of escalated to closer
  * - Premature loop closure, AI treated link-send as conversation-complete
+ *
+ * Optional `preBookingStep` argument (P1.02): when enabled, the bot asks ONE
+ * rapport question after both qualifiers are known and BEFORE sending the
+ * booking link, unless rapport is already established. The skip heuristic is
+ * encoded in plain English so Claude judges it; no deterministic gate.
  */
 
+import type { PreBookingStep } from '@/lib/prompts/pre-booking-step'
+
 export function buildDecisionRouting(
-  bookingUrl: string = '${bookingUrl}'
+  bookingUrl: string = '${bookingUrl}',
+  preBookingStep?: PreBookingStep
 ): string {
-  return `## Decision Routing
+  const rapportEnabled = preBookingStep?.enabled === true
 
-Use these decision gates to determine when to take each action. Never skip a gate.
+  // GATE 1 wording is conditional on the rapport bridge: when the bridge is
+  // active we MUST relax the "VERY NEXT message" instruction or the two rules
+  // contradict each other. When the bridge is disabled (or unset) we keep the
+  // legacy line byte-for-byte so the contract test stays green.
+  const gate1Directive = rapportEnabled
+    ? '**Two qualifiers known: ask one rapport bridge first, then the link.** Once both location AND motivation are known, ask the rapport question described in "Rapport Bridge" below (unless rapport is clearly already established) and then send the booking link in the message after that. Do not gather more qualification info "just in case." Two qualifiers + one bridge = booking link. This is non-negotiable.'
+    : '**CRITICAL: Once both location AND motivation are known, you MUST send the booking link in your VERY NEXT message.** Do not ask additional qualification questions. Do not delay. Do not gather more info "just in case." Two qualifiers = booking link. This is non-negotiable.'
 
-### GATE 1: Before Sending the Booking Link
+  const gate1 = `### GATE 1: Before Sending the Booking Link
 The prospect must have shared at minimum:
 - Their **location** AND
 - Their **primary motivation** (side income, full-time, family goal, scaling existing business, etc.)
 
 If only one is known, ask the second before routing to booking.
 
-**CRITICAL: Once both location AND motivation are known, you MUST send the booking link in your VERY NEXT message.** Do not ask additional qualification questions. Do not delay. Do not gather more info "just in case." Two qualifiers = booking link. This is non-negotiable.
+${gate1Directive}
 
 Mirror back what you know, then offer the link:
-"So you're in [location], you're looking to [goal]. Our team can walk you through exactly how to make that work on the call. Here's the link to grab a time: ${bookingUrl}"
+"So you're in [location], you're looking to [goal]. Our team can walk you through exactly how to make that work on the call. Here's the link to grab a time: ${bookingUrl}"`
+
+  const rapportBridge = rapportEnabled
+    ? `\n\n### Rapport Bridge (one message before the link)
+Once both location AND motivation are known, ask ONE rapport question in the message before the booking link, unless rapport is already clearly established. Examples of "already established": the prospect has spent 4+ replies sharing context, has volunteered a story, or has asked a substantive question that demonstrates engagement.
+
+Rapport question to ask: "${preBookingStep?.question}"
+Skip when: ${preBookingStep?.skipWhen}
+
+In your NEXT message after asking the rapport question — regardless of whether the prospect answered — mirror back what you know and send the booking link. Do not loop on rapport. One bridge message, then link.`
+    : ''
+
+  return `## Decision Routing
+
+Use these decision gates to determine when to take each action. Never skip a gate.
+
+${gate1}${rapportBridge}
 
 ### GATE 2: After Sending the Booking Link
 Wait for explicit confirmation ("I booked it", "just booked", "done", confirmation language) before treating the conversation as progressing.

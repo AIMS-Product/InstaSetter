@@ -17,6 +17,7 @@ import {
 } from '@/lib/services/claude'
 import { leadSummarySchema } from '@/types/lead'
 import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
+import { resolveLivePreBookingStep } from '@/lib/services/pre-booking-resolver'
 import { getServerConfig } from '@/lib/config'
 import { setContactTags } from '@/lib/services/sendpulse'
 import { syncLeadToClose } from '@/lib/services/sync-lead-to-close'
@@ -163,6 +164,7 @@ export async function processMessage(
     : null
 
   const isReturningContact = priorSummaries.length > 0
+  const preBookingStep = resolveLivePreBookingStep(BRAND_NAME)
   const systemPrompt = buildSystemPrompt({
     brandName: BRAND_NAME,
     bookingUrl: BOOKING_URL,
@@ -171,6 +173,7 @@ export async function processMessage(
     contactContext,
     leadSourceContext,
     postEmailBehavior: activeVersion?.compiled.postEmailBehavior,
+    preBookingStep,
   })
 
   // Step 5: Assemble message history

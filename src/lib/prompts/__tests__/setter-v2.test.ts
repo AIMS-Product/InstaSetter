@@ -227,6 +227,28 @@ describe('setter-v2 buildSystemPrompt', () => {
     expect(prompt).toMatch(/not.*more than two.*booking link/i)
   })
 
+  it('includes the pre-booking rapport bridge by default (P1.02)', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toContain('### Rapport Bridge (one message before the link)')
+    expect(prompt).toContain('What got you interested in vending?')
+    expect(prompt).toMatch(/Two qualifiers.*one rapport bridge.*then.*link/i)
+  })
+
+  it('reverts to the legacy "VERY NEXT message" wording when preBookingStep is disabled', () => {
+    const prompt = buildSystemPrompt({
+      ...DEFAULT_OPTS,
+      preBookingStep: {
+        enabled: false,
+        question: 'unused',
+        skipWhen: 'unused',
+      },
+    })
+    expect(prompt).toContain(
+      'Once both location AND motivation are known, you MUST send the booking link in your VERY NEXT message.'
+    )
+    expect(prompt).not.toContain('### Rapport Bridge')
+  })
+
   it('includes post-call escalation rules', () => {
     const prompt = buildSystemPrompt(DEFAULT_OPTS)
     expect(prompt).toMatch(/post-call price objections/i)

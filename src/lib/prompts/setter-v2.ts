@@ -8,6 +8,10 @@ import { buildDecisionRouting } from './sections/decision-routing'
 import { buildSummaryGeneration } from './sections/summary-generation'
 import { buildMessageConstraints } from './sections/message-constraints'
 import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
+import {
+  DEFAULT_PRE_BOOKING_STEP,
+  type PreBookingStep,
+} from './pre-booking-step'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
 const PROMPT_VERSION = 'setter-v2'
@@ -38,6 +42,14 @@ interface BuildSystemPromptOptions {
    * contract test enforces this invariant on every PR.
    */
   postEmailBehavior?: PostEmailBehavior
+  /**
+   * Pre-booking rapport step. When omitted, defaults to
+   * `DEFAULT_PRE_BOOKING_STEP` (enabled with the code-shipped question).
+   * Callers that need to disable the bridge — including the engine when
+   * `LIVE_PRE_BOOKING_STEP_ENABLED=false` — should pass an explicit step with
+   * `enabled: false`. See `@/lib/services/pre-booking-resolver`.
+   */
+  preBookingStep?: PreBookingStep
 }
 
 export function buildSystemPrompt({
@@ -48,6 +60,7 @@ export function buildSystemPrompt({
   contactContext,
   leadSourceContext,
   postEmailBehavior,
+  preBookingStep = DEFAULT_PRE_BOOKING_STEP,
 }: BuildSystemPromptOptions): string {
   const sections = [
     buildPersona(brandName),
@@ -58,7 +71,7 @@ export function buildSystemPrompt({
     postEmailBehavior
       ? buildEmailCapture(bookingUrl, postEmailBehavior)
       : buildEmailCapture(bookingUrl),
-    buildDecisionRouting(bookingUrl),
+    buildDecisionRouting(bookingUrl, preBookingStep),
     buildSummaryGeneration(),
     buildMessageConstraints(bookingUrl),
   ]
