@@ -10,6 +10,7 @@ import {
 import { createLead } from '@/lib/services/lead'
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
 import { persistLeadEvents } from '@/lib/services/lead-event'
+import { recordLeadCaptureEvent } from '@/lib/services/lead-capture'
 import {
   buildClaudeRequest,
   parseClaudeResponse,
@@ -304,7 +305,8 @@ export async function processMessage(
       contact.id,
       conversationId,
       allToolCalls,
-      integration
+      integration,
+      { leadSourceContext }
     ).catch(() => {})
   }
 
@@ -331,12 +333,17 @@ function coerceSeverity(value: unknown): HumanReviewSeverity {
     : 'concern'
 }
 
+type RouteLeadEventsOptions = {
+  leadSourceContext?: LeadSourceContext
+}
+
 export async function routeLeadEvents(
   client: SupabaseClient<Database>,
   contactId: string,
   conversationId: string,
   toolCalls: ToolCall[],
-  integration: string = 'sendpulse'
+  integration: string = 'sendpulse',
+  options: RouteLeadEventsOptions = {}
 ): Promise<{ success: boolean; eventsProcessed: number }> {
   if (toolCalls.length === 0) {
     return { success: true, eventsProcessed: 0 }
@@ -356,6 +363,19 @@ export async function routeLeadEvents(
               .from('contacts')
               .update({ email, updated_at: new Date().toISOString() })
               .eq('id', contactId)
+
+            // Record the channel-agnostic capture event so the future
+            // delivery job (P2) has a unified source-of-truth. Failure is
+            // non-blocking — the bot reply has already shipped at this
+            // point, and the existing try/catch around routeLeadEvents
+            // swallows any throw.
+            await recordLeadCaptureEvent(client, {
+              email,
+              source: 'dm',
+              contactId,
+              conversationId,
+              attribution: options.leadSourceContext ?? undefined,
+            })
           }
           break
         }

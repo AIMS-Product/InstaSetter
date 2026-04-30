@@ -1,62 +1,81 @@
-# P1.01 — Manual QA review
+# P1.05 — Manual QA review
 
-Branch: `feat/p1-01-limitations-labels`
+Branch: `feat/p1-05-anthony-magnet`
+Spec: `plans/dm-setter-roadmap/p1-trust-conversation/05-anthony-magnet.md`
 
-## Browser walkthrough (after `npm run dev`)
+This PR is **scaffolding only** — no UI changes, no live email send. The
+manual checklist below verifies that the new plumbing is wired correctly
+and the existing live traffic path is unchanged.
 
-For each route, confirm a SurfaceBadge is visible in the header region with the
-right colour and the right detail copy on hover/focus.
+## Pre-merge sanity (no browser needed)
 
-- [ ] `/dashboard` — Orange "Under construction" badge in the top-right of the
-      title row. Hover shows: "Active and today counts are real. Close-sync
-      KPIs and longer-range trends are still being wired up."
-- [ ] `/dashboard/conversations` — Grey "Read-only" badge inline with the Inbox
-      header. Hover: "You can search, filter, and inspect every real
-      conversation here. Editing replies and statuses lands later."
-- [ ] `/dashboard/conversations/<any id>` — Grey "Read-only" badge in the top
-      bar between the back link and the prompt-version note. Hover: "The full
-      transcript and tool calls are real. Sending replies or editing the
-      timeline from here lands later."
-- [ ] `/dashboard/marketing-sources` — Green "Live" badge beside the
-      Conversations link. Hover: "Creating, archiving, and copying SendPulse
-      setup values all run against production data."
-- [ ] `/dashboard/flows` — Grey "Read-only" badge beside the page title. Hover:
-      "The flows list shows what is configured today. We support a single flow
-      right now; click through to inspect it."
-- [ ] `/dashboard/flows/ig-organic-dm` (Flow tab) — Grey "Read-only" badge
-      beside the Draft/Runtime status badges in the BHeader. Hover: "Drafts
-      persist, but live Instagram DMs still use the production prompt. The
-      publish path lands later."
-- [ ] `/dashboard/flows/ig-organic-dm` → Bot tab — Grey "Read-only" badge in
-      the eyebrow row. Hover: "Persona and guardrails read from the active
-      prompt. Editing them in this tab lands later."
-- [ ] `/dashboard/flows/ig-organic-dm` → Variables tab — Grey "Reference only"
-      badge in the eyebrow row. Hover: "Saved values and where the bot learns
-      them. Editing variables from here lands later."
-- [ ] `/dashboard/flows/ig-organic-dm` → Versions tab — Grey "Read-only" badge
-      in the eyebrow row (same flow-detail copy).
+- [ ] `supabase db reset` runs cleanly against
+      `supabase/migrations/20260501010000_lead_capture_events.sql`. The
+      `lead_capture_events` table appears with three indexes and a
+      service-role-only RLS policy.
+- [ ] `npm run type-check && npm run lint && npm run build` — all green
+      against the latest commit on this branch.
+- [ ] `npx vitest run` — 420 tests pass.
+- [ ] `npx vitest run src/lib/prompts/compile-block/__tests__/compile-block.contract.test.ts`
+      — 33/33 green (the sacred guard).
 
-## A11y spot-checks
+## Schema spot-check
 
-- [ ] Tab into each page; the badge takes focus appropriately and
-      `aria-describedby` exposes the detail copy in a screen reader (verify
-      with VoiceOver: VO+arrow keys → reads label then detail).
-- [ ] Title-only fallback: hover the badge with a mouse; the detail appears as
-      a native tooltip.
-- [ ] Colour contrast (AA): badge tone tokens reuse the existing Chip
-      palette which is already AA-compliant.
+- [ ] After `supabase db reset`:
+      `\d public.lead_capture_events`
+      shows columns `id`, `email`, `source`, `contact_id`,
+      `conversation_id`, `marketing_source_id`, `attribution`,
+      `delivery_status`, `delivery_provider`, `delivery_attempted_at`,
+      `delivery_error`, `created_at`.
+- [ ] `\d public.lead_capture_events` shows three indexes:
+      `idx_lead_capture_events_email` (lower(email)),
+      `idx_lead_capture_events_status` (delivery_status),
+      `idx_lead_capture_events_source` (source, created_at desc).
+- [ ] RLS is `enabled` and the only policy is
+      `service_role manages lead capture events`.
+- [ ] `lead_capture_source` enum has exactly three values:
+      `dm`, `landing_page`, `manual`.
 
-## Light-theme + persona constraints
+## Live-traffic regression check (CRITICAL)
 
-- [ ] No badges use a dark surface. Confirm Linear/Vercel/Stripe-style soft
-      pastel pills throughout.
-- [ ] No "Week N" wording anywhere in display or detail copy (also covered by
-      automated test).
-- [ ] No bot-name leaks ("Mike", "Anthony") in detail copy — copy is generic.
+The bot must reply identically to today. The new code only adds an
+extra row write after the existing `contacts.email` update.
 
-## Regression
+- [ ] Send a test inbound DM that triggers `capture_email`. The bot
+      reply text is unchanged. The `contacts.email` field updates as
+      before.
+- [ ] After the same test, `select * from public.lead_capture_events`
+      shows one row with `source='dm'`, `delivery_status='pending'`,
+      `delivery_provider IS NULL`, `delivery_attempted_at IS NULL`.
+- [ ] Force a failure by giving the engine a malformed inbound (no
+      email but `capture_email` fires) — the bot reply still ships, the
+      `contacts.email` update is skipped (no email value), AND no
+      `lead_capture_events` row is written. The route never throws.
 
-- [ ] Compile-block contract test green (`npx vitest run
-    src/lib/prompts/compile-block/__tests__/compile-block.contract.test.ts`).
-- [ ] Existing flow-builder StatusBadge / StatusNote unchanged (different
-      concept: runtime state, not surface scope).
+## Surface-area sanity
+
+- [ ] No new dashboard UI surfaces in this PR (decision-spec invariant).
+- [ ] No new env vars added to `src/lib/config.ts`. The future
+      `LIVE_MAGNET_DELIVERY_ENABLED` flag is owned by P2.04.
+- [ ] No third-party API keys committed. `NoopMagnetDelivery` does not
+      require any.
+
+## Persona / surface invariants
+
+- [ ] The bot persona has not changed (no name leaks, US/Canada gating
+      intact). Compile-block contract test green proves this.
+- [ ] No "Week N" labels surfaced anywhere in display copy.
+- [ ] `LeadMagnetDelivery.send` never throws; it returns `success:true`
+      with `delivered:false, reason:'noop'` for the v0 implementation.
+
+## Pending blockers (P2 cannot ship without these)
+
+- [ ] **Path** — A, B, or C? Default recommendation: A.
+- [ ] **Asset** — does the magnet exist? ETA?
+- [ ] **Asset hosting** — Vercel Blob / Supabase Storage / external?
+- [ ] **Delivery provider** — Resend / Customer.io / Close / SendGrid?
+- [ ] **Sender identity** — `team@vendingpreneurs.com` confirmation +
+      DKIM/SPF/DMARC status?
+- [ ] **Reply handling** — which inbox receives replies?
+- [ ] **Live-or-draft** — first send via existing draft-only Flow
+      Builder, or wait for the published-snapshot path?
