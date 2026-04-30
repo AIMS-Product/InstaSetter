@@ -1,6 +1,4 @@
-// `server-only` ships only a runtime-error CJS file in production, designed
-// to fail the build if a server-only module is bundled into a client chunk.
-// Vitest runs in jsdom and therefore can't resolve the marker — this empty
-// stub stands in via vitest.config.ts alias so server-only modules can be
-// imported in tests.
+// Vitest alias target for the `server-only` package — see vitest.config.ts.
+// The real module throws when bundled into a client component; under tests we
+// just want it to be a no-op so server-side service modules can be imported.
 export {}

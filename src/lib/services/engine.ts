@@ -20,8 +20,13 @@ import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
 import { getServerConfig } from '@/lib/config'
 import { setContactTags } from '@/lib/services/sendpulse'
 import { syncLeadToClose } from '@/lib/services/sync-lead-to-close'
+import { flagOn } from '@/lib/services/flags'
+import { getActiveFlowVersion } from '@/lib/services/published-flows'
+import { DEFAULT_FLOW_ID } from '@/lib/flows'
 import type { Json } from '@/types/database'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
+
+const PUBLISHED_SNAPSHOT_FLAG = 'email_delivery.use_published_snapshot'
 
 type ClaudeCallFn = (
   request: ReturnType<typeof buildClaudeRequest>
@@ -64,13 +69,31 @@ export async function processMessage(
   options: ProcessMessageOptions = {}
 ): Promise<ServiceResult<ProcessMessageResult>> {
   const { BRAND_NAME, BOOKING_URL } = getServerConfig()
+  const flowId = options.flowId ?? DEFAULT_FLOW_ID
+
+  // Resolve the per-brand published-snapshot flag BEFORE creating the
+  // conversation row so a fresh row created during a cutover is stamped
+  // with the active version's id. Pre-cutover rows that were already
+  // active stay NULL — the engine treats them as flag-OFF below.
+  const cutoverFlagOn = await flagOn(PUBLISHED_SNAPSHOT_FLAG, {
+    brand: BRAND_NAME,
+  })
+
+  let stampVersionId: string | null = null
+  if (cutoverFlagOn) {
+    const active = await getActiveFlowVersion({
+      brand: BRAND_NAME,
+      flowId,
+    })
+    stampVersionId = active?.versionId ?? null
+  }
 
   // Step 1: Find or create active conversation
-  const convResult = await findOrCreateActiveConversation(
-    contact.id,
-    PROMPT_VERSION,
-    options.flowId
-  )
+  const convResult = await findOrCreateActiveConversation(contact.id, {
+    promptVersion: PROMPT_VERSION,
+    flowId,
+    flowVersionId: stampVersionId,
+  })
   if (!convResult.success) {
     return { success: false, error: convResult.error }
   }
@@ -124,7 +147,21 @@ export async function processMessage(
     return { success: true, data: { reply: undefined, conversationId } }
   }
 
-  // Step 4: Build system prompt with contact context
+  // Step 4: Build system prompt with contact context.
+  //
+  // The published-snapshot path is only entered when BOTH conditions hold:
+  //   1. the per-brand cutover flag is ON for this brand AND
+  //   2. the conversation row carries a non-null `flow_version_id` (i.e. it
+  //      was created post-cutover).
+  // Pre-cutover rows that were already active when the flag flipped have
+  // `flow_version_id IS NULL` and therefore fall through to the legacy
+  // `buildSystemPrompt()` default — byte-identical to pre-snapshot behaviour
+  // (docs/flow-builder/ROLLOUT.md safety invariant #7).
+  const useSnapshot = cutoverFlagOn && convResult.data.flow_version_id != null
+  const activeVersion = useSnapshot
+    ? await getActiveFlowVersion({ brand: BRAND_NAME, flowId })
+    : null
+
   const isReturningContact = priorSummaries.length > 0
   const systemPrompt = buildSystemPrompt({
     brandName: BRAND_NAME,
@@ -133,6 +170,7 @@ export async function processMessage(
     priorSummaries,
     contactContext,
     leadSourceContext,
+    postEmailBehavior: activeVersion?.compiled.postEmailBehavior,
   })
 
   // Step 5: Assemble message history

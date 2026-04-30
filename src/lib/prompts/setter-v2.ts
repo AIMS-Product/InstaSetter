@@ -7,6 +7,7 @@ import { buildEmailCapture } from './sections/email-capture'
 import { buildDecisionRouting } from './sections/decision-routing'
 import { buildSummaryGeneration } from './sections/summary-generation'
 import { buildMessageConstraints } from './sections/message-constraints'
+import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
 const PROMPT_VERSION = 'setter-v2'
@@ -30,6 +31,13 @@ interface BuildSystemPromptOptions {
   priorSummaries?: string[]
   contactContext?: ContactContext
   leadSourceContext?: LeadSourceContext
+  /**
+   * Operator-published Email Capture configuration. When omitted, the
+   * code-owned `DEFAULT_POST_EMAIL_BEHAVIOR` is used so output is
+   * byte-identical to the pre-snapshot behaviour. The compile-block
+   * contract test enforces this invariant on every PR.
+   */
+  postEmailBehavior?: PostEmailBehavior
 }
 
 export function buildSystemPrompt({
@@ -39,6 +47,7 @@ export function buildSystemPrompt({
   priorSummaries,
   contactContext,
   leadSourceContext,
+  postEmailBehavior,
 }: BuildSystemPromptOptions): string {
   const sections = [
     buildPersona(brandName),
@@ -46,7 +55,9 @@ export function buildSystemPrompt({
     buildLocationGate(brandName),
     buildQualificationCriteria(),
     buildObjectionHandling(brandName),
-    buildEmailCapture(bookingUrl),
+    postEmailBehavior
+      ? buildEmailCapture(bookingUrl, postEmailBehavior)
+      : buildEmailCapture(bookingUrl),
     buildDecisionRouting(bookingUrl),
     buildSummaryGeneration(),
     buildMessageConstraints(bookingUrl),

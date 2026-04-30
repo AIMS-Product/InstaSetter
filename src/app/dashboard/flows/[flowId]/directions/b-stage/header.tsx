@@ -8,6 +8,7 @@ import {
   type SurfaceLabelKey,
 } from '@/lib/dashboard/surface-labels'
 import { fetchFlowRuntimeAction, setFlowRuntimeAction } from '../../actions'
+import PublishControls from '../../publish-controls'
 import { useFlowActions, useFlowState } from '../../store'
 import {
   StatusBadge,
@@ -271,6 +272,7 @@ export default function BHeader({
             {simOpen ? 'Hide preview' : 'Preview replies'}
           </button>
         )}
+        <PublishControls brand={state.flow.brand} flowId={flowId} />
         <HeaderHelpMenu />
       </div>
     </div>

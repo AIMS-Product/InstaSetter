@@ -11,6 +11,17 @@ vi.mock('@/lib/services/sendpulse', () => ({
   sendInstagramMessage: vi.fn(),
   pauseAutomation: vi.fn(),
 }))
+vi.mock('@/lib/services/flags', () => ({
+  flagOn: vi.fn().mockResolvedValue(false),
+  setFlag: vi.fn(),
+}))
+vi.mock('@/lib/services/published-flows', () => ({
+  getActiveFlowVersion: vi.fn().mockResolvedValue(null),
+  publishFlow: vi.fn(),
+  rollbackPublishedFlow: vi.fn(),
+  listFlowVersions: vi.fn(),
+  DEFAULT_FLOW_CHANNEL: 'ig_organic_dm',
+}))
 vi.mock('@/lib/config', () => ({
   config: {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -20,6 +31,9 @@ vi.mock('@/lib/config', () => ({
     SUPABASE_SERVICE_ROLE_KEY: 'test',
     ANTHROPIC_API_KEY: 'sk-test',
     BRAND_NAME: 'TestBrand',
+  }),
+  getSupabaseServerConfig: () => ({
+    SUPABASE_SERVICE_ROLE_KEY: 'test',
   }),
   getSendPulseConfig: () => ({
     SENDPULSE_API_KEY: 'test',
@@ -45,6 +59,7 @@ const stubConversation: ConversationRow = {
   id: 'conv-1',
   contact_id: 'contact-1',
   flow_id: 'ig-organic-dm',
+  flow_version_id: null,
   status: 'active',
   prompt_version: 'setter-v1',
   summary: null,
@@ -443,5 +458,209 @@ describe('processMessage', () => {
       })
     )
     expect(mockClient.from).not.toHaveBeenCalledWith('ins_flow_drafts')
+  })
+})
+
+describe('processMessage — published-snapshot path', () => {
+  const mockContact = { id: 'contact-1' }
+  const mockClaude = vi.fn()
+  let mockClient: ReturnType<typeof createMockClient>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockClient = createMockClient()
+    mockClient.maybeSingle.mockResolvedValue({ data: null, error: null })
+
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: '',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockResolvedValue({ content: [{ type: 'text', text: 'Hey!' }] })
+    vi.mocked(parseClaudeResponse).mockReturnValue({
+      replyText: 'Hey!',
+      toolCalls: [],
+      truncated: false,
+    })
+  })
+
+  it('flag OFF: no postEmailBehavior is passed even with a stamped flow_version_id', async () => {
+    const { flagOn } = await import('@/lib/services/flags')
+    const { getActiveFlowVersion } =
+      await import('@/lib/services/published-flows')
+    vi.mocked(flagOn).mockResolvedValue(false)
+
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: { ...stubConversation, flow_version_id: 'ver-1' },
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      'ts',
+      mockClaude
+    )
+
+    expect(getActiveFlowVersion).not.toHaveBeenCalled()
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        postEmailBehavior: expect.anything(),
+      })
+    )
+  })
+
+  it('flag ON + flow_version_id NULL: pre-cutover row falls through to default prompt', async () => {
+    const { flagOn } = await import('@/lib/services/flags')
+    const { getActiveFlowVersion } =
+      await import('@/lib/services/published-flows')
+    vi.mocked(flagOn).mockResolvedValue(true)
+    vi.mocked(getActiveFlowVersion).mockResolvedValue({
+      versionId: 'ver-active',
+      versionNumber: 1,
+      publishedAt: '2026-04-29T00:00:00Z',
+      publishedBy: 'sofia@example.com',
+      compiled: {
+        postEmailBehavior: {
+          confirmationMessage: 'SNAPSHOT_SENTINEL_DO_NOT_LEAK',
+          deliveryMode: 'manual',
+          resourceLabel: null,
+          nextStep: 'summary',
+          emailTemplate: {
+            subject: 'subj',
+            body: 'body',
+            attachment: null,
+          },
+        },
+      },
+    })
+
+    // Simulate the in-flight pre-cutover row: stamp returns null even though
+    // the flag is on at the moment processMessage runs.
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: { ...stubConversation, flow_version_id: null },
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      'ts',
+      mockClaude
+    )
+
+    // The build call MUST NOT receive the snapshot's postEmailBehavior
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        postEmailBehavior: expect.anything(),
+      })
+    )
+  })
+
+  it('flag ON + stamped flow_version_id: published snapshot is threaded through', async () => {
+    const { flagOn } = await import('@/lib/services/flags')
+    const { getActiveFlowVersion } =
+      await import('@/lib/services/published-flows')
+    vi.mocked(flagOn).mockResolvedValue(true)
+
+    const snapshotBehavior = {
+      confirmationMessage: 'snapshot copy',
+      deliveryMode: 'manual' as const,
+      resourceLabel: null,
+      nextStep: 'summary' as const,
+      emailTemplate: {
+        subject: 'subj',
+        body: 'body',
+        attachment: null,
+      },
+    }
+    vi.mocked(getActiveFlowVersion).mockResolvedValue({
+      versionId: 'ver-active',
+      versionNumber: 7,
+      publishedAt: '2026-04-29T00:00:00Z',
+      publishedBy: 'sofia@example.com',
+      compiled: { postEmailBehavior: snapshotBehavior },
+    })
+
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: { ...stubConversation, flow_version_id: 'ver-active' },
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      'ts',
+      mockClaude
+    )
+
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        postEmailBehavior: snapshotBehavior,
+      })
+    )
+  })
+
+  it('flag ON: stamps flow_version_id from active version on conversation creation', async () => {
+    const { flagOn } = await import('@/lib/services/flags')
+    const { getActiveFlowVersion } =
+      await import('@/lib/services/published-flows')
+    vi.mocked(flagOn).mockResolvedValue(true)
+    vi.mocked(getActiveFlowVersion).mockResolvedValue({
+      versionId: 'ver-from-active',
+      versionNumber: 3,
+      publishedAt: '2026-04-29T00:00:00Z',
+      publishedBy: null,
+      compiled: {
+        postEmailBehavior: {
+          confirmationMessage: 'msg',
+          deliveryMode: 'manual',
+          resourceLabel: null,
+          nextStep: 'summary',
+          emailTemplate: { subject: 's', body: 'b', attachment: null },
+        },
+      },
+    })
+
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: { ...stubConversation, flow_version_id: 'ver-from-active' },
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      'ts',
+      mockClaude
+    )
+
+    expect(findOrCreateActiveConversation).toHaveBeenCalledWith(
+      mockContact.id,
+      expect.objectContaining({ flowVersionId: 'ver-from-active' })
+    )
   })
 })
