@@ -36,6 +36,22 @@ const sendpulseEnvSchema = z.object({
   SENDPULSE_WEBHOOK_SECRET: z.string().min(1),
 })
 
+// Flow Builder rationale-panel decision flag (P4.05). Two-variant experiment:
+// - 'always_on' renders the inspector "Why this exists" banner expanded.
+// - 'hidden' omits the inspector banner entirely; the PromptReader aside still
+//   carries the rationale data.
+// Unset = the default ('hidden'); the conservative choice. The decision is
+// closed in plans/dm-setter-roadmap/p4-flow-builder-ux/rationale-decision.md.
+const flowRationaleEnvSchema = z.object({
+  NEXT_PUBLIC_FLOW_RATIONALE: z
+    .enum(['always_on', 'hidden'])
+    .default('hidden'),
+})
+
+export type FlowRationaleVariant = z.infer<
+  typeof flowRationaleEnvSchema
+>['NEXT_PUBLIC_FLOW_RATIONALE']
+
 // Client-safe config — validated at import time
 export const config = envSchema.parse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -86,4 +102,14 @@ export function getSendPulseConfig() {
 // Default: enabled. Any value other than the literal string "false" is treated as enabled.
 export function isBotEnabled(): boolean {
   return process.env.BOT_ENABLED !== 'false'
+}
+
+// P4.05 — read the rationale-panel variant. Throws on unknown values so a
+// fat-fingered Vercel env entry surfaces immediately rather than silently
+// falling back. The flag is read client-side; Next.js inlines NEXT_PUBLIC_*
+// at build time so the parse cost is paid once per render call site.
+export function getFlowRationaleVariant(): FlowRationaleVariant {
+  return flowRationaleEnvSchema.parse({
+    NEXT_PUBLIC_FLOW_RATIONALE: process.env.NEXT_PUBLIC_FLOW_RATIONALE,
+  }).NEXT_PUBLIC_FLOW_RATIONALE
 }
