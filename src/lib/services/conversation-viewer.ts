@@ -35,9 +35,9 @@ function projectCloseSync(row: {
   close_sync_attempted_at?: string | null
   close_sync_attempts?: number | null
 }): CloseSyncState {
-  const status = (
-    VALID_SYNC_STATUSES as readonly string[]
-  ).includes(row.close_sync_status ?? '')
+  const status = (VALID_SYNC_STATUSES as readonly string[]).includes(
+    row.close_sync_status ?? ''
+  )
     ? (row.close_sync_status as CloseSyncState['status'])
     : 'pending'
   return {
