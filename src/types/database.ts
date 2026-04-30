@@ -303,12 +303,14 @@ export type Database = {
       marketing_sources: {
         Row: {
           ad_id: string | null
+          ad_set_id: string | null
           campaign: string
           channel: string
           created_at: string
           entry_action: string
           id: string
           label: string
+          landing_page_url: string | null
           material: string
           notes: string | null
           post_url: string | null
@@ -316,15 +318,22 @@ export type Database = {
           status: string
           trigger_label: string
           updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
           ad_id?: string | null
+          ad_set_id?: string | null
           campaign: string
           channel: string
           created_at?: string
           entry_action: string
           id?: string
           label: string
+          landing_page_url?: string | null
           material: string
           notes?: string | null
           post_url?: string | null
@@ -332,15 +341,22 @@ export type Database = {
           status?: string
           trigger_label: string
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
           ad_id?: string | null
+          ad_set_id?: string | null
           campaign?: string
           channel?: string
           created_at?: string
           entry_action?: string
           id?: string
           label?: string
+          landing_page_url?: string | null
           material?: string
           notes?: string | null
           post_url?: string | null
@@ -348,48 +364,77 @@ export type Database = {
           status?: string
           trigger_label?: string
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: []
       }
       conversation_attributions: {
         Row: {
+          ad_id: string | null
+          ad_set_id: string | null
           campaign: string | null
           channel: string | null
           conversation_id: string
           created_at: string
           entry_action: string | null
+          landing_page_url: string | null
           material: string | null
           raw_message_id: string | null
           source_id: string | null
           source_key: string | null
           trigger_label: string | null
           updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
+          ad_id?: string | null
+          ad_set_id?: string | null
           campaign?: string | null
           channel?: string | null
           conversation_id: string
           created_at?: string
           entry_action?: string | null
+          landing_page_url?: string | null
           material?: string | null
           raw_message_id?: string | null
           source_id?: string | null
           source_key?: string | null
           trigger_label?: string | null
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
+          ad_id?: string | null
+          ad_set_id?: string | null
           campaign?: string | null
           channel?: string | null
           conversation_id?: string
           created_at?: string
           entry_action?: string | null
+          landing_page_url?: string | null
           material?: string | null
           raw_message_id?: string | null
           source_id?: string | null
           source_key?: string | null
           trigger_label?: string | null
           updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: [
           {

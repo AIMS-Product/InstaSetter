@@ -28,6 +28,17 @@ const brandEnvSchema = z.object({
     .string()
     .url()
     .default('https://booking.vendingpreneurs.com/AK-DM'),
+  // Instagram handle (no `@`) — used to build `ig.me/m/{handle}?ref=...` deep
+  // links for paid traffic and bio links. Optional so deployments that don't
+  // surface deep links yet keep working. The marketing-sources Setup Copy
+  // Panel falls back to a placeholder hint when this is unset.
+  BRAND_INSTAGRAM_HANDLE: z
+    .string()
+    .regex(
+      /^[A-Za-z0-9._]+$/,
+      'BRAND_INSTAGRAM_HANDLE must be the IG handle without @'
+    )
+    .optional(),
 })
 
 const sendpulseEnvSchema = z.object({
@@ -114,6 +125,7 @@ export function getBrandConfig() {
   return brandEnvSchema.parse({
     BRAND_NAME: process.env.BRAND_NAME,
     BOOKING_URL: process.env.BOOKING_URL,
+    BRAND_INSTAGRAM_HANDLE: process.env.BRAND_INSTAGRAM_HANDLE,
   })
 }
 

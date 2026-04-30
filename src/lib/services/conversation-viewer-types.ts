@@ -29,6 +29,14 @@ export interface ConversationAttribution {
   material: string | null
   entry_action: string | null
   trigger_label: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  utm_content: string | null
+  utm_term: string | null
+  ad_id: string | null
+  ad_set_id: string | null
+  landing_page_url: string | null
 }
 
 export interface ConversationMessage {

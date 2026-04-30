@@ -34,6 +34,13 @@ export async function createMarketingSourceAction(formData: FormData) {
     postUrl: value(formData, 'postUrl'),
     adId: value(formData, 'adId'),
     notes: value(formData, 'notes'),
+    utmSource: value(formData, 'utmSource'),
+    utmMedium: value(formData, 'utmMedium'),
+    utmCampaign: value(formData, 'utmCampaign'),
+    utmContent: value(formData, 'utmContent'),
+    utmTerm: value(formData, 'utmTerm'),
+    adSetId: value(formData, 'adSetId'),
+    landingPageUrl: value(formData, 'landingPageUrl'),
   })
 
   if (!result.success) throw new Error(result.error)
