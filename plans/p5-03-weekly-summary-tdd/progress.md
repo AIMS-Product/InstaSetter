@@ -41,5 +41,8 @@ Phase 3 is unshipped (no `leads.close_crm_id` populated in the last 14 days).
 
 Implementation complete. 30 new test cases, all green; full suite (452
 tests across 45 files) green; type-check + lint clean (0 new warnings);
-build green with stub env vars. PR open at base
-`feat/p5-01-utm-tracking`.
+build green with stub env vars.
+
+PR: https://github.com/AIMS-Product/InstaSetter/pull/9
+Stacks on: #5 (feat/p5-01-utm-tracking)
+Soft-deps: #6 (feat/p3-01-push-emails-close)
