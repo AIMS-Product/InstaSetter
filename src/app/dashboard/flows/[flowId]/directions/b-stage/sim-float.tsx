@@ -9,6 +9,7 @@ import type { BlockOverrides } from '@/lib/prompts/compile-block/schemas'
 import { useFlowActions, useFlowState } from '../../store'
 import { getSimulatorStatus } from '../../surface-status'
 import type { Turn } from '../../types'
+import { getActiveBlockLabel } from './active-block'
 import { B } from './palette'
 import { isFlowCompileEnabled } from './simulator-overrides'
 import { simulateReplyAction } from './simulator-actions'
@@ -190,9 +191,11 @@ export default function BSimFloat({
             fontWeight: 600,
           }}
         >
-          {activeBlock
-            ? `${getBlockDisplayLabel(activeBlock.type)} selected`
-            : 'Flow-wide draft'}
+          {pending && state.simActiveBlock
+            ? `Currently replying as ${getActiveBlockLabel(state.simActiveBlock)}`
+            : activeBlock
+              ? `${getBlockDisplayLabel(activeBlock.type)} selected`
+              : 'Flow-wide draft'}
         </span>
         <span style={{ flex: 1 }} />
         <IconButton

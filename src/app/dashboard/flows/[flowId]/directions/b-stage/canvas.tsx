@@ -16,9 +16,10 @@ import {
   getBlockBlurb,
   getBlockDisplayLabel,
 } from '@/lib/dashboard/flow-builder-labels'
-import { blockColor, blockInk, blockTint } from '../../shared-data'
+import { blockColor, blockTint } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import type { BlockType, FlowNode } from '../../types'
+import { ActiveBlockLegend } from './active-block-legend'
 import { B } from './palette'
 
 const B_COL = 320
@@ -61,12 +62,18 @@ function Node({
   const p = dragOverridePx ?? nodePx(node)
   const exitCount = node.branches.length
 
+  // Active treatment uses a separate visual axis from `selected` (which keeps
+  // its 3px outline + accent border). Active = doubled top stripe (3 → 6px),
+  // a 1px tint border, and a subtle pulsing outer glow. Pulse animation is
+  // suppressed for users with `prefers-reduced-motion: reduce`.
+  const activeBorder = active && !selected ? color : undefined
   return (
     <div
       ref={nodeRef}
       role="button"
       tabIndex={0}
-      aria-label={`Block ${node.name}${selected ? ', selected' : ''}. Arrow keys to move, Enter to edit.`}
+      data-active={active ? 'true' : 'false'}
+      aria-label={`Block ${node.name}${selected ? ', selected' : ''}${active ? ', currently replying' : ''}. Arrow keys to move, Enter to edit.`}
       aria-pressed={selected}
       onPointerDown={(e) => {
         if (e.button !== 0) return
@@ -76,6 +83,7 @@ function Node({
       onClick={() => onSelect(node.id)}
       onFocus={() => onSelect(node.id)}
       onKeyDown={(e) => onKeyDown(node.id, e)}
+      className={active ? 'flow-node-active' : undefined}
       style={{
         position: 'absolute',
         left: p.x,
@@ -85,11 +93,11 @@ function Node({
         background: B.panel,
         borderRadius: 12,
         cursor: 'grab',
-        border: `1px solid ${selected ? B.accent : B.line}`,
+        border: `1px solid ${selected ? B.accent : (activeBorder ?? B.line)}`,
         boxShadow: selected
           ? `0 0 0 3px ${B.accentSoft}, 0 8px 24px rgba(22,21,40,0.10)`
           : active
-            ? `0 0 0 3px ${tint}, 0 4px 14px rgba(22,21,40,0.08)`
+            ? `0 0 0 1px ${tint}, 0 4px 14px rgba(22,21,40,0.08)`
             : '0 1px 2px rgba(22,21,40,0.04)',
         overflow: 'hidden',
         transition: 'box-shadow .18s, border-color .18s',
@@ -97,9 +105,18 @@ function Node({
         touchAction: 'none',
         display: 'flex',
         flexDirection: 'column',
+        // CSS custom property the keyframe consumes for the outer-glow color.
+        ['--flow-node-active-glow' as string]: tint,
       }}
     >
-      <div style={{ height: 3, background: color, flexShrink: 0 }} />
+      <div
+        style={{
+          height: active ? 6 : 3,
+          background: color,
+          flexShrink: 0,
+          transition: 'height .18s',
+        }}
+      />
       <div
         style={{
           padding: '16px 18px',
@@ -157,7 +174,7 @@ function Node({
             </span>
           )}
         </div>
-        {(active || exitCount > 0) && (
+        {exitCount > 0 && (
           <div
             style={{
               display: 'flex',
@@ -168,34 +185,18 @@ function Node({
               flexShrink: 0,
             }}
           >
-            {active && (
-              <span
-                style={{
-                  fontSize: 10,
-                  padding: '2px 7px',
-                  background: tint,
-                  color: blockInk(node.type),
-                  borderRadius: 999,
-                  fontWeight: 600,
-                }}
-              >
-                Active
-              </span>
-            )}
-            {exitCount > 0 && (
-              <span
-                style={{
-                  fontSize: 10,
-                  padding: '2px 7px',
-                  borderRadius: 999,
-                  background: B.lineSoft,
-                  color: B.ink2,
-                  fontWeight: 600,
-                }}
-              >
-                {exitCount} path{exitCount === 1 ? '' : 's'}
-              </span>
-            )}
+            <span
+              style={{
+                fontSize: 10,
+                padding: '2px 7px',
+                borderRadius: 999,
+                background: B.lineSoft,
+                color: B.ink2,
+                fontWeight: 600,
+              }}
+            >
+              {exitCount} path{exitCount === 1 ? '' : 's'}
+            </span>
           </div>
         )}
       </div>
@@ -1447,6 +1448,9 @@ export default function BCanvas() {
           style={{ color: B.ink2 }}
         />
       </div>
+
+      {/* simulator active-block legend (only visible during sim runs) */}
+      <ActiveBlockLegend />
 
       {/* canvas summary */}
       <div

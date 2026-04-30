@@ -184,3 +184,36 @@ a:focus-visible,
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Flow Builder simulator — active-block highlight.
+   Subtle pulse on the canvas node that's currently "responding". The block
+   tint is passed in via --flow-node-active-glow so each block keeps its own
+   color. Reduced-motion users see the static treatment only. */
+@keyframes flow-node-active-pulse {
+  0% {
+    box-shadow:
+      0 0 0 1px var(--flow-node-active-glow, #ddd),
+      0 4px 14px rgba(22, 21, 40, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px var(--flow-node-active-glow, #ddd),
+      0 0 18px var(--flow-node-active-glow, rgba(22, 21, 40, 0.12)),
+      0 4px 14px rgba(22, 21, 40, 0.08);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px var(--flow-node-active-glow, #ddd),
+      0 4px 14px rgba(22, 21, 40, 0.06);
+  }
+}
+
+.flow-node-active {
+  animation: flow-node-active-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-node-active {
+    animation: none;
+  }
+}
