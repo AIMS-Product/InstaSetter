@@ -16,7 +16,8 @@ import RPHeader from './header'
 import { BRAND_INBOX_STATUS, StatusNote } from '../surface-status'
 
 // Status tones mirror the real write surface in
-// src/lib/services/conversation.ts: {active, stalled, completed}.
+// src/lib/services/conversation.ts: {active, stalled, completed} plus
+// `flagged` for conversations paused via `request_human_review`.
 // Unknown values fall through to `stalled` tone so badges stay visible.
 const STATUS_TONE = (
   p: Palette
@@ -24,10 +25,17 @@ const STATUS_TONE = (
   active: { bg: p.accentSoft, fg: p.accentInk, label: 'Active' },
   stalled: { bg: '#FBE7D9', fg: '#8B4316', label: 'Stalled' },
   completed: { bg: '#E6EFE1', fg: '#3A5A32', label: 'Completed' },
+  flagged: { bg: '#FBEAEA', fg: '#8E2A2A', label: 'Flagged' },
 })
 
 const FALLBACK_TONE_KEY = 'stalled'
-const STATUS_OPTIONS = ['all', 'active', 'stalled', 'completed'] as const
+const STATUS_OPTIONS = [
+  'all',
+  'active',
+  'stalled',
+  'completed',
+  'flagged',
+] as const
 const SCOPE_OPTIONS = ['flow', 'all'] as const
 
 type InboxStatusFilter = (typeof STATUS_OPTIONS)[number]
@@ -384,6 +392,7 @@ export default function PageRuns({
               <option value="active">Active</option>
               <option value="stalled">Stalled</option>
               <option value="completed">Completed</option>
+              <option value="flagged">Needs human</option>
             </select>
             <span style={{ fontSize: 11, color: p.ink3 }}>
               {runs === null
@@ -530,6 +539,21 @@ export default function PageRuns({
                     {timeAgo(r.last_message_at ?? r.started_at)}
                   </span>
                   <span style={{ flex: 1 }} />
+                  {r.human_review_pause && (
+                    <span
+                      title={`Paused: ${r.human_review_pause.reason}`}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        background: '#FBEAEA',
+                        color: '#8E2A2A',
+                      }}
+                    >
+                      Needs human
+                    </span>
+                  )}
                   <span
                     style={{
                       padding: '2px 8px',

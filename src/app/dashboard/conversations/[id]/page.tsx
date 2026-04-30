@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getConversation, interleave } from '@/lib/services/conversation-viewer'
 import { ToolBadge } from '@/components/tool-badge'
 import { formatAttributionLabel } from '@/lib/services/marketing-attribution'
+import { HumanReviewBanner } from './human-review-banner'
 
 export const revalidate = 0
 
@@ -100,6 +101,13 @@ export default async function ConversationDetailPage({ params }: Params) {
             <span>Started {formatDate(conversation.started_at)}</span>
           </div>
         </header>
+
+        {conversation.human_review_pause && (
+          <HumanReviewBanner
+            conversationId={conversation.id}
+            pause={conversation.human_review_pause}
+          />
+        )}
 
         {conversation.summary && (
           <div

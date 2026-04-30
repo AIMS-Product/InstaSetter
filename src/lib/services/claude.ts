@@ -114,6 +114,28 @@ const TOOLS: Tool[] = [
       },
     },
   },
+  {
+    name: 'request_human_review',
+    description:
+      'Use when the prospect\'s tone, pattern of questioning, or content escalates beyond what a peer-mentor reply can address. Pauses bot replies on this conversation until a human clears it. Pair the tool call with one short warm bridge message (e.g., "Let me get someone from the team to come back to you on this") in the same response.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        reason: {
+          type: 'string',
+          description:
+            'One to three sentences explaining why this needs a human, in your own words. The operator will read this verbatim.',
+        },
+        severity: {
+          type: 'string',
+          enum: ['concern', 'hostile', 'compliance'],
+          description:
+            'concern: prospect is skeptical and has asked a hard question. hostile: tone has turned aggressive. compliance: prospect raised legal, fraud, or regulatory issues that need human handling.',
+        },
+      },
+      required: ['reason'],
+    },
+  },
 ]
 
 interface ClaudeRequest {
