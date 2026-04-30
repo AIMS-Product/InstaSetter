@@ -1,8 +1,11 @@
 import Link from 'next/link'
+import { SurfaceBadge } from '@/components/ui/surface-badge'
+import { getSurfaceLabel } from '@/lib/dashboard/surface-labels'
 import { KNOWN_FLOWS, resolveFlowBrand } from './[flowId]/flow-config'
 
 export default function FlowsIndexPage() {
   const brand = resolveFlowBrand(process.env.BRAND_NAME)
+  const surface = getSurfaceLabel('dashboard.flows.index')
 
   return (
     <main
@@ -11,19 +14,26 @@ export default function FlowsIndexPage() {
       className="flex-1 overflow-auto bg-[#FAFAFB] px-6 py-8 sm:px-10"
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <header>
-          <h1
-            className="m-0 text-[32px] font-normal tracking-tight text-[#161528]"
-            style={{
-              fontFamily:
-                'var(--font-instrument-serif), ui-serif, Georgia, serif',
-            }}
-          >
-            Flows
-          </h1>
-          <p className="mt-1 text-[13px] text-[#6B6A7E]">
-            Conversation flows configured for {brand}.
-          </p>
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1
+              className="m-0 text-[32px] font-normal tracking-tight text-[#161528]"
+              style={{
+                fontFamily:
+                  'var(--font-instrument-serif), ui-serif, Georgia, serif',
+              }}
+            >
+              Flows
+            </h1>
+            <p className="mt-1 text-[13px] text-[#6B6A7E]">
+              Conversation flows configured for {brand}.
+            </p>
+          </div>
+          <SurfaceBadge
+            state={surface.state}
+            display={surface.display}
+            detail={surface.detail}
+          />
         </header>
 
         <section aria-label="Configured flows">

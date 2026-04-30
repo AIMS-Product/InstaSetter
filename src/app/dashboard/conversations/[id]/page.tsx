@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { getConversation, interleave } from '@/lib/services/conversation-viewer'
 import { ToolBadge } from '@/components/tool-badge'
 import { formatAttributionLabel } from '@/lib/services/marketing-attribution'
+import { SurfaceBadge } from '@/components/ui/surface-badge'
+import { getSurfaceLabel } from '@/lib/dashboard/surface-labels'
 
 export const revalidate = 0
 
@@ -29,6 +31,7 @@ export default async function ConversationDetailPage({ params }: Params) {
   if (!conversation) notFound()
 
   const timeline = interleave(conversation.messages, conversation.events)
+  const surface = getSurfaceLabel('dashboard.conversations.detail')
 
   return (
     <main
@@ -60,9 +63,16 @@ export default async function ConversationDetailPage({ params }: Params) {
           >
             ← All conversations
           </Link>
-          <span style={{ fontSize: 11.5, color: '#6B6A7E' }}>
-            Prompt {conversation.prompt_version} · {conversation.status}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <SurfaceBadge
+              state={surface.state}
+              display={surface.display}
+              detail={surface.detail}
+            />
+            <span style={{ fontSize: 11.5, color: '#6B6A7E' }}>
+              Prompt {conversation.prompt_version} · {conversation.status}
+            </span>
+          </div>
         </div>
 
         <header style={{ marginBottom: 24 }}>

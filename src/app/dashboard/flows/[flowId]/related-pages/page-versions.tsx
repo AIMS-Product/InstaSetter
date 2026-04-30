@@ -37,6 +37,7 @@ export default function PageVersions({ p }: { p: Palette }) {
             tone={state.dirtySincePublish ? 'warning' : 'neutral'}
           />
         }
+        surfaceLabelKey="dashboard.flows.detail"
       />
       <StatusNote
         p={p}
