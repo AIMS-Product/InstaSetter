@@ -6,6 +6,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     exclude: ['**/node_modules/**', '**/.claude/**'],
+    server: {
+      deps: {
+        // `server-only` throws under jsdom — alias it to a no-op for tests so
+        // server-side modules importing it can be unit-tested.
+        inline: ['server-only'],
+      },
+    },
   },
   resolve: {
     alias: {

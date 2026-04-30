@@ -8,9 +8,10 @@ import {
   parsePersonaSections,
   type PersonaSection,
 } from '../directions/b-stage/block-sections'
+import { GuardrailsPanel } from '../directions/b-stage/block-panels/guardrails'
 import { SANS_FAMILY, SERIF_FAMILY } from '../shared-data'
-import { useFlowState } from '../store'
-import type { Guardrail, Palette } from '../types'
+import { useFlowDispatch, useFlowState } from '../store'
+import type { BrandGuardrail, Guardrail, Palette } from '../types'
 import RPHeader from './header'
 
 // Persona section key -> lock catalog id. The identity section is the
@@ -32,6 +33,7 @@ function lockIdForSection(section: PersonaSection) {
 
 export default function PageBot({ p }: { p: Palette }) {
   const state = useFlowState()
+  const dispatch = useFlowDispatch()
   const bot = state.bot
   const displayName = bot.name.trim() || 'No public bot name'
 
@@ -47,6 +49,14 @@ export default function PageBot({ p }: { p: Palette }) {
       }),
     [bot.messageConstraints, bot.persona]
   )
+  const personaForbiddenPhrases = useMemo<Guardrail[]>(
+    () => globalGuardrails.filter((g) => g.source.endsWith('persona.ts')),
+    [globalGuardrails]
+  )
+
+  function handleBrandGuardrailsChange(next: BrandGuardrail[]): void {
+    dispatch({ type: 'update_bot', patch: { brandGuardrails: next } })
+  }
 
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>
@@ -201,6 +211,18 @@ export default function PageBot({ p }: { p: Palette }) {
               </li>
             ))}
           </ul>
+        </SettingsSection>
+
+        <SettingsSection
+          p={p}
+          label="Brand guardrails — never say"
+          sub="Operator-curated forbidden phrases. Stack on top of the persona-locked phrases above."
+        >
+          <GuardrailsPanel
+            guardrails={bot.brandGuardrails ?? []}
+            lockedPersonaPhrases={personaForbiddenPhrases}
+            onChange={handleBrandGuardrailsChange}
+          />
         </SettingsSection>
 
         <SettingsSection

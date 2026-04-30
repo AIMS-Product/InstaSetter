@@ -279,6 +279,39 @@ describe('compileBlock — goal/guidance overrides', () => {
     )
   })
 
+  it('appends brand guardrails sandbox directive when overrides include phrases', async () => {
+    const compiled = await compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'opening',
+        brandGuardrails: [
+          {
+            id: '11111111-2222-4333-8444-555555555555',
+            phrase: 'passive income',
+            note: 'Anthony hates it.',
+            createdAt: '2026-04-29T00:00:00.000Z',
+          },
+        ],
+      },
+    })
+
+    expect(compiled).toContain('Sandbox-only Brand Guardrails')
+    expect(compiled).toContain(
+      '- Never say "passive income" — note: Anthony hates it.'
+    )
+  })
+
+  it('omits the brand guardrails sandbox directive when override list is empty', async () => {
+    const compiled = await compileBlock({
+      brand: BRAND,
+      overrides: {
+        activeBlockType: 'opening',
+        brandGuardrails: [],
+      },
+    })
+    expect(compiled).not.toContain('Sandbox-only Brand Guardrails')
+  })
+
   it('appends post-email behavior overrides when provided (legacy URL attachment)', async () => {
     const compiled = await compileBlock({
       brand: BRAND,

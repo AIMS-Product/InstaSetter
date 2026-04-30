@@ -13,6 +13,7 @@ import {
   DEFAULT_PRE_BOOKING_STEP,
   type PreBookingStep,
 } from './pre-booking-step'
+import { buildBrandGuardrails, type BrandGuardrail } from './brand-guardrails'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
 const PROMPT_VERSION = 'setter-v2'
@@ -51,6 +52,12 @@ interface BuildSystemPromptOptions {
    * `enabled: false`. See `@/lib/services/pre-booking-resolver`.
    */
   preBookingStep?: PreBookingStep
+  /**
+   * Operator-owned brand guardrails (forbidden phrases). Stack on top of the
+   * data-locked Forbidden Phrases section in `persona.ts`. Default `[]` keeps
+   * the assembled prompt byte-identical to today.
+   */
+  brandGuardrails?: BrandGuardrail[]
 }
 
 export function buildSystemPrompt({
@@ -62,9 +69,17 @@ export function buildSystemPrompt({
   leadSourceContext,
   postEmailBehavior,
   preBookingStep = DEFAULT_PRE_BOOKING_STEP,
+  brandGuardrails,
 }: BuildSystemPromptOptions): string {
+  // Brand guardrails sit between persona and company-context. Persona ships
+  // the data-locked Forbidden Phrases; brand guardrails are conceptually a
+  // brand-level forbidden-phrase set, so they live adjacent. An empty list
+  // emits no bytes — see buildBrandGuardrails.
+  const brandGuardrailsBlock = buildBrandGuardrails(brandGuardrails ?? [])
+
   const sections = [
     buildPersona(brandName),
+    ...(brandGuardrailsBlock ? [brandGuardrailsBlock] : []),
     buildCompanyContext(brandName),
     buildLocationGate(brandName),
     buildQualificationCriteria(),

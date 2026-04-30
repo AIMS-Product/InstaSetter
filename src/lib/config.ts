@@ -224,3 +224,11 @@ export function isFlowVersionsEnabled(): boolean {
 export function isLivePreBookingStepEnabled(): boolean {
   return process.env.LIVE_PRE_BOOKING_STEP_ENABLED !== 'false'
 }
+
+// Brand-guardrails read-path flag (P1.04).
+// Default: enabled. Empty list is a no-op so this is safe-by-default.
+// Flip to "false" to suppress the operator-curated Brand Guardrails section
+// from the live system prompt, regardless of what the resolver returns.
+export function isLiveBrandGuardrailsEnabled(): boolean {
+  return process.env.LIVE_BRAND_GUARDRAILS_ENABLED !== 'false'
+}

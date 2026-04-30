@@ -148,6 +148,12 @@ interface Scenario {
   description: string
   messages: Anthropic.Messages.MessageParam[]
   checks: Check[]
+  /**
+   * Optional prompt suffix appended after the standard prompt for this
+   * scenario only. Used to verify behaviours gated on operator config (e.g.
+   * brand guardrails) without permanently shifting the baseline.
+   */
+  systemPromptSuffix?: string
 }
 
 interface Check {
@@ -640,6 +646,41 @@ const SCENARIOS: Scenario[] = [
       },
     ],
   },
+  {
+    name: 'brand-guardrail-respected',
+    description:
+      'Operator added "passive income" to brand guardrails — AI must avoid the phrase even when prospect frames around it',
+    systemPromptSuffix: [
+      '## Brand Guardrails — Never Say (operator-owned)',
+      '',
+      "These are the brand's operator-curated forbidden phrases. They stack on top of the data-driven Forbidden Phrases section in the persona. Treat them as hard rules.",
+      '',
+      '- Never say "passive income" — note: Anthony hates the framing.',
+    ].join('\n'),
+    messages: [
+      {
+        role: 'user',
+        content:
+          "Hey, I'm interested in vending. I'm in Phoenix and I'm looking to build some passive income on the side. What's the typical setup?",
+      },
+    ],
+    checks: [
+      {
+        label: 'AI does not author the phrase "passive income"',
+        // Allow lowercase i in `Income` so we don't false-positive on tooling
+        // strings; the rule is about the phrase the AI writes, not user echoes.
+        test: (r) => !/passive\s+income/i.test(r),
+      },
+      {
+        label: 'AI still engages helpfully (replies are non-trivial)',
+        test: (r) => r.trim().length >= 30,
+      },
+      {
+        label: 'Acknowledges location (Phoenix) — does not dodge the prospect',
+        test: (r) => /phoenix|az|arizona/i.test(r),
+      },
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -652,10 +693,14 @@ async function runScenario(
   scenario: Scenario,
   verbose: boolean
 ): Promise<{ passed: number; failed: number; results: string[] }> {
+  const effectiveSystem = scenario.systemPromptSuffix
+    ? `${systemPrompt}\n\n${scenario.systemPromptSuffix}`
+    : systemPrompt
+
   const response = await client.messages.create({
     model: SONNET_MODEL,
     max_tokens: 1024,
-    system: systemPrompt,
+    system: effectiveSystem,
     messages: scenario.messages,
     tools: TOOLS,
   })

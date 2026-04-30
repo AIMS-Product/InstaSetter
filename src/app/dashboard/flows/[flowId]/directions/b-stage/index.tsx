@@ -46,8 +46,15 @@ function Shell({
         brand,
         bookingUrl,
         triggers: state.triggers,
+        brandGuardrails: state.bot.brandGuardrails ?? [],
       }),
-    [bookingUrl, brand, selectedBlock, state.triggers]
+    [
+      bookingUrl,
+      brand,
+      selectedBlock,
+      state.triggers,
+      state.bot.brandGuardrails,
+    ]
   )
 
   const dismissToast = useCallback(() => actions.toast(null), [actions])
