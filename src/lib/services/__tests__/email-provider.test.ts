@@ -55,6 +55,10 @@ describe('sendTransactionalEmail (shim)', () => {
       attachment: null,
     })
     expect(result.success).toBe(false)
+    if (result.success === false) {
+      expect(result.error).toBe('NOT_CONFIGURED')
+      expect(result.retryable).toBe(false)
+    }
   })
 
   it('does not throw on malformed input (caller validation is upstream)', async () => {
@@ -68,7 +72,12 @@ describe('sendTransactionalEmail (shim)', () => {
       body: '',
       idempotencyKey: '',
     } as unknown as SendTransactionalEmailInput
-    await expect(sendTransactionalEmail(malformed)).resolves.toBeDefined()
+    const result = await sendTransactionalEmail(malformed)
+    expect(result.success).toBe(false)
+    if (result.success === false) {
+      expect(result.error).toBe('NOT_CONFIGURED')
+      expect(result.retryable).toBe(false)
+    }
   })
 
   it('exposes a discriminated union so callers can narrow on success', async () => {

@@ -89,6 +89,12 @@ describe('getEmailProviderConfig (P2.01 — Resend)', () => {
   it('returns all-null when no RESEND_* env vars are set', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    // Explicitly clear RESEND_* vars to prevent leakage from real environment
+    vi.stubEnv('RESEND_API_KEY', '')
+    vi.stubEnv('RESEND_WEBHOOK_SECRET', '')
+    vi.stubEnv('RESEND_FROM_ADDRESS', '')
+    vi.stubEnv('RESEND_FROM_DISPLAY_NAME', '')
+    vi.stubEnv('RESEND_REPLY_TO', '')
     const { getEmailProviderConfig } = await import('@/lib/config')
     const cfg = getEmailProviderConfig()
     expect(cfg.RESEND_API_KEY).toBeNull()
@@ -129,6 +135,12 @@ describe('getEmailProviderConfig (P2.01 — Resend)', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
     // ANTHROPIC_API_KEY, SUPABASE_SERVICE_ROLE_KEY, BRAND_NAME all absent.
+    // Explicitly clear RESEND_* vars to ensure isolation from real environment
+    vi.stubEnv('RESEND_API_KEY', '')
+    vi.stubEnv('RESEND_WEBHOOK_SECRET', '')
+    vi.stubEnv('RESEND_FROM_ADDRESS', '')
+    vi.stubEnv('RESEND_FROM_DISPLAY_NAME', '')
+    vi.stubEnv('RESEND_REPLY_TO', '')
     const { getEmailProviderConfig } = await import('@/lib/config')
     expect(() => getEmailProviderConfig()).not.toThrow()
   })
