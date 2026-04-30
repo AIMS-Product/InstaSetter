@@ -76,6 +76,22 @@ function getInitialCloseSyncStatus(): InboxCloseSyncFilter {
     : 'any'
 }
 
+/**
+ * The dashboard tile (P3.03) emits `from`/`to` as ISO 8601 timestamps. The
+ * inbox's <input type="date"> expects YYYY-MM-DD. Coerce both shapes so a
+ * direct deep-link from the tile pre-populates the date inputs cleanly.
+ */
+function getInitialDateParam(name: 'from' | 'to'): string {
+  const raw = getInitialParam(name)
+  if (!raw) return ''
+  // Already in YYYY-MM-DD shape — date input accepts it as-is.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+  // ISO timestamp from the dashboard tile — extract the date portion.
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toISOString().slice(0, 10)
+}
+
 function dateInputToIso(value: string, endOfDay = false): string | undefined {
   if (!value) return undefined
   const date = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00'}`)
@@ -133,8 +149,8 @@ export default function PageRuns({
   const [detailResult, setDetailResult] = useState<DetailResult | null>(null)
   const [searchInput, setSearchInput] = useState(() => getInitialParam('q'))
   const [search, setSearch] = useState(() => getInitialParam('q'))
-  const [dateFrom, setDateFrom] = useState(() => getInitialParam('from'))
-  const [dateTo, setDateTo] = useState(() => getInitialParam('to'))
+  const [dateFrom, setDateFrom] = useState(() => getInitialDateParam('from'))
+  const [dateTo, setDateTo] = useState(() => getInitialDateParam('to'))
   const [statusFilter, setStatusFilter] =
     useState<InboxStatusFilter>(getInitialStatus)
   const [scopeFilter, setScopeFilter] = useState<InboxScopeFilter>(() =>

@@ -193,4 +193,35 @@ describe('PageRuns — closeSyncStatus URL state', () => {
     )
     expect(options).toEqual(['any', 'sent', 'failed', 'pending', 'not_synced'])
   })
+
+  // The dashboard tile (P3.03) navigates here with `from`/`to` as ISO 8601
+  // timestamps. The inbox's <input type="date"> expects YYYY-MM-DD. Verify
+  // the deep-link contract — a click on the tile pre-populates the date
+  // inputs without dropping the ISO portion onto the floor.
+  it('coerces ISO timestamp from/to params into YYYY-MM-DD on mount', async () => {
+    setSearchParams(
+      '?closeSyncStatus=sent&from=2026-04-27T00%3A00%3A00.000Z&to=2026-04-29T12%3A34%3A00.000Z'
+    )
+
+    render(
+      <PageRuns
+        p={B}
+        flowId="ig-organic-dm"
+        defaultScope="all"
+        flowScopeLabel="Instagram DM"
+      />
+    )
+
+    const fromInput = screen.getByLabelText(/from date/i) as HTMLInputElement
+    const toInput = screen.getByLabelText(/to date/i) as HTMLInputElement
+    expect(fromInput.value).toBe('2026-04-27')
+    expect(toInput.value).toBe('2026-04-29')
+
+    // Action call still includes the closeSyncStatus filter.
+    await waitFor(() => {
+      expect(fetchFlowRunsAction).toHaveBeenLastCalledWith(
+        expect.objectContaining({ closeSyncStatus: 'sent' })
+      )
+    })
+  })
 })
