@@ -328,3 +328,125 @@ custom field IDs + cron secret. Spec describes the procedure:
 6. Disable internet on Vercel for that deployment, repeat — confirm
    `close_sync_status='failed'` after 5 attempts and the cron picks
    it up an hour later.
+
+---
+
+# QA review: P3.02 — Sent-to-Close status badge
+
+The badge is read-only. There is no side effect to roll back, no
+flag to flip, and no migration to apply (the columns it reads were
+added by P3.01). The QA below verifies the badge renders the four
+states correctly across the inbox row and the detail header.
+
+## 1. Service projection (unit)
+
+**Commit**: `2cbd5eb` | **Type**: service | **Status**: Verified
+
+### Steps to test
+
+1. `npm test -- --run src/lib/services/__tests__/conversation-viewer.test.ts`
+2. Five tests pass.
+
+### What is verified
+
+- `listConversations` returns `closeSync.status === 'sent'` when the
+  underlying lead row has that status, with `closeLeadId` plumbed from
+  `close_crm_id`.
+- `listConversations` returns `closeSync: null` when no lead row
+  exists for the conversation.
+- `listConversations` keeps the most-recently-created lead per
+  conversation (multi-lead path — rare but real after
+  `generate_summary` retries).
+- `getConversation` projects the same shape from a single
+  `maybeSingle()` lookup ordered by `created_at desc`.
+- `getConversation` returns `closeSync: null` when no lead row
+  exists.
+
+## 2. CloseSyncBadge component (unit)
+
+**Commit**: `3b7c7a8` | **Type**: component | **Status**: Verified
+
+### Steps to test
+
+1. `npm test -- --run src/components/__tests__/close-sync-badge.test.tsx`
+2. Ten tests pass.
+
+### What is verified
+
+- `null` sync ⇒ component renders nothing (parent layout stays flat).
+- `skipped` ⇒ renders nothing (flag-off / cold-skip).
+- `pending` with `attempts=0` ⇒ renders nothing (no work yet).
+- `sent` with `closeLeadId` ⇒ `<a target="_blank">` with the
+  `https://app.close.com/lead/{id}/` URL and the success Chip inside.
+- `sent` with `disableLink=true` ⇒ static green Chip (used in the
+  inbox row to keep the parent button valid).
+- `sent` with `closeLeadId=null` ⇒ green Chip without the link
+  (handles the P3.01 race window).
+- `failed` ⇒ red Chip with the truncated error in `title`,
+  ellipsis when over 140 chars, plumbed through `aria-label` for
+  screen readers.
+- `failed_permanent` ⇒ visually identical to `failed` (v1 spec).
+- `pending` with `attempts >= 1` ⇒ amber Chip "Syncing to Close…".
+
+## 3. Inbox row + detail header rendering
+
+**Commit**: `4233924` | **Type**: integration | **Status**: Manual smoke
+
+### Steps to test
+
+1. Run `npm run dev` against a Supabase project with at least one
+   lead row whose `close_sync_status` is `sent` (or insert one
+   manually if cutover hasn't happened yet):
+
+   ```sql
+   UPDATE public.leads
+      SET close_sync_status = 'sent',
+          close_crm_id = 'lead_test123',
+          close_sync_attempted_at = now(),
+          close_sync_attempts = 1
+    WHERE id = '<a-real-lead-row-id>';
+   ```
+
+2. Open `/dashboard/conversations` (or the flow inbox).
+3. The matching conversation row shows a green `Sent to Close`
+   chip to the left of the existing status pill. The chip has no
+   click-through in the row context.
+4. Click the row to open the detail panel.
+5. The detail header shows the same green chip beside the contact
+   name. This chip IS a link — clicking it opens
+   `https://app.close.com/lead/lead_test123/` in a new tab.
+6. Insert a `failed` row similarly:
+
+   ```sql
+   UPDATE public.leads
+      SET close_sync_status = 'failed',
+          close_crm_id = NULL,
+          close_sync_error_message = 'Custom field cf_xyz unknown',
+          close_sync_attempted_at = now(),
+          close_sync_attempts = 5
+    WHERE id = '<another-lead-row-id>';
+   ```
+
+7. The corresponding row shows a red `Close sync failed` chip;
+   hovering reveals the error in the tooltip. Detail header behaves
+   the same.
+
+## 4. Accessibility quick check
+
+### Steps to test
+
+1. Tab through the inbox. The badge anchor (in detail header) is
+   focusable; focus ring uses the chip's success-tone outline.
+2. Hover the failed chip — `title` shows the error preview.
+3. Screen reader announces "Sent to Close, link" when the link
+   variant is focused; "Close sync failed: <error preview>" for the
+   failed variant via `aria-label` + `sr-only` span.
+
+## 5. Production safety
+
+- Read-only. No write paths touched.
+- Until cutover, every `closeSync` is null and the badge renders
+  nothing — visual no-op.
+- After cutover, badges appear automatically on conversations whose
+  leads sync — no further enablement step.
+- Rollback: revert the PR. No data migration to unwind.
