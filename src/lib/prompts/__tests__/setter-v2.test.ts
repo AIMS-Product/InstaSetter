@@ -372,4 +372,37 @@ describe('setter-v2 buildSystemPrompt', () => {
     expect(leadSourceSection).not.toContain('Trigger:')
     expect(leadSourceSection).toMatch(/short affirmative/i)
   })
+
+  it('NEVER injects UTM identifiers into the assembled prompt (P5.01 regression)', () => {
+    const prompt = buildSystemPrompt({
+      brandName: 'VP',
+      leadSourceContext: {
+        label: 'April Masterclass Comment',
+        channel: 'Instagram',
+        campaign: 'Free Masterclass',
+        utm: {
+          source: 'meta',
+          medium: 'cpc',
+          campaign: 'apr_masterclass',
+          content: 'reel_a',
+          term: 'startup',
+        },
+        adId: 'ad_12345',
+        adSetId: 'set_99',
+        landingPageUrl: 'https://example.com/lp',
+      },
+    })
+
+    // UTM identifiers are private operator metadata. Claude must never see
+    // them — leaking them would let the model echo `utm_source=meta` style
+    // strings back to prospects.
+    expect(prompt).not.toContain('utm_source')
+    expect(prompt).not.toContain('utm_medium')
+    expect(prompt).not.toContain('utm_campaign')
+    expect(prompt).not.toContain('utm_content')
+    expect(prompt).not.toContain('utm_term')
+    expect(prompt).not.toContain('ad_12345')
+    expect(prompt).not.toContain('set_99')
+    expect(prompt).not.toContain('https://example.com/lp')
+  })
 })

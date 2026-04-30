@@ -105,7 +105,7 @@ export async function listConversations(
   const { data: attributions } = await client
     .from('conversation_attributions')
     .select(
-      'conversation_id, source_id, source_key, channel, campaign, material, entry_action, trigger_label'
+      'conversation_id, source_id, source_key, channel, campaign, material, entry_action, trigger_label, utm_source, utm_medium, utm_campaign, utm_content, utm_term, ad_id, ad_set_id, landing_page_url'
     )
     .in('conversation_id', conversationIds)
 
@@ -227,7 +227,7 @@ export async function getConversation(
   const { data: attribution } = await client
     .from('conversation_attributions')
     .select(
-      'source_id, source_key, channel, campaign, material, entry_action, trigger_label'
+      'source_id, source_key, channel, campaign, material, entry_action, trigger_label, utm_source, utm_medium, utm_campaign, utm_content, utm_term, ad_id, ad_set_id, landing_page_url'
     )
     .eq('conversation_id', conversationId)
     .maybeSingle()

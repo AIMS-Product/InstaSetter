@@ -12,6 +12,7 @@ import {
   buildSourceSetupValues,
   listMarketingSources,
 } from '@/lib/services/marketing-sources'
+import { getBrandConfig } from '@/lib/config'
 import {
   archiveMarketingSourceAction,
   createMarketingSourceAction,
@@ -155,6 +156,17 @@ function WorkflowStep({
 export default async function MarketingSourcesPage() {
   const sourceResult = await listMarketingSources()
   const sources = sourceResult.sources
+  // The brand handle drives the `ig.me/m/{handle}?ref=...` deep link. When
+  // unset, `buildSourceSetupValues` omits the deep link section so operators
+  // are not handed a malformed URL.
+  const brand = (() => {
+    try {
+      return getBrandConfig()
+    } catch {
+      return undefined
+    }
+  })()
+  const handle = brand?.BRAND_INSTAGRAM_HANDLE
 
   return (
     <main
@@ -240,7 +252,7 @@ export default async function MarketingSourcesPage() {
               <WorkflowStep
                 n="2"
                 title="Copy the SendPulse setup"
-                detail="Add the generated variables and tag to that SendPulse flow."
+                detail="Paste the ig.me link into Ads Manager OR add the generated variables and tag to the SendPulse trigger."
               />
               <WorkflowStep
                 n="3"
@@ -437,6 +449,110 @@ export default async function MarketingSourcesPage() {
                     />
                   </div>
                 </div>
+
+                <details
+                  style={{
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTop: '1px solid #EEEFF3',
+                  }}
+                >
+                  <summary
+                    style={{
+                      cursor: 'pointer',
+                      listStyle: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      ...sectionLabelStyle,
+                    }}
+                  >
+                    UTM tagging (optional)
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: '#9A99AE',
+                        textTransform: 'none',
+                        letterSpacing: 0,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Click to expand for paid traffic
+                    </span>
+                  </summary>
+                  <p
+                    style={{
+                      margin: '10px 0 12px',
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                      color: '#6B6A7E',
+                    }}
+                  >
+                    Tag this source with the UTM convention your media buyer
+                    uses on the website. Suggested canonical values for
+                    <code style={{ margin: '0 4px' }}>utm_source</code>:{' '}
+                    <code>meta</code>, <code>instagram</code>,{' '}
+                    <code>tiktok</code>, <code>email</code>, <code>sms</code>.
+                    Cody can pin the final convention.
+                  </p>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                      gap: 14,
+                    }}
+                  >
+                    <Field
+                      name="utmSource"
+                      label="utm_source"
+                      placeholder="meta"
+                      help="Where the click originated. Pick a stable canonical value."
+                      example="meta"
+                    />
+                    <Field
+                      name="utmMedium"
+                      label="utm_medium"
+                      placeholder="cpc"
+                      help="Paid vs organic axis. Common values: cpc, organic, email, social."
+                      example="cpc"
+                    />
+                    <Field
+                      name="utmCampaign"
+                      label="utm_campaign"
+                      placeholder="apr_masterclass"
+                      help="The campaign or launch this entry point belongs to."
+                      example="apr_masterclass"
+                    />
+                    <Field
+                      name="utmContent"
+                      label="utm_content"
+                      placeholder="reel_a"
+                      help="Which creative variant. Use to A/B test reels or thumbnails."
+                      example="reel_a"
+                    />
+                    <Field
+                      name="utmTerm"
+                      label="utm_term"
+                      placeholder="startup"
+                      help="Optional keyword segment. Most teams leave this blank."
+                      example="startup"
+                    />
+                    <Field
+                      name="adSetId"
+                      label="Ad set ID"
+                      placeholder="Optional"
+                      help="Meta ad set identifier — useful for grouping creatives."
+                      example="Meta ad set ID"
+                    />
+                    <Field
+                      name="landingPageUrl"
+                      label="Landing page URL"
+                      placeholder="https://..."
+                      help="If the ad sent traffic through a landing page first."
+                      example="https://yourdomain.com/april-masterclass"
+                    />
+                  </div>
+                </details>
               </div>
 
               <aside
@@ -629,7 +745,7 @@ export default async function MarketingSourcesPage() {
             </section>
           )}
           {sources.map((source) => {
-            const setup = buildSourceSetupValues(source)
+            const setup = buildSourceSetupValues(source, { handle })
             return (
               <section
                 key={source.id}
@@ -723,7 +839,12 @@ export default async function MarketingSourcesPage() {
                   )}
                 </div>
 
-                <SetupCopyPanel variables={setup.variables} tag={setup.tag} />
+                <SetupCopyPanel
+                  variables={setup.variables}
+                  tag={setup.tag}
+                  refLink={setup.refLink}
+                  refLinkError={setup.refLinkError}
+                />
               </section>
             )
           })}
