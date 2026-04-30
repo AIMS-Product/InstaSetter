@@ -16,7 +16,7 @@ export function SummaryPanel({ config }: { config: SummaryConfig }) {
 
       <PanelCard
         title={`Required fields · ${config.requiredFields.length}`}
-        locked
+        lockId="summary.requiredFields"
         subtitle="Every call to generate_summary must include these."
       >
         <FieldTable fields={config.requiredFields} />
@@ -61,7 +61,8 @@ export function SummaryPanel({ config }: { config: SummaryConfig }) {
               color: B.ink3,
             }}
           >
-            <LockPill /> Missing summary is a failure. Extra summary is fine.
+            <LockPill id="summary.triggerWords" /> Missing summary is a failure.
+            Extra summary is fine.
           </div>
         </PanelCard>
       )}

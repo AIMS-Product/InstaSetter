@@ -16,7 +16,7 @@ export function OpeningPanel({ config }: { config: OpeningConfig }) {
 
       <PanelCard
         title="Supported markets"
-        locked
+        lockId="opening.usCanadaGate"
         subtitle="Out-of-region prospects are warmly declined before any qualification."
       >
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -35,11 +35,14 @@ export function OpeningPanel({ config }: { config: OpeningConfig }) {
               {m}
             </span>
           ))}
-          <LockPill title="Hard compliance gate" />
+          <LockPill id="opening.usCanadaGate" />
         </div>
       </PanelCard>
 
-      <PanelCard title="Out-of-area decline script" locked>
+      <PanelCard
+        title="Out-of-area decline script"
+        lockId="opening.outOfAreaScript"
+      >
         <ReadOnlyText value={config.outOfAreaScript} rows={3} />
       </PanelCard>
     </>

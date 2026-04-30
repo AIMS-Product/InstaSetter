@@ -7,7 +7,7 @@ import { LockPill, PanelCard, ReadOnlyText } from './shared'
 export function FollowupPanel({ config }: { config: FollowupConfig }) {
   return (
     <>
-      <PanelCard title="Timing" locked>
+      <PanelCard title="Timing" lockId="followup.timing">
         <div
           style={{
             padding: '10px 12px',
@@ -75,7 +75,7 @@ export function FollowupPanel({ config }: { config: FollowupConfig }) {
             gap: 6,
           }}
         >
-          <LockPill /> One touch only, then let it rest.
+          <LockPill id="followup.outcomes" /> One touch only, then let it rest.
         </div>
       </PanelCard>
     </>

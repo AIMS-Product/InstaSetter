@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Lock, Info, ChevronDown, ChevronRight } from 'lucide-react'
+import { LockPill } from '../directions/b-stage/block-panels/shared'
 import {
   extractBotGuardrails,
   parsePersonaSections,
@@ -11,6 +12,23 @@ import { SANS_FAMILY, SERIF_FAMILY } from '../shared-data'
 import { useFlowState } from '../store'
 import type { Guardrail, Palette } from '../types'
 import RPHeader from './header'
+
+// Persona section key -> lock catalog id. The identity section is the
+// nameless-rule safety lock (the bot must never claim a name); the message-
+// length section maps to the message-constraints admin lock; every other
+// locked section inherits the persona body admin lock.
+const PERSONA_LOCK_BY_KEY: Record<
+  string,
+  'bot.persona.namelessRule' | 'bot.persona.body' | 'bot.messageConstraints'
+> = {
+  identity: 'bot.persona.namelessRule',
+  messageLength: 'bot.messageConstraints',
+}
+
+function lockIdForSection(section: PersonaSection) {
+  if (!section.locked) return null
+  return PERSONA_LOCK_BY_KEY[section.key] ?? 'bot.persona.body'
+}
 
 export default function PageBot({ p }: { p: Palette }) {
   const state = useFlowState()
@@ -258,6 +276,7 @@ export default function PageBot({ p }: { p: Palette }) {
 
 function PersonaPanel({ p, section }: { p: Palette; section: PersonaSection }) {
   const [open, setOpen] = useState(!section.locked)
+  const lockId = lockIdForSection(section)
   return (
     <div
       style={{
@@ -266,58 +285,52 @@ function PersonaPanel({ p, section }: { p: Palette; section: PersonaSection }) {
         borderRadius: 10,
       }}
     >
-      <button
-        type="button"
-        onClick={() => setOpen((s) => !s)}
-        aria-expanded={open}
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 10,
           width: '100%',
           padding: '11px 14px',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          textAlign: 'left',
         }}
       >
-        {open ? (
-          <ChevronDown size={14} color={p.ink3} />
-        ) : (
-          <ChevronRight size={14} color={p.ink3} />
-        )}
-        <div
+        <button
+          type="button"
+          onClick={() => setOpen((s) => !s)}
+          aria-expanded={open}
+          aria-label={`${open ? 'Collapse' : 'Expand'} ${section.heading}`}
           style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: p.ink,
-            fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            flex: 1,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            textAlign: 'left',
+            padding: 0,
           }}
         >
-          {section.heading}
-        </div>
-        {section.locked ? (
-          <span
-            title="Set by InstaSetter for safety and compliance."
+          {open ? (
+            <ChevronDown size={14} color={p.ink3} />
+          ) : (
+            <ChevronRight size={14} color={p.ink3} />
+          )}
+          <div
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '2px 8px',
-              borderRadius: 999,
-              background: p.lineSoft,
-              color: p.ink3,
-              fontSize: 10,
+              fontSize: 13,
               fontWeight: 600,
-              letterSpacing: 0.5,
-              textTransform: 'uppercase',
+              color: p.ink,
+              fontFamily: p.serif ? SERIF_FAMILY : SANS_FAMILY,
             }}
           >
-            <Lock size={10} /> Fixed
-          </span>
-        ) : (
+            {section.heading}
+          </div>
+        </button>
+        {section.locked && lockId ? (
+          <LockPill id={lockId} />
+        ) : !section.locked ? (
           <span
             style={{
               padding: '2px 8px',
@@ -332,10 +345,9 @@ function PersonaPanel({ p, section }: { p: Palette; section: PersonaSection }) {
           >
             Editable
           </span>
-        )}
-        <span style={{ flex: 1 }} />
+        ) : null}
         <Info size={12} color={p.ink3} aria-hidden style={{ flexShrink: 0 }} />
-      </button>
+      </div>
       {open && (
         <div
           style={{

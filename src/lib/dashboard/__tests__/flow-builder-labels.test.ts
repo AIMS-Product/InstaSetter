@@ -33,6 +33,9 @@ function collectEntries(): Array<{ path: string; entry: LabelEntry }> {
   const out: Array<{ path: string; entry: LabelEntry }> = []
   for (const [groupKey, group] of Object.entries(FLOW_BUILDER_LABELS)) {
     for (const [memberKey, entry] of Object.entries(group)) {
+      // Skip the lock catalog reference — it's a Record<id, LockEntry>, not a
+      // LabelEntry. Catalog assertions live in flow-builder-locks.test.ts.
+      if (groupKey === 'locks' && memberKey === 'catalog') continue
       out.push({
         path: `${groupKey}.${memberKey}`,
         entry: entry as LabelEntry,
@@ -43,12 +46,13 @@ function collectEntries(): Array<{ path: string; entry: LabelEntry }> {
 }
 
 describe('FLOW_BUILDER_LABELS', () => {
-  it('exports the five required sub-records', () => {
+  it('exports the six required sub-records', () => {
     expect(Object.keys(FLOW_BUILDER_LABELS).sort()).toEqual(
       [
         'blocks',
         'inspectorFields',
         'inspectorTabs',
+        'locks',
         'pageNav',
         'panelSections',
       ].sort()
@@ -266,5 +270,25 @@ describe('FLOW_BUILDER_LABELS — panel section titles', () => {
     expect(
       FLOW_BUILDER_LABELS.panelSections.lockedSafetyRules.tooltip
     ).toBeTruthy()
+  })
+})
+
+describe('FLOW_BUILDER_LABELS — locks sub-record', () => {
+  it('exposes the safety and admin pill labels per the spec', () => {
+    expect(FLOW_BUILDER_LABELS.locks.safety.display).toBe('Locked')
+    expect(FLOW_BUILDER_LABELS.locks.admin.display).toBe('Locked (admin)')
+  })
+
+  it('exposes the popover heading and Ask-James escalation copy', () => {
+    expect(FLOW_BUILDER_LABELS.locks.popoverHeading.display).toBe(
+      'Why this is locked'
+    )
+    expect(FLOW_BUILDER_LABELS.locks.askJames.display).toMatch(/Ask James/)
+  })
+
+  it('references the lock catalog so downstream callers have one entry point', () => {
+    expect(FLOW_BUILDER_LABELS.locks.catalog).toBeDefined()
+    // Sanity check: at least one well-known id is present.
+    expect(FLOW_BUILDER_LABELS.locks.catalog['qualifier.list']).toBeDefined()
   })
 })
