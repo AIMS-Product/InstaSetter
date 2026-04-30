@@ -28,8 +28,10 @@ import { FloatingPanel } from './floating-panel'
 // `tooltip` is the operator-facing helper text from
 // `FLOW_BUILDER_LABELS.inspectorFields[*].tooltip`. When present, it renders
 // as a `title=` on the label (visible on hover) AND as a visually-hidden
-// span linked via `aria-describedby` so screen readers announce it alongside
-// the label. Keep tooltips short — they should never crowd the inspector.
+// span. Children apply `aria-describedby={ids.tooltipId}` to the actual
+// editable element (input/textarea) so screen readers announce the helper
+// text when focus lands on the field, not on the label container.
+// Keep tooltips short — they should never crowd the inspector.
 function Field({
   label,
   children,
@@ -39,7 +41,9 @@ function Field({
   tooltip,
 }: {
   label: string
-  children: ReactNode | ((labelId: string) => ReactNode)
+  children:
+    | ReactNode
+    | ((ids: { labelId: string; tooltipId?: string }) => ReactNode)
   action?: string
   hint?: string
   onAction?: () => void
@@ -59,9 +63,7 @@ function Field({
       >
         <div
           id={labelId}
-          {...(tooltip
-            ? { title: tooltip, 'aria-describedby': tooltipId }
-            : {})}
+          {...(tooltip ? { title: tooltip } : {})}
           style={{
             fontSize: 11,
             fontWeight: 600,
@@ -112,7 +114,12 @@ function Field({
           {hint}
         </div>
       )}
-      {typeof children === 'function' ? children(labelId) : children}
+      {typeof children === 'function'
+        ? children({
+            labelId,
+            tooltipId: tooltip ? tooltipId : undefined,
+          })
+        : children}
     </div>
   )
 }
@@ -262,9 +269,10 @@ function DesignTab({
         label={FLOW_BUILDER_LABELS.inspectorFields.goal.display}
         tooltip={FLOW_BUILDER_LABELS.inspectorFields.goal.tooltip}
       >
-        {(labelId) => (
+        {({ labelId, tooltipId }) => (
           <textarea
             aria-labelledby={labelId}
+            aria-describedby={tooltipId}
             value={block.goal}
             rows={2}
             style={inputStyle}
@@ -281,9 +289,10 @@ function DesignTab({
         onAction={() => onOpenPrompt('persona')}
         hint="Uses the global voice by default. Add step-specific guidance here."
       >
-        {(labelId) => (
+        {({ labelId, tooltipId }) => (
           <textarea
             aria-labelledby={labelId}
+            aria-describedby={tooltipId}
             value={block.guidance}
             rows={3}
             style={inputStyle}
