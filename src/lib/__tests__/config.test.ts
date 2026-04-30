@@ -80,3 +80,38 @@ describe('split server-env getters', () => {
     expect(() => getSupabaseServerConfig()).toThrow()
   })
 })
+
+describe('getFlowRationaleVariant (P4.05)', () => {
+  it('defaults to "hidden" when NEXT_PUBLIC_FLOW_RATIONALE is unset', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    const { getFlowRationaleVariant } = await import('@/lib/config')
+    expect(getFlowRationaleVariant()).toBe('hidden')
+  })
+
+  it('returns "always_on" when NEXT_PUBLIC_FLOW_RATIONALE=always_on', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('NEXT_PUBLIC_FLOW_RATIONALE', 'always_on')
+    const { getFlowRationaleVariant } = await import('@/lib/config')
+    expect(getFlowRationaleVariant()).toBe('always_on')
+  })
+
+  it('returns "hidden" when NEXT_PUBLIC_FLOW_RATIONALE=hidden', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('NEXT_PUBLIC_FLOW_RATIONALE', 'hidden')
+    const { getFlowRationaleVariant } = await import('@/lib/config')
+    expect(getFlowRationaleVariant()).toBe('hidden')
+  })
+
+  it('throws when NEXT_PUBLIC_FLOW_RATIONALE has an unknown value', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon')
+    vi.stubEnv('NEXT_PUBLIC_FLOW_RATIONALE', 'collapsed')
+    const { getFlowRationaleVariant } = await import('@/lib/config')
+    // The legacy 'collapsed' variant was removed by spec patch (2026-04-29);
+    // only the two-variant decision space ('always_on' | 'hidden') is valid.
+    expect(() => getFlowRationaleVariant()).toThrow()
+  })
+})

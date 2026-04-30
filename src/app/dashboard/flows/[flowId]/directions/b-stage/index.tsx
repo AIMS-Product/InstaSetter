@@ -18,6 +18,7 @@ import BCanvas from './canvas'
 import BInspector from './inspector'
 import BSimFloat from './sim-float'
 import PaletteDrawer from './palette-drawer'
+import { RationaleDebugOverlay } from './rationale-debug-overlay'
 import { B } from './palette'
 import { buildSimulatorOverrides } from './simulator-overrides'
 
@@ -122,6 +123,7 @@ function Shell({
       {state.toast && (
         <Toast toast={state.toast} onDone={dismissToast} onUndo={undoDelete} />
       )}
+      <RationaleDebugOverlay />
     </main>
   )
 }
