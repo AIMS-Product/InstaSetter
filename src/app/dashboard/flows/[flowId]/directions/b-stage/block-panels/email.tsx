@@ -4,11 +4,16 @@ import { useState, type CSSProperties } from 'react'
 import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import {
   PostEmailBehaviorSchema,
+  type EmailAttachment,
   type PostEmailBehavior,
 } from '@/lib/prompts/post-email-behavior'
 import type { EmailConfig, EmailTrigger } from '../../../types'
 import { B } from '../palette'
 import { LockPill, PanelCard, ReadOnlyText } from './shared'
+import {
+  EmailAssetUploader,
+  type EmailAttachmentValue,
+} from './email-asset-uploader'
 
 const LABEL: Record<EmailTrigger['priority'], string> = {
   primary: 'Primary',
@@ -19,9 +24,13 @@ const LABEL: Record<EmailTrigger['priority'], string> = {
 export function EmailPanel({
   config,
   onChange,
+  brand,
+  flowId,
 }: {
   config: EmailConfig
   onChange?: (config: EmailConfig) => void
+  brand?: string
+  flowId?: string
 }) {
   const [tab, setTab] = useState<EmailTrigger['priority']>(
     config.triggers[0]?.priority ?? 'primary'
@@ -74,28 +83,11 @@ export function EmailPanel({
     })
   }
 
-  function updateAttachment(
-    patch: Partial<
-      NonNullable<PostEmailBehavior['emailTemplate']['attachment']>
-    >
-  ) {
+  function setAttachment(next: EmailAttachmentValue | null) {
     setEmailTemplateDraft((currentTemplate) => {
-      const current = currentTemplate.attachment ?? {
-        fileName: '',
-        url: '',
-        description: null,
-      }
-      const next = {
-        ...current,
-        ...patch,
-      }
-      const attachment =
-        next.fileName.trim() || next.url.trim() || next.description?.trim()
-          ? next
-          : null
       const nextTemplate = {
         ...currentTemplate,
-        attachment,
+        attachment: (next as EmailAttachment | null) ?? null,
       }
 
       commitPostEmailBehavior({
@@ -423,69 +415,29 @@ export function EmailPanel({
             resize: 'vertical',
           }}
         />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 8,
-            marginTop: 10,
-          }}
-        >
-          <div style={{ display: 'grid', gap: 4 }}>
-            <label
-              htmlFor="email-attachment-file-name"
-              style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}
-            >
-              Attachment file name
-            </label>
-            <input
-              id="email-attachment-file-name"
-              value={emailTemplateDraft.attachment?.fileName ?? ''}
-              onChange={(e) => updateAttachment({ fileName: e.target.value })}
-              placeholder="prep-checklist.pdf"
-              style={selectStyle}
+        <div style={{ marginTop: 10 }}>
+          {brand && flowId ? (
+            <EmailAssetUploader
+              brand={brand}
+              flowId={flowId}
+              attachment={
+                (emailTemplateDraft.attachment as EmailAttachmentValue | null) ??
+                null
+              }
+              onAttachmentChange={setAttachment}
             />
-          </div>
-          <div style={{ display: 'grid', gap: 4 }}>
-            <label
-              htmlFor="email-attachment-url"
-              style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}
+          ) : (
+            <div
+              style={{
+                fontSize: 11,
+                color: B.ink3,
+                lineHeight: 1.4,
+                fontStyle: 'italic',
+              }}
             >
-              Attachment URL
-            </label>
-            <input
-              id="email-attachment-url"
-              value={emailTemplateDraft.attachment?.url ?? ''}
-              onChange={(e) => updateAttachment({ url: e.target.value })}
-              placeholder="https://..."
-              style={selectStyle}
-            />
-          </div>
-        </div>
-        <div
-          style={{
-            display: 'grid',
-            gap: 4,
-            marginTop: 8,
-          }}
-        >
-          <label
-            htmlFor="email-attachment-description"
-            style={{ fontSize: 10.5, fontWeight: 700, color: B.ink3 }}
-          >
-            Attachment description
-          </label>
-          <input
-            id="email-attachment-description"
-            value={emailTemplateDraft.attachment?.description ?? ''}
-            onChange={(e) =>
-              updateAttachment({
-                description: e.target.value.trim() || null,
-              })
-            }
-            placeholder="Optional"
-            style={selectStyle}
-          />
+              Asset uploader needs an active flow context.
+            </div>
+          )}
         </div>
       </PanelCard>
 

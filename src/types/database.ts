@@ -212,6 +212,54 @@ export type Database = {
           },
         ]
       }
+      ins_email_assets: {
+        Row: {
+          archived_at: string | null
+          block_id: string
+          brand: string
+          checksum: string
+          content_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          file_name: string
+          flow_id: string
+          id: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          archived_at?: string | null
+          block_id?: string
+          brand: string
+          checksum: string
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_name: string
+          flow_id: string
+          id?: string
+          size_bytes: number
+          storage_path: string
+        }
+        Update: {
+          archived_at?: string | null
+          block_id?: string
+          brand?: string
+          checksum?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_name?: string
+          flow_id?: string
+          id?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: []
+      }
       ins_feature_flags: {
         Row: {
           enabled: boolean

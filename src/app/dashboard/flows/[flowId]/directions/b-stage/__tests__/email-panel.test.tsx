@@ -30,7 +30,14 @@ describe('EmailPanel', () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
 
-    render(<EmailPanel config={config} onChange={onChange} />)
+    render(
+      <EmailPanel
+        config={config}
+        onChange={onChange}
+        brand="VendingPreneurs"
+        flowId="ig-organic-dm"
+      />
+    )
 
     const field = screen.getByLabelText(/after email is captured/i)
     await user.clear(field)
@@ -48,7 +55,14 @@ describe('EmailPanel', () => {
   it('surfaces no-delivery immediate-send validation errors', async () => {
     const user = userEvent.setup()
 
-    render(<EmailPanel config={config} onChange={vi.fn()} />)
+    render(
+      <EmailPanel
+        config={config}
+        onChange={vi.fn()}
+        brand="VendingPreneurs"
+        flowId="ig-organic-dm"
+      />
+    )
 
     const field = screen.getByLabelText(/after email is captured/i)
     await user.clear(field)
@@ -57,11 +71,18 @@ describe('EmailPanel', () => {
     expect(screen.getByText(/must not promise immediate/i)).toBeInTheDocument()
   })
 
-  it('edits the sent email subject, body, and attachment metadata', async () => {
+  it('edits the sent email subject and body', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
 
-    render(<EmailPanel config={config} onChange={onChange} />)
+    render(
+      <EmailPanel
+        config={config}
+        onChange={onChange}
+        brand="VendingPreneurs"
+        flowId="ig-organic-dm"
+      />
+    )
 
     await user.clear(screen.getByLabelText(/email subject/i))
     await user.type(screen.getByLabelText(/email subject/i), 'Your call prep')
@@ -69,16 +90,6 @@ describe('EmailPanel', () => {
     await user.type(
       screen.getByLabelText(/email body/i),
       'Here are the resources from our chat.'
-    )
-    await user.clear(screen.getByLabelText(/attachment file name/i))
-    await user.type(
-      screen.getByLabelText(/attachment file name/i),
-      'prep-checklist.pdf'
-    )
-    await user.clear(screen.getByLabelText(/attachment url/i))
-    await user.type(
-      screen.getByLabelText(/attachment url/i),
-      'https://assets.example.com/prep-checklist.pdf'
     )
 
     await waitFor(() => {
@@ -88,14 +99,81 @@ describe('EmailPanel', () => {
             emailTemplate: expect.objectContaining({
               subject: 'Your call prep',
               body: 'Here are the resources from our chat.',
-              attachment: expect.objectContaining({
-                fileName: 'prep-checklist.pdf',
-                url: 'https://assets.example.com/prep-checklist.pdf',
-              }),
             }),
           }),
         })
       )
+    })
+  })
+
+  it('renders the asset uploader (drop zone) for the new attachment flow', () => {
+    render(
+      <EmailPanel
+        config={config}
+        onChange={vi.fn()}
+        brand="VendingPreneurs"
+        flowId="ig-organic-dm"
+      />
+    )
+
+    expect(
+      screen.getByText(/drop a file or click to browse/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /use external url instead/i })
+    ).toBeInTheDocument()
+  })
+
+  it('still allows configuring a legacy URL attachment via the toggle', async () => {
+    const onChange = vi.fn()
+    const user = userEvent.setup()
+
+    // Pre-populate with a legacy attachment so the schema validates as
+    // soon as the user touches the URL field. (The schema rejects an
+    // attachment with empty fileName + URL — that validation shape is
+    // exercised separately in the post-email-behavior schema tests.)
+    const seededConfig: EmailConfig = {
+      ...config,
+      postEmailBehavior: {
+        ...config.postEmailBehavior,
+        emailTemplate: {
+          ...config.postEmailBehavior.emailTemplate,
+          attachment: {
+            kind: 'url',
+            fileName: 'legacy.pdf',
+            url: 'https://assets.example.com/legacy.pdf',
+            description: null,
+          },
+        },
+      },
+    }
+
+    render(
+      <EmailPanel
+        config={seededConfig}
+        onChange={onChange}
+        brand="VendingPreneurs"
+        flowId="ig-organic-dm"
+      />
+    )
+
+    // Already in legacy mode because of the seeded attachment.
+    await user.clear(screen.getByLabelText(/^attachment url$/i))
+    await user.type(
+      screen.getByLabelText(/^attachment url$/i),
+      'https://assets.example.com/replacement.pdf'
+    )
+
+    await waitFor(() => {
+      const calls = onChange.mock.calls.filter((call) => {
+        const attachment = call[0]?.postEmailBehavior?.emailTemplate?.attachment
+        return (
+          attachment &&
+          attachment.kind === 'url' &&
+          attachment.url === 'https://assets.example.com/replacement.pdf'
+        )
+      })
+      expect(calls.length).toBeGreaterThan(0)
     })
   })
 })

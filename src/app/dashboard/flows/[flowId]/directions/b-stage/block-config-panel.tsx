@@ -13,9 +13,14 @@ import { SummaryPanel } from './block-panels/summary'
 export function BlockConfigPanel({
   config,
   onChange,
+  brand,
+  flowId,
 }: {
   config: BlockConfig | undefined
   onChange?: (config: BlockConfig) => void
+  /** Required for the Email Capture asset uploader; falls back gracefully when absent. */
+  brand?: string
+  flowId?: string
 }) {
   if (!config) return null
   switch (config.kind) {
@@ -28,7 +33,14 @@ export function BlockConfigPanel({
     case 'booking':
       return <BookingPanel config={config} />
     case 'email':
-      return <EmailPanel config={config} onChange={onChange} />
+      return (
+        <EmailPanel
+          config={config}
+          onChange={onChange}
+          brand={brand}
+          flowId={flowId}
+        />
+      )
     case 'followup':
       return <FollowupPanel config={config} />
     case 'escalation':

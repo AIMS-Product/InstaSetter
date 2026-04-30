@@ -263,6 +263,7 @@ function DesignTab({
   onOpenPrompt: (target?: string) => void
 }) {
   const actions = useFlowActions()
+  const flowState = useFlowState()
   // P4.05 — record one variant_loaded event per inspector mount per block.
   // The hook is idempotent on identical {variant, blockType} pairs so a
   // parent re-render does NOT inflate the counter.
@@ -495,6 +496,8 @@ function DesignTab({
         <BlockConfigPanel
           config={block.blockConfig}
           onChange={(config) => actions.updateBlockConfig(block.id, config)}
+          brand={flowState.flow.brand}
+          flowId={flowState.flow.id}
         />
         <GuardrailsPanel
           guardrails={block.guardrails ?? []}

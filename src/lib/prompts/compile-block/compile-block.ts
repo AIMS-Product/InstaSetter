@@ -5,7 +5,10 @@ import type {
   CaptureOverride,
   TriggerOverride,
 } from '@/lib/prompts/compile-block/schemas'
-import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
+import type {
+  EmailAttachment,
+  PostEmailBehavior,
+} from '@/lib/prompts/post-email-behavior'
 import {
   BLOCK_GOALS,
   BLOCK_GUIDANCE,
@@ -13,13 +16,27 @@ import {
 import { BLOCK_BY_TYPE } from '@/app/dashboard/flows/[flowId]/shared-data'
 import { describeTriggerMode } from '@/app/dashboard/flows/[flowId]/directions/b-stage/simulator-overrides'
 
+/**
+ * Resolver signature for stored-asset URL lookup. Tests inject a stub;
+ * production injects `resolveStoredAssetUrl` from `email-assets.ts`.
+ *
+ * Throws on resolution failure — the caller is wrapped in the engine's
+ * try/catch (ROLLOUT.md invariant #5), so a Storage outage degrades to
+ * a logged error, not a prompt-rendering crash that breaks the bot.
+ */
+export type StoredAssetUrlResolver = (assetId: string) => Promise<string>
+
 export interface CompileBlockInput {
   brand: string
   bookingUrl?: string
   overrides?: BlockOverrides | undefined
+  /**
+   * Test-only injection point. Defaults to the production resolver.
+   */
+  resolveStoredAssetUrl?: StoredAssetUrlResolver
 }
 
-export function compileBlock(input: CompileBlockInput): string {
+export async function compileBlock(input: CompileBlockInput): Promise<string> {
   const baseline = buildSystemPrompt({
     brandName: input.brand,
     bookingUrl: input.bookingUrl,
@@ -46,7 +63,11 @@ export function compileBlock(input: CompileBlockInput): string {
   appendCaptureLines(lines, input.overrides.captures)
   appendBranchLines(lines, input.overrides.branches)
   appendTriggerLines(lines, input.overrides.triggers)
-  appendPostEmailBehaviorLines(lines, input.overrides.postEmailBehavior)
+  await appendPostEmailBehaviorLines(
+    lines,
+    input.overrides.postEmailBehavior,
+    input.resolveStoredAssetUrl ?? loadDefaultResolver
+  )
 
   // Directive is appended as a suffix. Effective for blocks whose source
   // sections are thin or conditional (Opening, Booking, Email, Follow-up,
@@ -57,11 +78,18 @@ export function compileBlock(input: CompileBlockInput): string {
   return `${baseline}\n\n${lines.join('\n')}\n`
 }
 
-function appendPostEmailBehaviorLines(
+async function appendPostEmailBehaviorLines(
   lines: string[],
-  behavior: PostEmailBehavior | undefined
-): void {
+  behavior: PostEmailBehavior | undefined,
+  resolve: StoredAssetUrlResolver
+): Promise<void> {
   if (!behavior) return
+
+  const attachmentLine = await renderAttachmentLine(
+    behavior.emailTemplate.attachment,
+    resolve
+  )
+
   lines.push(
     '',
     'Post-email behavior:',
@@ -71,10 +99,24 @@ function appendPostEmailBehaviorLines(
     `- Next step: ${behavior.nextStep}`,
     `- Email subject: ${behavior.emailTemplate.subject}`,
     `- Email body: ${behavior.emailTemplate.body}`,
-    behavior.emailTemplate.attachment
-      ? `- Attachment: ${behavior.emailTemplate.attachment.fileName} (${behavior.emailTemplate.attachment.url})`
-      : '- Attachment: none'
+    attachmentLine
   )
+}
+
+async function renderAttachmentLine(
+  attachment: EmailAttachment | null,
+  resolve: StoredAssetUrlResolver
+): Promise<string> {
+  if (!attachment) return '- Attachment: none'
+
+  // Discriminated union: `kind` is set to 'url' when absent (default in
+  // the legacy schema branch), or 'asset' for the new stored variant.
+  if (attachment.kind === 'asset') {
+    const url = await resolve(attachment.assetId)
+    return `- Attachment: ${attachment.fileName} (${url})`
+  }
+
+  return `- Attachment: ${attachment.fileName} (${attachment.url})`
 }
 
 function appendCaptureLines(
@@ -136,4 +178,18 @@ function appendTriggerLines(
       }`
     )
   }
+}
+
+/**
+ * Lazy import for the production resolver. Importing
+ * `@/lib/services/email-assets` at module scope pulls in
+ * `service-role.ts` -> `config.ts`, which throws at import time when
+ * `NEXT_PUBLIC_SUPABASE_URL` is unset (e.g. unit test environments
+ * that never touch a stored attachment). Deferring the import until
+ * the resolver is actually invoked keeps the contract test green
+ * without a Supabase env in jsdom.
+ */
+async function loadDefaultResolver(assetId: string): Promise<string> {
+  const mod = await import('@/lib/services/email-assets')
+  return mod.resolveStoredAssetUrl(assetId)
 }
