@@ -10,6 +10,7 @@ import {
 import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import { buildPersona } from '@/lib/prompts/sections/persona'
 import { buildMessageConstraints } from '@/lib/prompts/sections/message-constraints'
+import { inferActiveBlock } from './directions/b-stage/active-block'
 import { deriveBlock } from './directions/b-stage/block-sections'
 import {
   normalizePersistedFlowDraft,
@@ -599,12 +600,20 @@ export function reducer(state: FlowState, action: Action): FlowState {
           { role: 'prospect', text: action.text, t: 'now' },
         ],
       }
-    case 'sim_receive':
+    case 'sim_receive': {
+      const bookingUrl = getStateBookingUrl(state)
+      const inferred = inferActiveBlock({
+        turn: action.turn,
+        selectedBlockId: state.selectedId,
+        flow: state.flow,
+        ...(bookingUrl ? { bookingUrlSubstring: bookingUrl } : {}),
+      })
       return {
         ...state,
         conversation: [...state.conversation, action.turn],
-        simActiveBlock: action.turn.block ?? state.simActiveBlock,
+        simActiveBlock: inferred ?? state.simActiveBlock,
       }
+    }
     case 'sim_set_mode':
       return { ...state, simMode: action.mode }
     case 'sim_set_active':
