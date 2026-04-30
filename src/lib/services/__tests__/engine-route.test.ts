@@ -35,7 +35,11 @@ vi.mock('@/lib/config', () => ({
 import { routeLeadEvents } from '@/lib/services/engine'
 import { createLead } from '@/lib/services/lead'
 import { closeConversation } from '@/lib/services/conversation'
-import { createMockClient, asSupabaseClient } from '@/test/helpers'
+import {
+  createMockClient,
+  createTableAwareMockClient,
+  asSupabaseClient,
+} from '@/test/helpers'
 
 describe('routeLeadEvents', () => {
   let client: ReturnType<typeof createMockClient>
@@ -298,6 +302,83 @@ describe('routeLeadEvents', () => {
         },
       })
     )
+  })
+
+  it('writes a lead_capture_events row tagged source=dm when capture_email fires with valid uuids', async () => {
+    const tableAware = createTableAwareMockClient()
+    // contacts.update().eq() resolves
+    tableAware.forTable('contacts').eq.mockResolvedValueOnce({ error: null })
+    // lead_capture_events.insert().select().single() resolves
+    tableAware
+      .forTable('lead_capture_events')
+      .single.mockResolvedValueOnce({ data: { id: 'evt-77' }, error: null })
+    // integration_events.insert().select().single() resolves
+    tableAware
+      .forTable('integration_events')
+      .single.mockResolvedValueOnce({ data: {}, error: null })
+
+    const contactId = '2d72fa8c-9171-4c54-9b1e-e7df3b18a8ce'
+    const conversationId = '577990d5-2663-4c51-8e9a-c6be12cbb76e'
+
+    const result = await routeLeadEvents(
+      asSupabaseClient(tableAware),
+      contactId,
+      conversationId,
+      [
+        {
+          name: 'capture_email',
+          toolUseId: 'tu-capture',
+          input: { email: 'lead@example.com' },
+        },
+      ],
+      'sendpulse',
+      {
+        leadSourceContext: {
+          channel: 'instagram',
+          campaign: 'organic-dm',
+        },
+      }
+    )
+
+    expect(result.eventsProcessed).toBe(1)
+    const captureChain = tableAware.forTable('lead_capture_events')
+    expect(captureChain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'lead@example.com',
+        source: 'dm',
+        contact_id: contactId,
+        conversation_id: conversationId,
+        attribution: { channel: 'instagram', campaign: 'organic-dm' },
+      })
+    )
+  })
+
+  it('still updates contact email when leadSourceContext is absent', async () => {
+    const tableAware = createTableAwareMockClient()
+    tableAware.forTable('contacts').eq.mockResolvedValueOnce({ error: null })
+    tableAware
+      .forTable('lead_capture_events')
+      .single.mockResolvedValueOnce({ data: { id: 'evt-78' }, error: null })
+    tableAware
+      .forTable('integration_events')
+      .single.mockResolvedValueOnce({ data: {}, error: null })
+
+    const result = await routeLeadEvents(
+      asSupabaseClient(tableAware),
+      '2d72fa8c-9171-4c54-9b1e-e7df3b18a8ce',
+      '577990d5-2663-4c51-8e9a-c6be12cbb76e',
+      [
+        {
+          name: 'capture_email',
+          toolUseId: 'tu-capture-2',
+          input: { email: 'a@b.com' },
+        },
+      ]
+    )
+
+    expect(result.eventsProcessed).toBe(1)
+    expect(tableAware.forTable('contacts').update).toHaveBeenCalled()
+    expect(tableAware.forTable('lead_capture_events').insert).toHaveBeenCalled()
   })
 
   it('continues processing after individual tool failure', async () => {

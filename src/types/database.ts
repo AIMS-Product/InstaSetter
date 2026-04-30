@@ -242,6 +242,73 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_capture_events: {
+        Row: {
+          attribution: Json | null
+          contact_id: string | null
+          conversation_id: string | null
+          created_at: string
+          delivery_attempted_at: string | null
+          delivery_error: string | null
+          delivery_provider: string | null
+          delivery_status: string
+          email: string
+          id: string
+          marketing_source_id: string | null
+          source: Database['public']['Enums']['lead_capture_source']
+        }
+        Insert: {
+          attribution?: Json | null
+          contact_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivery_attempted_at?: string | null
+          delivery_error?: string | null
+          delivery_provider?: string | null
+          delivery_status?: string
+          email: string
+          id?: string
+          marketing_source_id?: string | null
+          source: Database['public']['Enums']['lead_capture_source']
+        }
+        Update: {
+          attribution?: Json | null
+          contact_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          delivery_attempted_at?: string | null
+          delivery_error?: string | null
+          delivery_provider?: string | null
+          delivery_status?: string
+          email?: string
+          id?: string
+          marketing_source_id?: string | null
+          source?: Database['public']['Enums']['lead_capture_source']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'lead_capture_events_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'lead_capture_events_conversation_id_fkey'
+            columns: ['conversation_id']
+            isOneToOne: false
+            referencedRelation: 'conversations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'lead_capture_events_marketing_source_id_fkey'
+            columns: ['marketing_source_id']
+            isOneToOne: false
+            referencedRelation: 'marketing_sources'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       lead_events: {
         Row: {
           contact_id: string
@@ -847,7 +914,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      lead_capture_source: 'dm' | 'landing_page' | 'manual'
     }
     CompositeTypes: {
       [_ in never]: never
