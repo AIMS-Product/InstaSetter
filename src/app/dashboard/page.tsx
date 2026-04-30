@@ -10,6 +10,10 @@ import { Chip } from '@/components/ui/chip'
 import { SurfaceBadge } from '@/components/ui/surface-badge'
 import { getSurfaceLabel } from '@/lib/dashboard/surface-labels'
 import { CloseHandoffTile } from './components/close-handoff-tile'
+import {
+  WeeklySummaryCard,
+  WeeklySummarySkeleton,
+} from './_components/weekly-summary-card'
 
 export const revalidate = 0
 
@@ -83,6 +87,10 @@ export default async function DashboardHome({ searchParams }: PageProps) {
 
         <Suspense fallback={<MetricsSkeleton />}>
           <Metrics window={window} />
+        </Suspense>
+
+        <Suspense fallback={<WeeklySummarySkeleton />}>
+          <WeeklySummaryCard />
         </Suspense>
 
         <Suspense fallback={<ActivitySkeleton />}>
