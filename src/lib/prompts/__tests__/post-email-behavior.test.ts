@@ -83,6 +83,67 @@ describe('PostEmailBehaviorSchema', () => {
     }
   })
 
+  it('accepts the new stored-asset attachment shape (kind: asset)', () => {
+    const result = PostEmailBehaviorSchema.safeParse({
+      ...DEFAULT_POST_EMAIL_BEHAVIOR,
+      emailTemplate: {
+        subject: 'Your vending call prep',
+        body: 'Details attached.',
+        attachment: {
+          kind: 'asset',
+          assetId: '123e4567-e89b-12d3-a456-426614174000',
+          fileName: 'prep-checklist.pdf',
+          description: null,
+        },
+      },
+    })
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.emailTemplate.attachment).toMatchObject({
+        kind: 'asset',
+        assetId: '123e4567-e89b-12d3-a456-426614174000',
+        fileName: 'prep-checklist.pdf',
+      })
+    }
+  })
+
+  it('accepts the legacy URL shape with explicit kind: url', () => {
+    const result = PostEmailBehaviorSchema.safeParse({
+      ...DEFAULT_POST_EMAIL_BEHAVIOR,
+      emailTemplate: {
+        subject: 'Your vending call prep',
+        body: 'Details attached.',
+        attachment: {
+          kind: 'url',
+          fileName: 'prep-checklist.pdf',
+          url: 'https://assets.example.com/prep-checklist.pdf',
+          description: null,
+        },
+      },
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects the stored-asset shape when assetId is not a UUID', () => {
+    const result = PostEmailBehaviorSchema.safeParse({
+      ...DEFAULT_POST_EMAIL_BEHAVIOR,
+      emailTemplate: {
+        subject: 'Your vending call prep',
+        body: 'Details attached.',
+        attachment: {
+          kind: 'asset',
+          assetId: 'not-a-uuid',
+          fileName: 'prep-checklist.pdf',
+          description: null,
+        },
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it('backfills the default email template for legacy post-email behavior', () => {
     const result = PostEmailBehaviorSchema.safeParse({
       confirmationMessage:
