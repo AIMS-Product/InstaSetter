@@ -23,9 +23,10 @@ plus a few conversations with no lead row).
       `pending` + 0 attempts.
 - [ ] Visit `/dashboard/conversations?closeSyncStatus=any`. Identical to
       `/dashboard/conversations` (no filter) — full inbox.
-- [ ] Visit `/dashboard/conversations?closeSyncStatus=garbage`. Param
-      ignored (Zod safety net). Inbox renders normally; URL still has
-      `closeSyncStatus=garbage` until the operator interacts.
+- [ ] Visit `/dashboard/conversations?closeSyncStatus=garbage`. PageRuns
+      normalizes unknown closeSyncStatus values to "any" and removes the
+      closeSyncStatus query param on the first URL-sync effect. The URL
+      will not persist `closeSyncStatus=garbage` until operator interaction.
 
 ## Click-through from the dashboard tile (P3.03 → P3.04)
 
@@ -81,9 +82,10 @@ plus a few conversations with no lead row).
 - [ ] All leads are `pending` with 0 attempts —
       `closeSyncStatus=pending` returns empty (correct);
       `closeSyncStatus=not_synced` returns the full set (correct).
-- [ ] Operator pastes a malformed timestamp like `?from=NaN`. The date
-      input renders empty; the action's Zod schema rejects the value
-      and the inbox renders empty. No console errors.
+- [ ] Operator pastes a malformed timestamp like `?from=NaN`. The
+      malformed timestamp is coerced to an empty/ignored date and routed
+      out of the action path (does not trigger the Zod schema or clear
+      the inbox). The inbox still renders normally. No console errors.
 
 ## Pagination correctness gate
 
