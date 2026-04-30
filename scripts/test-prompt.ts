@@ -40,13 +40,21 @@ async function loadPrompt(): Promise<string> {
     import(join(sectionsDir, 'message-constraints')),
   ])
 
+  // P1.02 — load the default rapport step so the script mirrors what the
+  // live engine compiles via resolveLivePreBookingStep.
+  const preBookingStepModule = await import(
+    join(process.cwd(), 'src/lib/prompts/pre-booking-step')
+  )
   const sections = [
     persona.buildPersona('VendingPreneurs'),
     company.buildCompanyContext('VendingPreneurs'),
     qualification.buildQualificationCriteria(),
     objections.buildObjectionHandling('VendingPreneurs'),
     emailCapture.buildEmailCapture(),
-    routing.buildDecisionRouting(),
+    routing.buildDecisionRouting(
+      undefined,
+      preBookingStepModule.DEFAULT_PRE_BOOKING_STEP
+    ),
     summary.buildSummaryGeneration(),
     constraints.buildMessageConstraints(),
   ]
@@ -537,6 +545,123 @@ const SCENARIOS: Scenario[] = [
           const notes = String(summary.input.key_notes ?? '')
           return /HUMAN_REVIEW_NEEDED/i.test(notes)
         },
+      },
+    ],
+  },
+  {
+    // P1.02 — soft pre-booking rapport step
+    name: 'pre-booking-rapport-asked',
+    description:
+      'Two qualifiers known with thin rapport — bot should ask ONE rapport question before sending the link, not the link itself',
+    messages: [
+      { role: 'user', content: 'hey saw your reel' },
+      {
+        role: 'assistant',
+        content: "What's good! What area are you in?",
+      },
+      { role: 'user', content: 'Dallas' },
+      {
+        role: 'assistant',
+        content:
+          'Dallas is a great market. Are you thinking side income or going full-time with this?',
+      },
+      { role: 'user', content: 'side income' },
+    ],
+    checks: [
+      {
+        label: 'Does NOT send the booking link in this turn',
+        test: (r) => !/calendly|booking|grab a time|here.*link/i.test(r),
+      },
+      {
+        label:
+          'Asks a rapport-style question (interest, motivation, what got them looking)',
+        test: (r) =>
+          /\?/.test(r) &&
+          /interest|got you|drew you|why vending|what.*thinking|caught.*eye|sparked|why.*now|what.*looking/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Single message, under 600 chars',
+        test: (r) => r.length < 600,
+      },
+    ],
+  },
+  {
+    // P1.02 — soft pre-booking rapport step (skip path)
+    name: 'pre-booking-rapport-skipped',
+    description:
+      'Sofia case — prospect volunteered location + motivation + a story-quality detail. Bot should SKIP rapport and send the link.',
+    messages: [
+      {
+        role: 'user',
+        content:
+          "Hey, I'm in Dallas and got about 7K saved up. I've been looking for something steady that doesn't take all my time, vending feels right.",
+      },
+    ],
+    checks: [
+      {
+        label: 'Sends the booking link (or invites to book a call)',
+        test: (r) =>
+          /calendly|grab a time|here.*link|here['’]s.*link|book.*call|book.*time|jump on a call/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Mirrors back location or motivation (Dallas / steady / 7K)',
+        test: (r) => /dallas|steady|7k|7,000|saved/i.test(r),
+      },
+      {
+        label: 'Does NOT ask another rapport question before the link',
+        test: (r) => {
+          const linkIdx = r.search(/calendly|here['’]?s the link|here.*link/i)
+          if (linkIdx === -1) return false
+          const before = r.slice(0, linkIdx)
+          // Allow the mirror-back, but reject another standalone "what got you" probe.
+          return !/what got you|what.*interest.*you|why.*vending\b/i.test(
+            before
+          )
+        },
+      },
+    ],
+  },
+  {
+    // P1.02 — soft pre-booking rapport step (ignore path)
+    name: 'pre-booking-rapport-ignored',
+    description:
+      'Bot already asked the rapport question; prospect ignored or deflected. Bot must send the link in the next message — no looping.',
+    messages: [
+      { role: 'user', content: 'saw your vending stuff' },
+      { role: 'assistant', content: "What's good — where you based?" },
+      { role: 'user', content: 'phoenix' },
+      {
+        role: 'assistant',
+        content:
+          'Phoenix is solid. Side income or looking to scale into something bigger?',
+      },
+      { role: 'user', content: 'side income' },
+      {
+        role: 'assistant',
+        content: 'Got it. Quick one — what got you interested in vending?',
+      },
+      { role: 'user', content: 'idk just looks easy' },
+    ],
+    checks: [
+      {
+        label: 'Sends the booking link (does not loop on rapport)',
+        test: (r) =>
+          /calendly|grab a time|here.*link|here['’]?s the link|book.*time|jump on a call/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Does NOT re-ask the rapport question',
+        test: (r) =>
+          !/what got you interested|why vending|what.*caught.*eye/i.test(r),
+      },
+      {
+        label: 'Mirrors known qualifiers (Phoenix / side income)',
+        test: (r) => /phoenix|side income|side.*income/i.test(r),
       },
     ],
   },

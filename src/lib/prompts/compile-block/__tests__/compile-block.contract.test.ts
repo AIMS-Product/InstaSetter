@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { compileBlock } from '../compile-block'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
+import { DEFAULT_PRE_BOOKING_STEP } from '@/lib/prompts/pre-booking-step'
 
 const BRAND = 'VendingPreneurs'
 const BOOKING_URL = 'https://calendly.com/x'
@@ -26,6 +27,14 @@ describe('compileBlock — contract (no overrides)', () => {
         overrides: undefined,
       })
     ).toBe(buildSystemPrompt({ brandName: BRAND, bookingUrl: BOOKING_URL }))
+  })
+
+  it('includes the default rapport bridge in the baseline (P1.02)', () => {
+    const compiled = compileBlock({ brand: BRAND, bookingUrl: BOOKING_URL })
+    expect(compiled).toContain(
+      '### Rapport Bridge (one message before the link)'
+    )
+    expect(compiled).toContain(`"${DEFAULT_PRE_BOOKING_STEP.question}"`)
   })
 })
 
