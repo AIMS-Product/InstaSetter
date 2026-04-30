@@ -11,7 +11,7 @@ export function ObjectionPanel({ config }: { config: ObjectionConfig }) {
     <>
       <PanelCard
         title="Response structure"
-        locked
+        lockId="objection.structure"
         subtitle="Every objection reply follows this exact sequence. Skipping the probe kills conversion."
       >
         <div style={{ display: 'flex', gap: 6 }}>
@@ -43,6 +43,7 @@ export function ObjectionPanel({ config }: { config: ObjectionConfig }) {
 
       <PanelCard
         title={`Typed handlers · ${config.handlers.length}`}
+        lockId="objection.handlers"
         subtitle="Sorted by frequency in 5,438 classified conversations."
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -137,7 +138,7 @@ function HandlerRow({
                   gap: 6,
                 }}
               >
-                Follow-ups <LockPill />
+                Follow-ups <LockPill id="objection.followUps" />
               </div>
               <ul
                 style={{

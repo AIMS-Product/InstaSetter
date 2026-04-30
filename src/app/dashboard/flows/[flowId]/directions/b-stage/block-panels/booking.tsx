@@ -28,6 +28,7 @@ export function BookingPanel({ config }: { config: BookingConfig }) {
 
       <PanelCard
         title={FLOW_BUILDER_LABELS.panelSections.bookingLinkCopy.display}
+        lockId="booking.linkPattern"
       >
         <ReadOnlyText value={config.emailAskCombined} rows={2} />
         <div
@@ -44,7 +45,7 @@ export function BookingPanel({ config }: { config: BookingConfig }) {
 
       <PanelCard
         title={FLOW_BUILDER_LABELS.panelSections.bookingReengagement.display}
-        locked
+        lockId="booking.reengagement"
       >
         <div
           style={{
@@ -80,7 +81,7 @@ export function BookingPanel({ config }: { config: BookingConfig }) {
                 gap: 6,
               }}
             >
-              Reminder script <LockPill />
+              Reminder script <LockPill id="booking.reengagement" />
             </div>
             <ReadOnlyText value={config.reengagementScript} rows={2} />
           </>

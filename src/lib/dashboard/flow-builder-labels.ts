@@ -23,6 +23,7 @@
 // without rewriting callsites. Translation itself is deferred indefinitely.
 
 import type { BlockType } from '@/app/dashboard/flows/[flowId]/types'
+import { FLOW_BUILDER_LOCKS, type LockEntry } from './flow-builder-locks'
 
 export interface LabelEntry {
   /** Operator-facing string. Always present, never empty. */
@@ -72,12 +73,35 @@ export type PanelSectionKey =
   | 'lockedSafetyRulesNote'
   | 'stepActions'
 
+export interface LocksKindLabels {
+  /** Pill label, e.g. "Locked". */
+  display: string
+  /** Default fallback tooltip when a callsite passes no `id`. */
+  tooltip: string
+}
+
 export interface FlowBuilderLabels {
   pageNav: Record<PageNavKey, PageNavEntry>
   blocks: Record<BlockType, BlockEntry>
   inspectorTabs: Record<InspectorTabKey, LabelEntry>
   inspectorFields: Record<InspectorFieldKey, LabelEntry>
   panelSections: Record<PanelSectionKey, LabelEntry>
+  /**
+   * Lock catalog reference + per-kind UI copy. The catalog itself lives in
+   * `flow-builder-locks.ts`; this sub-record exposes it through the labels
+   * module so downstream specs (P4.04 warnings, etc.) read every operator-
+   * facing string from one entry point.
+   */
+  locks: {
+    safety: LocksKindLabels
+    admin: LocksKindLabels
+    /** "Ask James..." text used in the popover when an admin lock is shown. */
+    askJames: LabelEntry
+    /** Header line for the popover: e.g. "Why this is locked". */
+    popoverHeading: LabelEntry
+    /** Reference to the catalog itself, for downstream consumers. */
+    catalog: Readonly<Record<string, LockEntry>>
+  }
 }
 
 export const FLOW_BUILDER_LABELS: FlowBuilderLabels = Object.freeze({
@@ -245,6 +269,24 @@ export const FLOW_BUILDER_LABELS: FlowBuilderLabels = Object.freeze({
     stepActions: {
       display: 'Step actions',
     },
+  },
+  locks: {
+    safety: {
+      display: 'Locked',
+      tooltip: 'InstaSetter keeps this locked for legal or compliance reasons.',
+    },
+    admin: {
+      display: 'Locked (admin)',
+      tooltip:
+        'Editable only by the InstaSetter team today. Click for the request path.',
+    },
+    askJames: {
+      display: 'Ask James in #dm-setter Slack to change this.',
+    },
+    popoverHeading: {
+      display: 'Why this is locked',
+    },
+    catalog: FLOW_BUILDER_LOCKS,
   },
 })
 

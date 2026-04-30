@@ -10,7 +10,7 @@ export function QualifierPanel({ config }: { config: QualifierConfig }) {
     <>
       <PanelCard
         title={`${FLOW_BUILDER_LABELS.panelSections.qualifierList.display} · need at least ${config.minToBook}`}
-        locked
+        lockId="qualifier.list"
         subtitle="Ordered by priority. Location first — it's the highest-rapport qualifier."
       >
         <ol
@@ -68,7 +68,7 @@ export function QualifierPanel({ config }: { config: QualifierConfig }) {
                 >
                   {q.label}
                 </div>
-                {q.locked && <LockPill title="Order is locked" />}
+                {q.locked && <LockPill id="qualifier.order" />}
               </div>
               <ReadOnlyText value={q.ask} />
               {q.rules.length > 0 && (
@@ -105,7 +105,7 @@ export function QualifierPanel({ config }: { config: QualifierConfig }) {
       {config.thresholds.length > 0 && (
         <PanelCard
           title={FLOW_BUILDER_LABELS.panelSections.qualifierThresholds.display}
-          locked
+          lockId="qualifier.thresholds"
         >
           <div
             style={{

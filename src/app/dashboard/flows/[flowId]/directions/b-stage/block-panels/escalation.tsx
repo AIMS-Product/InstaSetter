@@ -10,7 +10,7 @@ export function EscalationPanel({ config }: { config: EscalationConfig }) {
     <>
       <PanelCard
         title={FLOW_BUILDER_LABELS.panelSections.escalationTriggers.display}
-        locked
+        lockId="escalation.requiredTriggers"
       >
         {config.triggers.length === 0 ? (
           <div style={{ fontSize: 12, color: B.ink3 }}>
@@ -78,7 +78,7 @@ export function EscalationPanel({ config }: { config: EscalationConfig }) {
             best way to reach them
           </span>
           <span style={{ flex: 1 }} />
-          <LockPill />
+          <LockPill id="escalation.captureMethod" />
         </div>
       </PanelCard>
     </>
