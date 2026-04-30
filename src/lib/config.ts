@@ -43,9 +43,7 @@ const sendpulseEnvSchema = z.object({
 // Unset = the default ('hidden'); the conservative choice. The decision is
 // closed in plans/dm-setter-roadmap/p4-flow-builder-ux/rationale-decision.md.
 const flowRationaleEnvSchema = z.object({
-  NEXT_PUBLIC_FLOW_RATIONALE: z
-    .enum(['always_on', 'hidden'])
-    .default('hidden'),
+  NEXT_PUBLIC_FLOW_RATIONALE: z.enum(['always_on', 'hidden']).default('hidden'),
 })
 
 export type FlowRationaleVariant = z.infer<
