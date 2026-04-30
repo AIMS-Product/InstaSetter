@@ -15,6 +15,13 @@ interface CloseSyncBadgeProps {
   sync: CloseSyncState | null
   size?: 'sm' | 'md'
   className?: string
+  /**
+   * Render the `sent` state as a static chip without the click-through
+   * link. Set to `true` inside parent buttons (e.g. inbox row) where
+   * nesting an anchor inside `<button>` is invalid markup. The detail
+   * header omits this prop and gets the link.
+   */
+  disableLink?: boolean
 }
 
 const ERROR_TITLE_MAX = 140
@@ -37,6 +44,7 @@ export function CloseSyncBadge({
   sync,
   size = 'sm',
   className = '',
+  disableLink = false,
 }: CloseSyncBadgeProps) {
   if (!sync) return null
 
@@ -51,7 +59,7 @@ export function CloseSyncBadge({
 
   if (sync.status === 'sent') {
     const label = 'Sent to Close'
-    if (sync.closeLeadId) {
+    if (sync.closeLeadId && !disableLink) {
       return (
         <a
           href={buildCloseUrl(sync.closeLeadId)}

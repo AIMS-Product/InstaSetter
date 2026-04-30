@@ -56,6 +56,12 @@ describe('<CloseSyncBadge />', () => {
     expect(link).toHaveAttribute('rel', 'noreferrer noopener')
   })
 
+  it('renders the sent state as a static chip when disableLink is true (parent is a button)', () => {
+    render(<CloseSyncBadge sync={baseSync} disableLink />)
+    expect(screen.queryByRole('link')).toBeNull()
+    expect(screen.getByLabelText('Sent to Close')).toBeInTheDocument()
+  })
+
   it('renders the sent state as a non-link when closeLeadId is null (race during write)', () => {
     render(
       <CloseSyncBadge
