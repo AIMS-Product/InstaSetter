@@ -1015,9 +1015,42 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
               textTransform: 'uppercase',
               letterSpacing: 0.6,
               fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
             }}
           >
-            {getBlockDisplayLabel(block.type)}
+            <span>{getBlockDisplayLabel(block.type)}</span>
+            {state.simActiveBlock === block.id &&
+              state.conversation.length > 0 && (
+                <span
+                  aria-label="Currently replying as this step"
+                  title="Currently replying as this step"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '2px 6px',
+                    borderRadius: 999,
+                    background: B.accentSoft,
+                    color: B.accentInk,
+                    fontSize: 9.5,
+                    fontWeight: 600,
+                    letterSpacing: 0.4,
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: color,
+                    }}
+                  />
+                  Active
+                </span>
+              )}
           </div>
           <input
             id={titleId}
