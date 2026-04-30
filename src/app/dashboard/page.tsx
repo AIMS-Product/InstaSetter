@@ -3,6 +3,8 @@ import { Suspense } from 'react'
 import { getDashboardMetrics } from '@/lib/services/dashboard-metrics'
 import { listConversations } from '@/lib/services/conversation-viewer'
 import { Chip } from '@/components/ui/chip'
+import { SurfaceBadge } from '@/components/ui/surface-badge'
+import { getSurfaceLabel } from '@/lib/dashboard/surface-labels'
 
 export const revalidate = 0
 
@@ -19,6 +21,7 @@ function timeAgo(iso: string | null): string {
 }
 
 export default function DashboardHome() {
+  const surface = getSurfaceLabel('dashboard.home')
   return (
     <main
       id="main"
@@ -41,6 +44,11 @@ export default function DashboardHome() {
               Bot performance across your Instagram DM flows.
             </p>
           </div>
+          <SurfaceBadge
+            state={surface.state}
+            display={surface.display}
+            detail={surface.detail}
+          />
         </header>
 
         <Suspense fallback={<MetricsSkeleton />}>

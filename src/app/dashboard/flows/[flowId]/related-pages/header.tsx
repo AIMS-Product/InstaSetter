@@ -1,5 +1,10 @@
 'use client'
 
+import { SurfaceBadge } from '@/components/ui/surface-badge'
+import {
+  getSurfaceLabel,
+  type SurfaceLabelKey,
+} from '@/lib/dashboard/surface-labels'
 import { SERIF_FAMILY, SANS_FAMILY } from '../shared-data'
 import type { Palette } from '../types'
 
@@ -9,13 +14,16 @@ export default function RPHeader({
   eyebrow,
   description,
   right,
+  surfaceLabelKey,
 }: {
   p: Palette
   title: string
   eyebrow: string
   description?: React.ReactNode
   right?: React.ReactNode
+  surfaceLabelKey?: SurfaceLabelKey
 }) {
+  const surface = surfaceLabelKey ? getSurfaceLabel(surfaceLabelKey) : null
   return (
     <div
       className="related-page-header"
@@ -31,15 +39,30 @@ export default function RPHeader({
       <div style={{ flex: 1 }}>
         <div
           style={{
-            fontSize: 11,
-            color: p.ink3,
-            textTransform: 'uppercase',
-            letterSpacing: 0.6,
-            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
             marginBottom: 6,
           }}
         >
-          {eyebrow}
+          <span
+            style={{
+              fontSize: 11,
+              color: p.ink3,
+              textTransform: 'uppercase',
+              letterSpacing: 0.6,
+              fontWeight: 600,
+            }}
+          >
+            {eyebrow}
+          </span>
+          {surface && (
+            <SurfaceBadge
+              state={surface.state}
+              display={surface.display}
+              detail={surface.detail}
+            />
+          )}
         </div>
         <h1
           style={{

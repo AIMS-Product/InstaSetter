@@ -74,6 +74,7 @@ export default function PageVariables({ p }: { p: Palette }) {
             tone="neutral"
           />
         }
+        surfaceLabelKey="dashboard.flows.detail.variables"
       />
       <div style={{ padding: '24px 32px', maxWidth: 960, margin: '0 auto' }}>
         <div
