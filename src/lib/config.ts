@@ -52,6 +52,46 @@ const emailProviderEnvSchema = z.object({
   RESEND_REPLY_TO: z.string().email().nullable().optional(),
 })
 
+// Close CRM (P3.01). The on/off switch is NOT an env var — it lives on the
+// per-brand row in `ins_feature_flags` (key `close_sync.enabled`). The env
+// vars below carry the credentials and field IDs the Close API needs when
+// the flag is flipped on. CLOSE_API_KEY is optional so local dev / preview
+// can leave it unset and rely on the flag staying off.
+const closeEnvSchema = z.object({
+  CLOSE_API_KEY: z.string().min(1).optional(),
+  CLOSE_BASE_URL: z.string().url().default('https://api.close.com/api/v1'),
+  CLOSE_LEAD_STATUS_NEW_ID: z.string().min(1).optional(),
+  // JSON map of logical field name → Close `lcf_xxx` ID. Defaults to an
+  // empty object so the orchestrator can decide at runtime whether the
+  // configured fields cover what we want to write.
+  CLOSE_CUSTOM_FIELD_IDS: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => {
+      if (!value) return {} as Record<string, string>
+      try {
+        const parsed: unknown = JSON.parse(value)
+        if (
+          parsed &&
+          typeof parsed === 'object' &&
+          !Array.isArray(parsed) &&
+          Object.values(parsed as Record<string, unknown>).every(
+            (v) => typeof v === 'string'
+          )
+        ) {
+          return parsed as Record<string, string>
+        }
+      } catch {
+        // fall through to throw below
+      }
+      throw new Error(
+        'CLOSE_CUSTOM_FIELD_IDS must be a JSON object of string→string'
+      )
+    }),
+  CLOSE_CRON_SECRET: z.string().min(1).optional(),
+})
+
 // Client-safe config — validated at import time
 export const config = envSchema.parse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -109,6 +149,18 @@ export function getEmailProviderConfig() {
     RESEND_FROM_ADDRESS: process.env.RESEND_FROM_ADDRESS ?? null,
     RESEND_FROM_DISPLAY_NAME: process.env.RESEND_FROM_DISPLAY_NAME ?? null,
     RESEND_REPLY_TO: process.env.RESEND_REPLY_TO ?? null,
+  })
+}
+
+// Close CRM config (P3.01). Validated separately so non-Close code paths
+// (most of the app) don't need any of these vars set.
+export function getCloseConfig() {
+  return closeEnvSchema.parse({
+    CLOSE_API_KEY: process.env.CLOSE_API_KEY?.trim(),
+    CLOSE_BASE_URL: process.env.CLOSE_BASE_URL?.trim(),
+    CLOSE_LEAD_STATUS_NEW_ID: process.env.CLOSE_LEAD_STATUS_NEW_ID?.trim(),
+    CLOSE_CUSTOM_FIELD_IDS: process.env.CLOSE_CUSTOM_FIELD_IDS,
+    CLOSE_CRON_SECRET: process.env.CLOSE_CRON_SECRET?.trim(),
   })
 }
 
