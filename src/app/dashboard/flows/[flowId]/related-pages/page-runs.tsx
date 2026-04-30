@@ -12,6 +12,7 @@ import type {
 } from '@/lib/services/conversation-viewer-types'
 import { interleave } from '@/lib/services/conversation-viewer-types'
 import { ToolBadge } from '@/components/tool-badge'
+import { CloseSyncBadge } from '@/components/close-sync-badge'
 import RPHeader from './header'
 import { BRAND_INBOX_STATUS, StatusNote } from '../surface-status'
 
@@ -518,6 +519,7 @@ export default function PageRuns({
                     alignItems: 'baseline',
                     gap: 8,
                     marginBottom: 4,
+                    flexWrap: 'wrap',
                   }}
                 >
                   <span
@@ -533,6 +535,13 @@ export default function PageRuns({
                     {timeAgo(r.last_message_at ?? r.started_at)}
                   </span>
                   <span style={{ flex: 1 }} />
+                  {/*
+                    P3.02: Close-sync badge sits to the left of the
+                    existing status pill. `disableLink` keeps the row's
+                    button parent valid markup — operators jump to Close
+                    from the detail header where the link is live.
+                  */}
+                  <CloseSyncBadge sync={r.closeSync} size="sm" disableLink />
                   <span
                     style={{
                       padding: '2px 8px',
@@ -813,8 +822,23 @@ function TranscriptPanel({
           {(contact.instagram_handle ?? 'U').slice(0, 2).toUpperCase()}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 500, color: p.ink }}>
-            {contact.name ?? contact.instagram_handle}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 500, color: p.ink }}>
+              {contact.name ?? contact.instagram_handle}
+            </div>
+            {/*
+              P3.02: Close-sync badge — detail header is a div, so the
+              link variant is safe here. Operators click through to the
+              Close Lead in a new tab.
+            */}
+            <CloseSyncBadge sync={detail.closeSync} size="md" />
           </div>
           <div style={{ fontSize: 11.5, color: p.ink3 }}>
             {contact.instagram_handle} · {detail.status} ·{' '}

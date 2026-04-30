@@ -2,6 +2,7 @@ import 'server-only'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
 export type {
+  CloseSyncState,
   ConversationDetail,
   ConversationEvent,
   ConversationListItem,
@@ -11,9 +12,42 @@ export type {
 export { interleave } from './conversation-viewer-types'
 
 import type {
+  CloseSyncState,
   ConversationDetail,
   ConversationListItem,
 } from './conversation-viewer-types'
+
+// Status enum guard — keeps the typed projection honest if Postgres ever
+// returns an unexpected value (it's CHECK-constrained but defensive code
+// here means the UI never crashes on a stale enum).
+const VALID_SYNC_STATUSES: readonly CloseSyncState['status'][] = [
+  'sent',
+  'failed',
+  'failed_permanent',
+  'pending',
+  'skipped',
+] as const
+
+function projectCloseSync(row: {
+  close_sync_status?: string | null
+  close_crm_id?: string | null
+  close_sync_error_message?: string | null
+  close_sync_attempted_at?: string | null
+  close_sync_attempts?: number | null
+}): CloseSyncState {
+  const status = (VALID_SYNC_STATUSES as readonly string[]).includes(
+    row.close_sync_status ?? ''
+  )
+    ? (row.close_sync_status as CloseSyncState['status'])
+    : 'pending'
+  return {
+    status,
+    closeLeadId: row.close_crm_id ?? null,
+    errorMessage: row.close_sync_error_message ?? null,
+    attemptedAt: row.close_sync_attempted_at ?? null,
+    attempts: row.close_sync_attempts ?? 0,
+  }
+}
 
 export interface ListConversationsOptions {
   limit?: number
@@ -109,6 +143,25 @@ export async function listConversations(
     )
     .in('conversation_id', conversationIds)
 
+  // P3.02: surface the latest lead's Close sync state on each row.
+  // Sorted desc by created_at so the first hit per conversation is the
+  // most recent sync attempt — multiple lead rows are rare but possible
+  // when generate_summary retries.
+  const { data: leadsForSync } = await client
+    .from('leads')
+    .select(
+      'conversation_id, close_sync_status, close_crm_id, close_sync_error_message, close_sync_attempted_at, close_sync_attempts, created_at'
+    )
+    .in('conversation_id', conversationIds)
+    .order('created_at', { ascending: false })
+
+  const closeSyncByConv = new Map<string, CloseSyncState>()
+  for (const row of leadsForSync ?? []) {
+    if (!row.conversation_id) continue
+    if (closeSyncByConv.has(row.conversation_id)) continue
+    closeSyncByConv.set(row.conversation_id, projectCloseSync(row))
+  }
+
   const messagesByConv = new Map<
     string,
     { content: string; created_at: string; count: number }
@@ -170,6 +223,7 @@ export async function listConversations(
         instagram_handle: contact?.instagram_handle ?? 'unknown',
         name: contact?.name ?? null,
       },
+      closeSync: closeSyncByConv.get(c.id) ?? null,
     }
   })
 }
@@ -232,6 +286,19 @@ export async function getConversation(
     .eq('conversation_id', conversationId)
     .maybeSingle()
 
+  // P3.02: latest lead's Close sync state for the detail header badge.
+  // `maybeSingle` keeps the projection null when a conversation has no
+  // lead yet (the common case before generate_summary fires).
+  const { data: leadSync } = await client
+    .from('leads')
+    .select(
+      'close_sync_status, close_crm_id, close_sync_error_message, close_sync_attempted_at, close_sync_attempts'
+    )
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   const contact = Array.isArray(conv.contacts)
     ? conv.contacts[0]
     : conv.contacts
@@ -271,5 +338,6 @@ export async function getConversation(
         created_at: e.created_at,
       }))
       .sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    closeSync: leadSync ? projectCloseSync(leadSync) : null,
   }
 }

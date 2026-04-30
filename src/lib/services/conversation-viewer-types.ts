@@ -1,6 +1,20 @@
 // Pure types and client-safe helpers for conversation viewer.
 // The server-only fetchers live in ./conversation-viewer.ts.
 
+/**
+ * Sync state for a conversation's latest lead row, projected from the
+ * P3.01 `close_sync_*` columns on `public.leads`. Surfaced in the inbox
+ * row + detail header by P3.02's CloseSyncBadge. Null when no lead row
+ * has been written for the conversation yet.
+ */
+export interface CloseSyncState {
+  status: 'sent' | 'failed' | 'failed_permanent' | 'pending' | 'skipped'
+  closeLeadId: string | null
+  errorMessage: string | null
+  attemptedAt: string | null
+  attempts: number
+}
+
 export interface ConversationListItem {
   id: string
   flow_id: string | null
@@ -19,6 +33,7 @@ export interface ConversationListItem {
     instagram_handle: string
     name: string | null
   }
+  closeSync: CloseSyncState | null
 }
 
 export interface ConversationAttribution {
@@ -72,6 +87,7 @@ export interface ConversationDetail {
   attribution: ConversationAttribution | null
   messages: ConversationMessage[]
   events: ConversationEvent[]
+  closeSync: CloseSyncState | null
 }
 
 export type TimelineItem =
