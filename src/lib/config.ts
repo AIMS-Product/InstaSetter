@@ -87,3 +87,13 @@ export function getSendPulseConfig() {
 export function isBotEnabled(): boolean {
   return process.env.BOT_ENABLED !== 'false'
 }
+
+// Pre-booking rapport step kill switch. Set LIVE_PRE_BOOKING_STEP_ENABLED=false
+// on Vercel to revert to legacy GATE 1 behaviour (booking link in the very next
+// message after two qualifiers, no rapport bridge). The flag is server-only.
+// Default: enabled. Any value other than the literal string "false" is treated
+// as enabled — this lets the change ship to all brands automatically while
+// preserving a one-toggle rollback.
+export function isLivePreBookingStepEnabled(): boolean {
+  return process.env.LIVE_PRE_BOOKING_STEP_ENABLED !== 'false'
+}

@@ -26,6 +26,7 @@ vi.mock('@/lib/config', () => ({
     SENDPULSE_BOT_ID: 'test',
     SENDPULSE_WEBHOOK_SECRET: 'test',
   }),
+  isLivePreBookingStepEnabled: () => true,
 }))
 
 import { processMessage } from '@/lib/services/engine'
@@ -129,6 +130,14 @@ describe('processMessage', () => {
       expect(result.data.reply).toBe('Hey!')
       expect(result.data.conversationId).toBe('conv-1')
     }
+
+    // Engine resolves the live pre-booking step via the resolver seam and
+    // threads it into buildSystemPrompt. P1.02: default is enabled.
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preBookingStep: expect.objectContaining({ enabled: true }),
+      })
+    )
   })
 
   it('returns error when conversation service fails', async () => {
