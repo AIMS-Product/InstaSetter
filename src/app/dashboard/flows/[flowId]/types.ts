@@ -1,4 +1,7 @@
 import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
+import type { BrandGuardrail } from '@/lib/prompts/brand-guardrails'
+
+export type { BrandGuardrail }
 
 export const BLOCK_TYPES = [
   'opening',

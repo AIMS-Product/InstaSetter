@@ -6,6 +6,7 @@ import type {
   TriggerOverride,
 } from '@/lib/prompts/compile-block/schemas'
 import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
+import type { BrandGuardrail } from '@/lib/prompts/brand-guardrails'
 import {
   BLOCK_GOALS,
   BLOCK_GUIDANCE,
@@ -47,6 +48,7 @@ export function compileBlock(input: CompileBlockInput): string {
   appendBranchLines(lines, input.overrides.branches)
   appendTriggerLines(lines, input.overrides.triggers)
   appendPostEmailBehaviorLines(lines, input.overrides.postEmailBehavior)
+  appendBrandGuardrailLines(lines, input.overrides.brandGuardrails)
 
   // Directive is appended as a suffix. Effective for blocks whose source
   // sections are thin or conditional (Opening, Booking, Email, Follow-up,
@@ -55,6 +57,19 @@ export function compileBlock(input: CompileBlockInput): string {
   // outweigh an end-of-prompt directive. The v2 plan is section replacement —
   // see docs/flow-builder/FUTURE.md.
   return `${baseline}\n\n${lines.join('\n')}\n`
+}
+
+function appendBrandGuardrailLines(
+  lines: string[],
+  guardrails: BrandGuardrail[] | undefined
+): void {
+  if (!guardrails || guardrails.length === 0) return
+  lines.push('', 'Sandbox-only Brand Guardrails:')
+  for (const guardrail of guardrails) {
+    const trimmedNote = guardrail.note?.trim()
+    const noteSuffix = trimmedNote ? ` — note: ${trimmedNote}` : ''
+    lines.push(`- Never say "${guardrail.phrase}"${noteSuffix}`)
+  }
 }
 
 function appendPostEmailBehaviorLines(
