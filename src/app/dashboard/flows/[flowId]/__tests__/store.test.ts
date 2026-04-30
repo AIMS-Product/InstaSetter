@@ -5,7 +5,7 @@ import {
   dirtyTrackingReducer,
   reducer,
 } from '../store'
-import type { FlowNode } from '../types'
+import type { FlowNode, Turn } from '../types'
 
 const BRAND = 'VendingPreneurs'
 const BOOKING_URL = 'https://booking.vendingpreneurs.com/AK-DM'
@@ -230,6 +230,57 @@ describe('store reducer integrity', () => {
     expect(rolledBack.versions.find((version) => version.v === 1)?.status).toBe(
       'live'
     )
+  })
+
+  it('infers booking on sim_receive when the turn includes a book_call', () => {
+    const state = {
+      ...buildInitialState(BRAND, BOOKING_URL, FLOW_ID),
+      selectedId: 'opening' as FlowNode['id'],
+    }
+
+    const turn: Turn = {
+      role: 'bot',
+      text: 'On it.',
+      t: 'now',
+      toolCalls: [{ name: 'book_call', input: {} }],
+    }
+
+    const next = reducer(state, { type: 'sim_receive', turn })
+
+    expect(next.simActiveBlock).toBe('booking')
+  })
+
+  it('keeps the selected block on sim_receive when no signal is present', () => {
+    const state = {
+      ...buildInitialState(BRAND, BOOKING_URL, FLOW_ID),
+      selectedId: 'qualifier' as FlowNode['id'],
+      simActiveBlock: 'qualifier' as FlowNode['id'],
+    }
+
+    const next = reducer(state, {
+      type: 'sim_receive',
+      turn: { role: 'bot', text: 'Where are you based?', t: 'now' },
+    })
+
+    expect(next.simActiveBlock).toBe('qualifier')
+  })
+
+  it('infers booking from a brand-booking-url substring in the reply text', () => {
+    const state = {
+      ...buildInitialState(BRAND, BOOKING_URL, FLOW_ID),
+      selectedId: 'qualifier' as FlowNode['id'],
+    }
+
+    const next = reducer(state, {
+      type: 'sim_receive',
+      turn: {
+        role: 'bot',
+        text: `Here's the link: ${BOOKING_URL}`,
+        t: 'now',
+      },
+    })
+
+    expect(next.simActiveBlock).toBe('booking')
   })
 
   it('strips bot-level guardrails when hydrating persisted drafts', () => {
