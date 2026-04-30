@@ -18,11 +18,38 @@ function isStale(conversation: Conversation): boolean {
   return lastActivity < cutoff
 }
 
+export interface FindOrCreateConversationOptions {
+  promptVersion?: string
+  flowId?: string
+  /**
+   * Stamped on conversation creation so live `processMessage()` can pin the
+   * prospect to the published flow snapshot that was active at the moment
+   * the conversation began. Pre-cutover rows leave this NULL and fall
+   * through to the legacy code-owned prompt path — see
+   * docs/flow-builder/ROLLOUT.md safety invariant #7.
+   */
+  flowVersionId?: string | null
+}
+
 export async function findOrCreateActiveConversation(
   contactId: string,
-  promptVersion: string = PROMPT_VERSION,
-  flowId?: string
+  promptVersionOrOptions:
+    | string
+    | FindOrCreateConversationOptions = PROMPT_VERSION,
+  flowIdLegacy?: string
 ): Promise<ServiceResult<Conversation & { staleConversationId?: string }>> {
+  const options =
+    typeof promptVersionOrOptions === 'string'
+      ? {
+          promptVersion: promptVersionOrOptions,
+          flowId: flowIdLegacy,
+        }
+      : promptVersionOrOptions
+
+  const promptVersion = options.promptVersion ?? PROMPT_VERSION
+  const flowId = options.flowId
+  const flowVersionId = options.flowVersionId ?? null
+
   const supabase = createServiceRoleClient()
 
   // Look for an existing active conversation
@@ -58,6 +85,7 @@ export async function findOrCreateActiveConversation(
         .insert({
           contact_id: contactId,
           flow_id: flowId,
+          flow_version_id: flowVersionId,
           status: 'active',
           prompt_version: promptVersion,
         })
@@ -88,6 +116,7 @@ export async function findOrCreateActiveConversation(
     .insert({
       contact_id: contactId,
       flow_id: flowId,
+      flow_version_id: flowVersionId,
       status: 'active',
       prompt_version: promptVersion,
     })
