@@ -11,6 +11,7 @@ import type {
   TimelineItem,
 } from '@/lib/services/conversation-viewer-types'
 import { interleave } from '@/lib/services/conversation-viewer-types'
+import { Chip } from '@/components/ui/chip'
 import { ToolBadge } from '@/components/tool-badge'
 import RPHeader from './header'
 import { BRAND_INBOX_STATUS, StatusNote } from '../surface-status'
@@ -29,9 +30,25 @@ const STATUS_TONE = (
 const FALLBACK_TONE_KEY = 'stalled'
 const STATUS_OPTIONS = ['all', 'active', 'stalled', 'completed'] as const
 const SCOPE_OPTIONS = ['flow', 'all'] as const
+const CLOSE_SYNC_OPTIONS = [
+  'any',
+  'sent',
+  'failed',
+  'pending',
+  'not_synced',
+] as const
+
+const CLOSE_SYNC_LABELS: Record<(typeof CLOSE_SYNC_OPTIONS)[number], string> = {
+  any: 'All sync states',
+  sent: 'Sent to Close',
+  failed: 'Failed',
+  pending: 'Pending retry',
+  not_synced: 'Not synced',
+}
 
 type InboxStatusFilter = (typeof STATUS_OPTIONS)[number]
 type InboxScopeFilter = (typeof SCOPE_OPTIONS)[number]
+type InboxCloseSyncFilter = (typeof CLOSE_SYNC_OPTIONS)[number]
 
 function getInitialParam(name: string): string {
   if (typeof window === 'undefined') return ''
@@ -50,6 +67,13 @@ function getInitialScope(defaultScope: InboxScopeFilter): InboxScopeFilter {
   return SCOPE_OPTIONS.includes(value as InboxScopeFilter)
     ? (value as InboxScopeFilter)
     : defaultScope
+}
+
+function getInitialCloseSyncStatus(): InboxCloseSyncFilter {
+  const value = getInitialParam('closeSyncStatus')
+  return CLOSE_SYNC_OPTIONS.includes(value as InboxCloseSyncFilter)
+    ? (value as InboxCloseSyncFilter)
+    : 'any'
 }
 
 function dateInputToIso(value: string, endOfDay = false): string | undefined {
@@ -116,6 +140,9 @@ export default function PageRuns({
   const [scopeFilter, setScopeFilter] = useState<InboxScopeFilter>(() =>
     getInitialScope(defaultScope)
   )
+  const [closeSyncFilter, setCloseSyncFilter] = useState<InboxCloseSyncFilter>(
+    getInitialCloseSyncStatus
+  )
 
   // The panel is "loading" when a selection exists but no result for THIS id
   // has come back yet. If the last result is for a different id, we're mid-
@@ -139,15 +166,25 @@ export default function PageRuns({
       dateFrom: dateInputToIso(dateFrom),
       dateTo: dateInputToIso(dateTo, true),
       status: statusFilter,
+      closeSyncStatus: closeSyncFilter,
     }),
-    [dateFrom, dateTo, flowId, scopeFilter, search, statusFilter]
+    [
+      closeSyncFilter,
+      dateFrom,
+      dateTo,
+      flowId,
+      scopeFilter,
+      search,
+      statusFilter,
+    ]
   )
   const hasFilters = Boolean(
     search ||
     dateFrom ||
     dateTo ||
     statusFilter !== 'all' ||
-    scopeFilter !== defaultScope
+    scopeFilter !== defaultScope ||
+    closeSyncFilter !== 'any'
   )
 
   useEffect(() => {
@@ -171,9 +208,20 @@ export default function PageRuns({
     else params.delete('status')
     if (scopeFilter !== defaultScope) params.set('scope', scopeFilter)
     else params.delete('scope')
+    if (closeSyncFilter !== 'any')
+      params.set('closeSyncStatus', closeSyncFilter)
+    else params.delete('closeSyncStatus')
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`
     window.history.replaceState(null, '', nextUrl)
-  }, [dateFrom, dateTo, defaultScope, scopeFilter, search, statusFilter])
+  }, [
+    closeSyncFilter,
+    dateFrom,
+    dateTo,
+    defaultScope,
+    scopeFilter,
+    search,
+    statusFilter,
+  ])
 
   useEffect(() => {
     let alive = true
@@ -385,11 +433,61 @@ export default function PageRuns({
               <option value="stalled">Stalled</option>
               <option value="completed">Completed</option>
             </select>
-            <span style={{ fontSize: 11, color: p.ink3 }}>
-              {runs === null
-                ? 'Loading…'
-                : `${runs.length} recent conversations`}
-            </span>
+            <select
+              aria-label="Close sync status"
+              value={closeSyncFilter}
+              onChange={(e) => {
+                setRuns(null)
+                setCloseSyncFilter(e.target.value as InboxCloseSyncFilter)
+              }}
+              style={filterInputStyle(p)}
+            >
+              {CLOSE_SYNC_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {CLOSE_SYNC_LABELS[opt]}
+                </option>
+              ))}
+            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: p.ink3 }}>
+                {runs === null
+                  ? 'Loading…'
+                  : `${runs.length} recent conversations`}
+              </span>
+              {closeSyncFilter !== 'any' && (
+                <Chip
+                  tone="accent"
+                  className="!py-0.5"
+                  aria-label={`Filtered to Close: ${CLOSE_SYNC_LABELS[closeSyncFilter]}. Press the clear button to remove the filter.`}
+                >
+                  Close: {CLOSE_SYNC_LABELS[closeSyncFilter]}
+                  <button
+                    type="button"
+                    aria-label="Clear Close sync filter"
+                    onClick={() => {
+                      setRuns(null)
+                      setCloseSyncFilter('any')
+                    }}
+                    style={{
+                      marginLeft: 4,
+                      padding: 0,
+                      width: 14,
+                      height: 14,
+                      lineHeight: '14px',
+                      borderRadius: 999,
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'inherit',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    ×
+                  </button>
+                </Chip>
+              )}
+            </div>
           </div>
         }
       />
