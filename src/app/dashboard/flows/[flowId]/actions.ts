@@ -75,6 +75,9 @@ const flowRunsFilterSchema = z
     dateFrom: z.string().datetime().optional(),
     dateTo: z.string().datetime().optional(),
     status: z.enum(['all', 'active', 'stalled', 'completed']).optional(),
+    closeSyncStatus: z
+      .enum(['sent', 'failed', 'pending', 'not_synced', 'any'])
+      .optional(),
   })
   .strict()
 

@@ -49,6 +49,13 @@ function projectCloseSync(row: {
   }
 }
 
+export type CloseSyncStatusFilter =
+  | 'sent'
+  | 'failed'
+  | 'pending'
+  | 'not_synced'
+  | 'any'
+
 export interface ListConversationsOptions {
   limit?: number
   flowId?: string
@@ -56,6 +63,36 @@ export interface ListConversationsOptions {
   dateFrom?: string
   dateTo?: string
   status?: string
+  /**
+   * Filter by Close CRM sync state of the conversation's lead row.
+   *
+   * - `sent` — `leads.close_sync_status = 'sent'`
+   * - `failed` — `leads.close_sync_status` IN (`failed`, `failed_permanent`)
+   * - `pending` — `leads.close_sync_status = 'pending'` AND attempts > 0
+   * - `not_synced` — no lead row, OR `skipped`, OR pending with 0 attempts
+   * - `any` — no filter (default)
+   *
+   * Filtering happens server-side via a candidate-set sub-query so paginated
+   * counts stay exact. See P3.04 spec for rationale.
+   */
+  closeSyncStatus?: CloseSyncStatusFilter
+}
+
+interface CloseSyncMatch {
+  statusList: string[]
+  requireAttempts: boolean
+}
+
+const CLOSE_SYNC_MATCH: Record<
+  Exclude<CloseSyncStatusFilter, 'not_synced' | 'any'>,
+  CloseSyncMatch
+> = {
+  sent: { statusList: ['sent'], requireAttempts: false },
+  failed: {
+    statusList: ['failed', 'failed_permanent'],
+    requireAttempts: false,
+  },
+  pending: { statusList: ['pending'], requireAttempts: true },
 }
 
 export async function countConversationsStartedSince(
@@ -99,6 +136,59 @@ export async function listConversations(
     if (contactIds.length === 0) return []
   }
 
+  // Close CRM sync filter — server-side candidate-set sub-query so paginated
+  // counts remain exact. See P3.04 spec.
+  let conversationIdsFilter: string[] | null = null
+  let conversationIdsAntiFilter: string[] | null = null
+  const closeSyncStatus = options.closeSyncStatus
+  if (closeSyncStatus && closeSyncStatus !== 'any') {
+    if (closeSyncStatus === 'not_synced') {
+      // Anti-filter: collect every conversation_id whose lead is "synced-ish"
+      // (sent / failed / failed_permanent / pending-with-attempts) and exclude
+      // them from the conversations query. Conversations with no lead row at
+      // all naturally pass through the anti-filter.
+      const { data: matchedLeads, error: matchedErr } = await client
+        .from('leads')
+        .select('conversation_id')
+        .or(
+          [
+            'close_sync_status.in.(sent,failed,failed_permanent)',
+            'and(close_sync_status.eq.pending,close_sync_attempts.gt.0)',
+          ].join(',')
+        )
+      if (matchedErr) {
+        console.error(
+          'listConversations close-sync anti-filter failed',
+          matchedErr
+        )
+        return []
+      }
+      conversationIdsAntiFilter = (matchedLeads ?? [])
+        .map((row) => row.conversation_id)
+        .filter((id): id is string => Boolean(id))
+    } else {
+      const match = CLOSE_SYNC_MATCH[closeSyncStatus]
+      let leadQuery = client
+        .from('leads')
+        .select('conversation_id')
+        .in('close_sync_status', match.statusList)
+      if (match.requireAttempts) {
+        leadQuery = leadQuery.gt('close_sync_attempts', 0)
+      }
+      const { data: matchedLeads, error: matchedErr } = await leadQuery
+      if (matchedErr) {
+        console.error('listConversations close-sync filter failed', matchedErr)
+        return []
+      }
+      conversationIdsFilter = (matchedLeads ?? [])
+        .map((row) => row.conversation_id)
+        .filter((id): id is string => Boolean(id))
+      // No matches → empty result, server-side. Avoids issuing the second
+      // query with `.in('id', [])` which Supabase rejects in some clients.
+      if (conversationIdsFilter.length === 0) return []
+    }
+  }
+
   let query = client
     .from('conversations')
     .select(
@@ -112,6 +202,10 @@ export async function listConversations(
   if (options.dateTo) query = query.lte('started_at', options.dateTo)
   if (options.status && options.status !== 'all') {
     query = query.eq('status', options.status)
+  }
+  if (conversationIdsFilter) query = query.in('id', conversationIdsFilter)
+  if (conversationIdsAntiFilter && conversationIdsAntiFilter.length > 0) {
+    query = query.not('id', 'in', `(${conversationIdsAntiFilter.join(',')})`)
   }
 
   const { data: convs, error } = await query.limit(limit)
