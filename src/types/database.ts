@@ -75,6 +75,7 @@ export type Database = {
           ended_at: string | null
           flagged_reason: string | null
           flow_id: string | null
+          flow_version_id: string | null
           id: string
           is_test: boolean
           prompt_version: string
@@ -89,6 +90,7 @@ export type Database = {
           ended_at?: string | null
           flagged_reason?: string | null
           flow_id?: string | null
+          flow_version_id?: string | null
           id?: string
           is_test?: boolean
           prompt_version: string
@@ -103,6 +105,7 @@ export type Database = {
           ended_at?: string | null
           flagged_reason?: string | null
           flow_id?: string | null
+          flow_version_id?: string | null
           id?: string
           is_test?: boolean
           prompt_version?: string
@@ -209,6 +212,112 @@ export type Database = {
           },
         ]
       }
+      ins_feature_flags: {
+        Row: {
+          enabled: boolean
+          id: string
+          key: string
+          scope: string
+          scope_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id?: string
+          key: string
+          scope: string
+          scope_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          key?: string
+          scope?: string
+          scope_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      ins_feature_flags_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          brand: string
+          created_at: string
+          flag_id: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          brand: string
+          created_at?: string
+          flag_id: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          brand?: string
+          created_at?: string
+          flag_id?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ins_feature_flags_audit_flag_id_fkey'
+            columns: ['flag_id']
+            isOneToOne: false
+            referencedRelation: 'ins_feature_flags'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      ins_flow_channels: {
+        Row: {
+          active_version_id: string | null
+          brand: string
+          channel: string
+          flow_id: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active_version_id?: string | null
+          brand: string
+          channel?: string
+          flow_id: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active_version_id?: string | null
+          brand?: string
+          channel?: string
+          flow_id?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ins_flow_channels_active_version_id_fkey'
+            columns: ['active_version_id']
+            isOneToOne: false
+            referencedRelation: 'ins_flow_versions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       ins_flow_drafts: {
         Row: {
           booking_url: string | null
@@ -239,6 +348,89 @@ export type Database = {
           schema_version?: number
           state?: Json
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ins_flow_publish_log: {
+        Row: {
+          action: string
+          actor: string | null
+          brand: string
+          created_at: string
+          flow_id: string
+          id: string
+          note: string | null
+          version_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          brand: string
+          created_at?: string
+          flow_id: string
+          id?: string
+          note?: string | null
+          version_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          brand?: string
+          created_at?: string
+          flow_id?: string
+          id?: string
+          note?: string | null
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ins_flow_publish_log_version_id_fkey'
+            columns: ['version_id']
+            isOneToOne: false
+            referencedRelation: 'ins_flow_versions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      ins_flow_versions: {
+        Row: {
+          brand: string
+          checksum: string
+          compiled: Json
+          flow_id: string
+          id: string
+          note: string | null
+          published_at: string
+          published_by: string | null
+          source: string
+          state: Json
+          version_number: number
+        }
+        Insert: {
+          brand: string
+          checksum: string
+          compiled: Json
+          flow_id: string
+          id?: string
+          note?: string | null
+          published_at?: string
+          published_by?: string | null
+          source?: string
+          state: Json
+          version_number: number
+        }
+        Update: {
+          brand?: string
+          checksum?: string
+          compiled?: Json
+          flow_id?: string
+          id?: string
+          note?: string | null
+          published_at?: string
+          published_by?: string | null
+          source?: string
+          state?: Json
+          version_number?: number
         }
         Relationships: []
       }
@@ -844,7 +1036,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ins_publish_flow: {
+        Args: {
+          p_brand: string
+          p_flow_id: string
+          p_channel: string
+          p_state: Json
+          p_compiled: Json
+          p_checksum: string
+          p_source: string
+          p_note: string | null
+          p_published_by: string | null
+        }
+        Returns: string
+      }
+      ins_set_feature_flag: {
+        Args: {
+          p_key: string
+          p_scope: string
+          p_scope_id: string | null
+          p_enabled: boolean
+          p_actor: string
+          p_reason: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

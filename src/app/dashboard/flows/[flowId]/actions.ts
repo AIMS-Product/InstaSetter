@@ -20,6 +20,14 @@ import {
   setFlowRuntimePause,
   type FlowRuntimeControl,
 } from '@/lib/services/flow-runtime'
+import {
+  listFlowVersions,
+  publishFlow,
+  rollbackPublishedFlow,
+  DEFAULT_FLOW_CHANNEL,
+  type FlowVersionListItem,
+  type PublishFlowResult,
+} from '@/lib/services/published-flows'
 import type { PersistedFlowDraft } from './draft-persistence'
 
 const nonEmptyString = z.string().trim().min(1).max(200)
@@ -149,4 +157,109 @@ export async function saveFlowDraftAction(
   const parsed = saveFlowDraftArgsSchema.safeParse(args)
   if (!parsed.success) return false
   return saveFlowDraft(parsed.data as unknown as SaveFlowDraftArgs)
+}
+
+const publishFlowArgsSchema = z
+  .object({
+    brand: nonEmptyString,
+    flowId: nonEmptyString,
+    note: z.string().trim().max(500).optional(),
+    actor: nonEmptyString.optional(),
+  })
+  .strict()
+
+const rollbackFlowArgsSchema = z
+  .object({
+    brand: nonEmptyString,
+    flowId: nonEmptyString,
+    versionId: nonEmptyString,
+    note: z.string().trim().max(500).optional(),
+    actor: nonEmptyString.optional(),
+  })
+  .strict()
+
+const listFlowVersionsArgsSchema = z
+  .object({
+    brand: nonEmptyString,
+    flowId: nonEmptyString,
+  })
+  .strict()
+
+/**
+ * Resolve the publishing actor. Today the dashboard is gated by Vercel basic
+ * auth + IP allowlist (see `feat(proxy): remove dashboard basic auth gate`),
+ * so the operator email is not yet wired through the session. The action
+ * accepts an explicit `actor` override and falls back to a deterministic
+ * label so the audit log is never empty. Once Supabase Auth lands for the
+ * dashboard, replace this with `supabase.auth.getUser()`.
+ */
+function resolvePublishActor(actor: string | undefined): string {
+  return actor?.trim() || 'system:dashboard'
+}
+
+export async function publishFlowAction(args: {
+  brand: string
+  flowId: string
+  note?: string
+  actor?: string
+}): Promise<PublishFlowResult> {
+  const parsed = publishFlowArgsSchema.safeParse(args)
+  if (!parsed.success) {
+    return { success: false, error: 'Invalid input' }
+  }
+
+  const draft = await loadFlowDraft({
+    brand: parsed.data.brand,
+    flowId: parsed.data.flowId,
+  })
+  if (!draft) {
+    return { success: false, error: 'No draft to publish' }
+  }
+
+  return publishFlow({
+    brand: parsed.data.brand,
+    flowId: parsed.data.flowId,
+    channel: DEFAULT_FLOW_CHANNEL,
+    draft,
+    publishedBy: resolvePublishActor(parsed.data.actor),
+    note: parsed.data.note,
+  })
+}
+
+export async function rollbackFlowAction(args: {
+  brand: string
+  flowId: string
+  versionId: string
+  note?: string
+  actor?: string
+}): Promise<PublishFlowResult> {
+  const parsed = rollbackFlowArgsSchema.safeParse(args)
+  if (!parsed.success) {
+    return { success: false, error: 'Invalid input' }
+  }
+
+  return rollbackPublishedFlow({
+    brand: parsed.data.brand,
+    flowId: parsed.data.flowId,
+    channel: DEFAULT_FLOW_CHANNEL,
+    versionId: parsed.data.versionId,
+    publishedBy: resolvePublishActor(parsed.data.actor),
+    note: parsed.data.note,
+  })
+}
+
+export async function listFlowVersionsAction(args: {
+  brand: string
+  flowId: string
+}): Promise<{ versions: FlowVersionListItem[] }> {
+  const parsed = listFlowVersionsArgsSchema.safeParse(args)
+  if (!parsed.success) {
+    return { versions: [] }
+  }
+
+  return listFlowVersions({
+    brand: parsed.data.brand,
+    flowId: parsed.data.flowId,
+    channel: DEFAULT_FLOW_CHANNEL,
+  })
 }
