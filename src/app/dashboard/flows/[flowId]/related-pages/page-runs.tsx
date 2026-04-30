@@ -116,6 +116,14 @@ export default function PageRuns({
   const [scopeFilter, setScopeFilter] = useState<InboxScopeFilter>(() =>
     getInitialScope(defaultScope)
   )
+  // Attribution filters arrive via deep-link from the creative funnel report.
+  // They are read-once at mount and not user-editable here — the report is the
+  // canonical control surface.
+  const sourceId = useMemo(() => getInitialParam('source_id'), [])
+  const utmSource = useMemo(() => getInitialParam('utm_source'), [])
+  const utmMedium = useMemo(() => getInitialParam('utm_medium'), [])
+  const utmCampaign = useMemo(() => getInitialParam('utm_campaign'), [])
+  const utmContent = useMemo(() => getInitialParam('utm_content'), [])
 
   // The panel is "loading" when a selection exists but no result for THIS id
   // has come back yet. If the last result is for a different id, we're mid-
@@ -139,8 +147,25 @@ export default function PageRuns({
       dateFrom: dateInputToIso(dateFrom),
       dateTo: dateInputToIso(dateTo, true),
       status: statusFilter,
+      sourceId: sourceId || undefined,
+      utmSource: utmSource || undefined,
+      utmMedium: utmMedium || undefined,
+      utmCampaign: utmCampaign || undefined,
+      utmContent: utmContent || undefined,
     }),
-    [dateFrom, dateTo, flowId, scopeFilter, search, statusFilter]
+    [
+      dateFrom,
+      dateTo,
+      flowId,
+      scopeFilter,
+      search,
+      statusFilter,
+      sourceId,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmContent,
+    ]
   )
   const hasFilters = Boolean(
     search ||
@@ -160,6 +185,8 @@ export default function PageRuns({
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    // Preserve source_id / utm_* drill-through params on every URL update so
+    // the user can refine other filters without losing the funnel context.
     const params = new URLSearchParams(window.location.search)
     if (search) params.set('q', search)
     else params.delete('q')
