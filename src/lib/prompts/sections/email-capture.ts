@@ -90,8 +90,21 @@ function buildEmailTemplateContext(behavior: PostEmailBehavior): string {
   return [
     `- Subject: ${emailTemplate.subject}`,
     `- Body: ${emailTemplate.body}`,
-    emailTemplate.attachment
-      ? `- Attachment: ${emailTemplate.attachment.fileName} (${emailTemplate.attachment.url})`
-      : '- Attachment: none',
+    formatAttachmentLine(emailTemplate.attachment),
   ].join('\n')
+}
+
+function formatAttachmentLine(
+  attachment: PostEmailBehavior['emailTemplate']['attachment']
+): string {
+  // The prompt-rendered context only needs the filename. The Storage URL
+  // is generated at send time (P2.04 → resolveStoredAssetUrl) — never
+  // baked into the system prompt. For legacy URL attachments we still
+  // surface the URL to the prompt because operators historically relied
+  // on the model citing it; new stored attachments only show filename.
+  if (!attachment) return '- Attachment: none'
+  if (attachment.kind === 'asset') {
+    return `- Attachment: ${attachment.fileName} (stored asset)`
+  }
+  return `- Attachment: ${attachment.fileName} (${attachment.url})`
 }

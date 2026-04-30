@@ -159,11 +159,16 @@ function isEmailAttachmentEqual(
   >['emailTemplate']['attachment']
 ): boolean {
   if (!left || !right) return left === right
-  return (
-    left.fileName === right.fileName &&
-    left.url === right.url &&
-    left.description === right.description
-  )
+  if (left.kind !== right.kind) return false
+  if (left.fileName !== right.fileName) return false
+  if (left.description !== right.description) return false
+  if (left.kind === 'asset' && right.kind === 'asset') {
+    return left.assetId === right.assetId
+  }
+  if (left.kind === 'url' && right.kind === 'url') {
+    return left.url === right.url
+  }
+  return false
 }
 
 export function describeTriggerMode(mode: TriggerOverride['mode']): string {

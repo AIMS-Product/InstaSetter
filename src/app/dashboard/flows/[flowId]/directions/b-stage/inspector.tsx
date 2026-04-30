@@ -194,6 +194,7 @@ function DesignTab({
   onOpenPrompt: (target?: string) => void
 }) {
   const actions = useFlowActions()
+  const flowState = useFlowState()
   const examplePairCount = block.examplePairs?.length ?? 0
   const draftExampleCount = block.examples.length
   const captureCount = block.captures.length
@@ -386,6 +387,8 @@ function DesignTab({
         <BlockConfigPanel
           config={block.blockConfig}
           onChange={(config) => actions.updateBlockConfig(block.id, config)}
+          brand={flowState.flow.brand}
+          flowId={flowState.flow.id}
         />
         <GuardrailsPanel
           guardrails={block.guardrails ?? []}

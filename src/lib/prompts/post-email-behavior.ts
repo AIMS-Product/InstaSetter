@@ -1,12 +1,42 @@
 import { z } from 'zod'
 
-export const EmailAttachmentSchema = z
+/**
+ * Email attachments are either:
+ *
+ * - **legacy URL** (`kind: 'url'` or kind absent): operator-typed
+ *   external URL string. The send worker fetches the URL directly.
+ *   Kept parsable for back-compat with drafts authored before the
+ *   asset-storage uploader landed.
+ *
+ * - **stored asset** (`kind: 'asset'`): operator-uploaded file living
+ *   in the private `email-assets` Supabase Storage bucket. The send
+ *   worker resolves the asset id to a 24h signed URL at send time.
+ *   Authored via `email-asset-uploader.tsx` -> `uploadEmailAssetAction`.
+ */
+const LegacyEmailAttachmentSchema = z
   .object({
+    // Defaulting `kind` to `'url'` lets the union discriminate cleanly
+    // against `'asset'` while still parsing legacy drafts that omit it.
+    kind: z.literal('url').default('url'),
     fileName: z.string().trim().min(1),
     url: z.string().trim().url(),
     description: z.string().trim().nullable(),
   })
   .strict()
+
+const StoredEmailAttachmentSchema = z
+  .object({
+    kind: z.literal('asset'),
+    assetId: z.string().uuid(),
+    fileName: z.string().trim().min(1),
+    description: z.string().trim().nullable(),
+  })
+  .strict()
+
+export const EmailAttachmentSchema = z.union([
+  StoredEmailAttachmentSchema,
+  LegacyEmailAttachmentSchema,
+])
 
 export const EmailTemplateSchema = z
   .object({
@@ -17,6 +47,9 @@ export const EmailTemplateSchema = z
   .strict()
 
 export type EmailAttachment = z.infer<typeof EmailAttachmentSchema>
+export type EmailAttachmentInput = z.input<typeof EmailAttachmentSchema>
+export type LegacyEmailAttachment = z.infer<typeof LegacyEmailAttachmentSchema>
+export type StoredEmailAttachment = z.infer<typeof StoredEmailAttachmentSchema>
 export type EmailTemplate = z.infer<typeof EmailTemplateSchema>
 
 export const DEFAULT_EMAIL_TEMPLATE: EmailTemplate = {

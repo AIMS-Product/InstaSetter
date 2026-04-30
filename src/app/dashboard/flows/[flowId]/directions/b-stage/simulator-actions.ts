@@ -69,8 +69,11 @@ export async function simulateReplyAction(
   try {
     const bookingUrl = resolveFlowBookingUrl(process.env.BOOKING_URL)
     const useCompile = isFlowCompileEnabled()
+    // `compileBlock` is async — the stored-asset attachment path
+    // resolves a Supabase signed URL at compile time. The legacy URL
+    // path returns immediately; only the stored variant awaits I/O.
     const systemPrompt = useCompile
-      ? compileBlock({
+      ? await compileBlock({
           brand: parsed.data.brand,
           bookingUrl,
           ...(parsed.data.overrides
