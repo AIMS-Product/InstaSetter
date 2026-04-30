@@ -886,7 +886,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_creative_funnel: {
+        Row: {
+          conversation_id: string
+          started_at: string
+          source_id: string | null
+          source_label: string | null
+          channel: string | null
+          utm_source: string | null
+          utm_medium: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_term: string | null
+          ad_id: string | null
+          ad_set_id: string | null
+          is_qualified: boolean
+          is_booked: boolean
+          is_sent_to_close: boolean
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
