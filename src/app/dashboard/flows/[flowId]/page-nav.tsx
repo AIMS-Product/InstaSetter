@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { Bot as BotIcon, Braces, Workflow, type LucideIcon } from 'lucide-react'
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import type { PageId, Palette } from './types'
 
 const ITEMS: Array<{
@@ -10,17 +11,22 @@ const ITEMS: Array<{
   description: string
   Icon: LucideIcon
 }> = [
-  { id: 'flow', label: 'Flow', description: 'Edit the draft', Icon: Workflow },
+  {
+    id: 'flow',
+    label: FLOW_BUILDER_LABELS.pageNav.flow.display,
+    description: FLOW_BUILDER_LABELS.pageNav.flow.description,
+    Icon: Workflow,
+  },
   {
     id: 'variables',
-    label: 'Variables',
-    description: 'Check memory',
+    label: FLOW_BUILDER_LABELS.pageNav.variables.display,
+    description: FLOW_BUILDER_LABELS.pageNav.variables.description,
     Icon: Braces,
   },
   {
     id: 'bot',
-    label: 'Bot',
-    description: 'Global rules',
+    label: FLOW_BUILDER_LABELS.pageNav.bot.display,
+    description: FLOW_BUILDER_LABELS.pageNav.bot.description,
     Icon: BotIcon,
   },
 ]

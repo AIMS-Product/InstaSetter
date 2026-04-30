@@ -1,5 +1,6 @@
 'use client'
 
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import type { QualifierConfig } from '../../../types'
 import { B } from '../palette'
 import { LockPill, PanelCard, ReadOnlyText } from './shared'
@@ -8,7 +9,7 @@ export function QualifierPanel({ config }: { config: QualifierConfig }) {
   return (
     <>
       <PanelCard
-        title={`Qualifiers · minimum ${config.minToBook} before booking`}
+        title={`${FLOW_BUILDER_LABELS.panelSections.qualifierList.display} · need at least ${config.minToBook}`}
         locked
         subtitle="Ordered by priority. Location first — it's the highest-rapport qualifier."
       >
@@ -102,7 +103,10 @@ export function QualifierPanel({ config }: { config: QualifierConfig }) {
       </PanelCard>
 
       {config.thresholds.length > 0 && (
-        <PanelCard title="Qualification thresholds" locked>
+        <PanelCard
+          title={FLOW_BUILDER_LABELS.panelSections.qualifierThresholds.display}
+          locked
+        >
           <div
             style={{
               display: 'grid',

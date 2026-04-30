@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Lock, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import type { Guardrail } from '../../types'
 import { B } from './palette'
 
@@ -13,6 +14,8 @@ export function GuardrailsPanel({
   onOpenSource?: (source: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  const tooltipId = useId()
+  const tooltip = FLOW_BUILDER_LABELS.panelSections.lockedSafetyRules.tooltip
   if (guardrails.length === 0) return null
 
   return (
@@ -28,6 +31,7 @@ export function GuardrailsPanel({
         type="button"
         onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
+        {...(tooltip ? { 'aria-describedby': tooltipId } : {})}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -48,11 +52,32 @@ export function GuardrailsPanel({
         )}
         <Lock size={13} color={B.ink3} />
         <span style={{ fontSize: 12, fontWeight: 600, color: B.ink2 }}>
-          Fixed safety rules · {guardrails.length}
+          {FLOW_BUILDER_LABELS.panelSections.lockedSafetyRules.display} ·{' '}
+          {guardrails.length}
         </span>
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: B.ink3 }}>set by InstaSetter</span>
+        <span style={{ fontSize: 11, color: B.ink3 }}>
+          {FLOW_BUILDER_LABELS.panelSections.lockedSafetyRulesNote.display}
+        </span>
       </button>
+      {tooltip && (
+        <span
+          id={tooltipId}
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
+          {tooltip}
+        </span>
+      )}
       {open && (
         <ul
           style={{
