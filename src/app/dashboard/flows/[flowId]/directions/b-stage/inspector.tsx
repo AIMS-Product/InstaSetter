@@ -8,6 +8,12 @@ import {
   getBlockDisplayLabel,
   type InspectorTabKey,
 } from '@/lib/dashboard/flow-builder-labels'
+import { getFlowRationaleVariant } from '@/lib/config'
+import {
+  recordRationaleEvent,
+  useRationaleInstrumentation,
+  type RationaleVariant,
+} from '@/lib/services/rationale-events'
 import { blockColor } from '../../shared-data'
 import { useFlowActions, useFlowState, useFlowStore } from '../../store'
 import type { FlowNode } from '../../types'
@@ -18,6 +24,21 @@ import { B } from './palette'
 import { PromptReader } from './prompt-reader'
 import { RationaleBanner } from './rationale-banner'
 import { FloatingPanel } from './floating-panel'
+
+/**
+ * P4.05 — read the rationale-panel variant flag. Wrapped in a try/catch so
+ * an invalid env value (e.g. `NEXT_PUBLIC_FLOW_RATIONALE=foo`) cannot crash
+ * the inspector at runtime. The conservative fallback is `hidden` — the same
+ * shipped default — so an env misconfig degrades to "no inspector banner"
+ * instead of a blank screen.
+ */
+function readRationaleVariant(): RationaleVariant {
+  try {
+    return getFlowRationaleVariant()
+  } catch {
+    return 'hidden'
+  }
+}
 
 // Field renders its label with a stable id and exposes it to children via
 // render-prop. Children that own the primary editable element (textarea/input)
@@ -141,11 +162,18 @@ function CollapsibleSection({
   title,
   summary,
   defaultOpen = false,
+  onToggle,
   children,
 }: {
   title: string
   summary?: string
   defaultOpen?: boolean
+  /**
+   * P4.05 — fires after every operator-driven toggle so the rationale
+   * instrumentation hook can record `rationale.expanded` /
+   * `rationale.collapsed`. Optional; non-rationale collapsibles ignore it.
+   */
+  onToggle?: (open: boolean) => void
   children: ReactNode
 }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -162,7 +190,13 @@ function CollapsibleSection({
     >
       <button
         type="button"
-        onClick={() => setOpen((s) => !s)}
+        onClick={() =>
+          setOpen((s) => {
+            const next = !s
+            onToggle?.(next)
+            return next
+          })
+        }
         aria-expanded={open}
         style={{
           width: '100%',
@@ -223,12 +257,21 @@ function CollapsibleSection({
 
 function DesignTab({
   block,
+  rationaleVariant,
   onOpenPrompt,
 }: {
   block: FlowNode
+  rationaleVariant: RationaleVariant
   onOpenPrompt: (target?: string) => void
 }) {
   const actions = useFlowActions()
+  // P4.05 — record one variant_loaded event per inspector mount per block.
+  // The hook is idempotent on identical {variant, blockType} pairs so a
+  // parent re-render does NOT inflate the counter.
+  useRationaleInstrumentation({
+    variant: rationaleVariant,
+    blockType: block.id,
+  })
   const examplePairCount = block.examplePairs?.length ?? 0
   const draftExampleCount = block.examples.length
   const captureCount = block.captures.length
@@ -293,9 +336,29 @@ function DesignTab({
           />
         )}
       </Field>
-      <CollapsibleSection title="Why this step exists" summary={whySummary}>
-        <RationaleBanner rationale={block.rationale ?? []} stat={block.stat} />
-      </CollapsibleSection>
+      {rationaleVariant === 'always_on' && (
+        // P4.05 — `always_on` renders the rationale section EXPANDED so a
+        // first-time operator sees the supporting insights without an extra
+        // click. The toggle still works locally; collapses + re-expands flow
+        // through `onToggle` into the instrumentation counter.
+        <CollapsibleSection
+          title="Why this step exists"
+          summary={whySummary}
+          defaultOpen
+          onToggle={(open) =>
+            recordRationaleEvent({
+              type: open ? 'rationale.expanded' : 'rationale.collapsed',
+              blockType: block.id,
+            })
+          }
+        >
+          <RationaleBanner
+            rationale={block.rationale ?? []}
+            stat={block.stat}
+          />
+        </CollapsibleSection>
+      )}
+      {/* `hidden` renders neither the wrapper nor the banner — no empty heading. */}
       <CollapsibleSection title="Examples" summary={exampleSummary}>
         <Field
           label={`${FLOW_BUILDER_LABELS.inspectorFields.examples.display} · ${examplePairCount}`}
@@ -953,6 +1016,9 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
     : null
   const actions = useFlowActions()
   const [reader, setReader] = useState<{ target?: string } | null>(null)
+  // P4.05 — read once per render; the variant is a build-time string for
+  // NEXT_PUBLIC_* so this is effectively a constant lookup.
+  const rationaleVariant = readRationaleVariant()
   if (!block) return null
   const color = blockColor(block.type, { l: 0.58, c: 0.14 })
   const tabs: Array<{ key: InspectorTabKey; label: string }> = [
@@ -1041,7 +1107,17 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
         </div>
         <button
           type="button"
-          onClick={() => setReader({})}
+          onClick={() => {
+            // P4.05 — proxy signal: opening the prompt reader is the
+            // operator saying "I needed deeper context". Compares directly
+            // against `rationale.expanded` to decide if the inspector
+            // duplicate earns its real-estate.
+            recordRationaleEvent({
+              type: 'rationale.prompt_reader_opened',
+              blockType: block.id,
+            })
+            setReader({})
+          }}
           title="View the customer-facing wording for this step"
           style={{
             display: 'flex',
@@ -1153,7 +1229,14 @@ export default function BInspector({ onClose }: { onClose: () => void }) {
         {state.activeTab === 'design' && (
           <DesignTab
             block={block}
-            onOpenPrompt={(target) => setReader({ target })}
+            rationaleVariant={rationaleVariant}
+            onOpenPrompt={(target) => {
+              recordRationaleEvent({
+                type: 'rationale.prompt_reader_opened',
+                blockType: block.id,
+              })
+              setReader({ target })
+            }}
           />
         )}
         {state.activeTab === 'routing' && <RoutingTab block={block} />}
