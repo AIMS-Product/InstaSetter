@@ -9,7 +9,7 @@
 
 ## Test totals
 
-- 516 vitest tests pass across the full suite (was 488 before; 28 new tests
+- 517 vitest tests pass across the full suite (was 488 before; 29 new tests
   in three new test files).
   - `src/lib/services/__tests__/conversation-viewer.test.ts` — 12 tests
     covering all five filter values (`sent`, `failed`, `pending`,
