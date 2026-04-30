@@ -13,11 +13,10 @@ import { Position } from '@xyflow/react'
 import { GitBranch, Maximize2, Minus, Plus, Workflow } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import {
-  BLOCK_BY_TYPE,
-  blockColor,
-  blockInk,
-  blockTint,
-} from '../../shared-data'
+  getBlockBlurb,
+  getBlockDisplayLabel,
+} from '@/lib/dashboard/flow-builder-labels'
+import { blockColor, blockInk, blockTint } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import type { BlockType, FlowNode } from '../../types'
 import { B } from './palette'
@@ -127,7 +126,7 @@ function Node({
               fontWeight: 600,
             }}
           >
-            {BLOCK_BY_TYPE[node.type]?.label}
+            {getBlockDisplayLabel(node.type)}
           </span>
         </div>
         <div
@@ -1294,12 +1293,11 @@ export default function BCanvas() {
       id = `${type}_${i}` as BlockType
       i++
     }
-    const def = BLOCK_BY_TYPE[type]
     actions.addNode({
       id: id as BlockType,
       type,
-      name: def?.label ?? 'New block',
-      goal: def?.blurb ?? '',
+      name: getBlockDisplayLabel(type),
+      goal: getBlockBlurb(type),
       guidance: '',
       examples: [],
       captures: [],

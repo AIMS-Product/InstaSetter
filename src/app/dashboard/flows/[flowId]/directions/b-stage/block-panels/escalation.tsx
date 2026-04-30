@@ -1,5 +1,6 @@
 'use client'
 
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import type { EscalationConfig } from '../../../types'
 import { B } from '../palette'
 import { LockPill, PanelCard, ReadOnlyText } from './shared'
@@ -7,7 +8,10 @@ import { LockPill, PanelCard, ReadOnlyText } from './shared'
 export function EscalationPanel({ config }: { config: EscalationConfig }) {
   return (
     <>
-      <PanelCard title="Required triggers" locked>
+      <PanelCard
+        title={FLOW_BUILDER_LABELS.panelSections.escalationTriggers.display}
+        locked
+      >
         {config.triggers.length === 0 ? (
           <div style={{ fontSize: 12, color: B.ink3 }}>
             No explicit triggers defined in decision-routing.

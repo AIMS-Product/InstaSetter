@@ -1,7 +1,7 @@
 'use client'
 
+import { getBlockDisplayLabel } from '@/lib/dashboard/flow-builder-labels'
 import {
-  BLOCK_BY_TYPE,
   MONO_FAMILY,
   SANS_FAMILY,
   SERIF_FAMILY,
@@ -13,7 +13,7 @@ import {
   StatusNote,
   VARIABLE_REFERENCE_STATUS,
 } from '../surface-status'
-import type { BlockType, Palette, Variable } from '../types'
+import type { Palette, Variable } from '../types'
 import RPHeader from './header'
 
 const SCOPES: Array<{
@@ -42,8 +42,12 @@ export default function PageVariables({ p }: { p: Palette }) {
   const state = useFlowState()
   const allVars = state.variables
 
-  // Augment contact vars with capturing blocks from current flow
-  const captureMap = new Map<string, BlockType>()
+  // Augment contact vars with capturing blocks from current flow.
+  // Node ids may be type-suffixed (e.g. "booking_2") when blocks are
+  // duplicated. Keep the raw id here and resolve back to a node before
+  // rendering so we never feed a non-canonical id into label helpers
+  // keyed by BlockType.
+  const captureMap = new Map<string, string>()
   state.flow.nodes.forEach((n) => {
     n.captures.forEach((c) => {
       captureMap.set(c.variable, n.id)
@@ -168,6 +172,16 @@ export default function PageVariables({ p }: { p: Palette }) {
               {grouped[sc.key].map((v) => {
                 const fullKey = `${v.scope}.${v.key}`
                 const capturedById = captureMap.get(fullKey) ?? v.capturedBy
+                const capturedByNode = capturedById
+                  ? (state.flow.nodes.find(
+                      (node) => node.id === capturedById
+                    ) ?? null)
+                  : null
+                const capturedByLabel = capturedByNode
+                  ? getBlockDisplayLabel(capturedByNode.type)
+                  : capturedById
+                    ? capturedById
+                    : null
                 return (
                   <div
                     key={v.key}
@@ -220,7 +234,7 @@ export default function PageVariables({ p }: { p: Palette }) {
                       </span>
                     </div>
                     <div style={{ color: p.ink3, fontSize: 12 }}>
-                      {capturedById ? (
+                      {capturedByLabel ? (
                         <span
                           style={{
                             display: 'inline-flex',
@@ -233,10 +247,12 @@ export default function PageVariables({ p }: { p: Palette }) {
                               width: 6,
                               height: 6,
                               borderRadius: '50%',
-                              background: blockColor(capturedById),
+                              background: capturedByNode
+                                ? blockColor(capturedByNode.type)
+                                : p.ink3,
                             }}
                           />
-                          {BLOCK_BY_TYPE[capturedById]?.label ?? capturedById}
+                          {capturedByLabel}
                         </span>
                       ) : v.scope === 'brand' ? (
                         'Set manually'

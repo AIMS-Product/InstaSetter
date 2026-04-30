@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type CSSProperties } from 'react'
+import { FLOW_BUILDER_LABELS } from '@/lib/dashboard/flow-builder-labels'
 import {
   PostEmailBehaviorSchema,
   type PostEmailBehavior,
@@ -109,7 +110,7 @@ export function EmailPanel({
   return (
     <>
       <PanelCard
-        title="Capture triggers"
+        title={FLOW_BUILDER_LABELS.panelSections.emailCaptureTriggers.display}
         subtitle="Three moments at which the bot is allowed to ask for email."
       >
         <div
@@ -224,7 +225,7 @@ export function EmailPanel({
       </PanelCard>
 
       <PanelCard
-        title="After email is captured"
+        title={FLOW_BUILDER_LABELS.panelSections.emailAfterCapture.display}
         subtitle="Operator-owned confirmation copy and delivery context."
       >
         <label
@@ -363,7 +364,7 @@ export function EmailPanel({
       </PanelCard>
 
       <PanelCard
-        title="Email to send"
+        title={FLOW_BUILDER_LABELS.panelSections.emailToSend.display}
         subtitle="Draft content for the configured follow-up email."
       >
         <label
@@ -487,7 +488,9 @@ export function EmailPanel({
       </PanelCard>
 
       {config.hesitationScript && (
-        <PanelCard title="Hesitation response">
+        <PanelCard
+          title={FLOW_BUILDER_LABELS.panelSections.emailHesitation.display}
+        >
           <ReadOnlyText value={config.hesitationScript} />
           <div
             style={{

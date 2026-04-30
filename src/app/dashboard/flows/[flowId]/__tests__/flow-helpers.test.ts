@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  FLOW_BUILDER_LABELS,
+  getBlockDisplayLabel,
+} from '@/lib/dashboard/flow-builder-labels'
+import {
   DEFAULT_FLOW_BOOKING_URL,
   KNOWN_FLOWS,
   isKnownFlowId,
@@ -14,6 +18,8 @@ import {
   blockInk,
   blockTint,
 } from '../shared-data'
+import { buildInitialFlow } from '../store'
+import { BLOCK_TYPES, type BlockType } from '../types'
 import {
   extractPersistedFlowDraft,
   isSuspectFlowDraft,
@@ -109,11 +115,17 @@ describe('block catalog helpers', () => {
     expect(Object.keys(BLOCK_BY_TYPE).sort()).toEqual(
       BLOCK_CATALOG.map((block) => block.type).sort()
     )
+    // BLOCK_BY_TYPE.label feeds the compiled prompt directive (asserted byte-
+    // for-byte by compile-block.contract.test.ts) — never coupled to operator
+    // display copy.
     expect(BLOCK_BY_TYPE.booking).toEqual(
       expect.objectContaining({
         label: 'Booking',
-        blurb: expect.stringContaining('send link'),
       })
+    )
+    // Display blurbs come from the operator-facing flow-builder-labels catalog.
+    expect(BLOCK_BY_TYPE.booking.blurb).toBe(
+      FLOW_BUILDER_LABELS.blocks.booking.blurb
     )
   })
 
@@ -124,6 +136,22 @@ describe('block catalog helpers', () => {
     )
     expect(blockTint('summary')).toBe('oklch(0.97 0.022 260)')
     expect(blockInk('opening')).toBe('oklch(0.38 0.09 18)')
+  })
+})
+
+describe('flow node display labels', () => {
+  // BLOCK_LABELS in store.tsx seeds FlowNode.name, which is shown in the
+  // canvas, inspector header, palette, and route selector. It must read from
+  // the operator-facing flow-builder-labels catalog so a marketer never sees
+  // engineering vocabulary like "Booking Handoff" or "Objection Handler".
+  it('seeds FlowNode.name from FLOW_BUILDER_LABELS for every block type', () => {
+    const flow = buildInitialFlow('VendingPreneurs')
+    const namesByType = new Map<BlockType, string>(
+      flow.nodes.map((node) => [node.type, node.name])
+    )
+    for (const type of BLOCK_TYPES) {
+      expect(namesByType.get(type)).toBe(getBlockDisplayLabel(type))
+    }
   })
 })
 

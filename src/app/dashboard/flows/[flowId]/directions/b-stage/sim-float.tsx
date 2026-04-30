@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { RotateCcw, X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
 import { ToolBadge } from '@/components/tool-badge'
+import { getBlockDisplayLabel } from '@/lib/dashboard/flow-builder-labels'
 import type { BlockOverrides } from '@/lib/prompts/compile-block/schemas'
-import { BLOCK_BY_TYPE } from '../../shared-data'
 import { useFlowActions, useFlowState } from '../../store'
 import { getSimulatorStatus } from '../../surface-status'
 import type { Turn } from '../../types'
@@ -191,7 +191,7 @@ export default function BSimFloat({
           }}
         >
           {activeBlock
-            ? `${BLOCK_BY_TYPE[activeBlock.type]?.label ?? activeBlock.name} selected`
+            ? `${getBlockDisplayLabel(activeBlock.type)} selected`
             : 'Flow-wide draft'}
         </span>
         <span style={{ flex: 1 }} />

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { IconButton } from '@/components/icon-button'
-import { BLOCK_BY_TYPE, blockColor, SERIF_FAMILY } from '../../shared-data'
+import { getBlockDisplayLabel } from '@/lib/dashboard/flow-builder-labels'
+import { blockColor, SERIF_FAMILY } from '../../shared-data'
 import {
   PROMPT_READER_STATUS,
   StatusBadge,
@@ -452,7 +453,7 @@ export function PromptReader({
   }
 
   const color = blockColor(block.type, { l: 0.58, c: 0.14 })
-  const label = BLOCK_BY_TYPE[block.type]?.label ?? block.type
+  const label = getBlockDisplayLabel(block.type)
   const runtimeStatus = getLiveRuntimeStatus()
 
   return (
