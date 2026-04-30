@@ -111,7 +111,9 @@ export function EmailPanel({
     <>
       <PanelCard
         title={FLOW_BUILDER_LABELS.panelSections.emailCaptureTriggers.display}
+        lockId="email.captureTriggers"
         subtitle="Three moments at which the bot is allowed to ask for email."
+        action={<LockPill id="email.timingFloor" />}
       >
         <div
           role="tablist"
@@ -502,8 +504,8 @@ export function EmailPanel({
               color: B.ink3,
             }}
           >
-            <LockPill /> tool: capture_email called immediately after email
-            received
+            <LockPill id="email.captureEmailTool" /> tool: capture_email called
+            immediately after email received
           </div>
         </PanelCard>
       )}
