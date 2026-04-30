@@ -31,7 +31,7 @@ export function GuardrailsPanel({
         type="button"
         onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
-        {...(tooltip ? { 'aria-describedby': tooltipId, title: tooltip } : {})}
+        {...(tooltip ? { 'aria-describedby': tooltipId } : {})}
         style={{
           display: 'flex',
           alignItems: 'center',
