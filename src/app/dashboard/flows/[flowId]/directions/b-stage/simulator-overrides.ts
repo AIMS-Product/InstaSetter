@@ -1,4 +1,10 @@
-import type { AmbientTrigger, Branch, Capture, FlowNode } from '../../types'
+import type {
+  AmbientTrigger,
+  Branch,
+  BrandGuardrail,
+  Capture,
+  FlowNode,
+} from '../../types'
 import { deriveBlock } from './block-sections'
 import { DEFAULT_POST_EMAIL_BEHAVIOR } from '@/lib/prompts/post-email-behavior'
 import type {
@@ -18,6 +24,12 @@ interface BuildSimulatorOverridesInput {
   brand: string
   bookingUrl?: string
   triggers: AmbientTrigger[]
+  /**
+   * Operator-curated brand guardrails (P1.04). Threaded into the simulator
+   * compile-block path so previews honour the same forbidden-phrase rules the
+   * live prompt would.
+   */
+  brandGuardrails?: BrandGuardrail[]
 }
 
 export function isFlowCompileEnabled(
@@ -33,6 +45,7 @@ export function buildSimulatorOverrides({
   brand,
   bookingUrl,
   triggers,
+  brandGuardrails,
 }: BuildSimulatorOverridesInput): BlockOverrides | null {
   if (!selectedBlock) return null
 
@@ -80,6 +93,13 @@ export function buildSimulatorOverrides({
     )
   ) {
     overrides.postEmailBehavior = selectedBlock.blockConfig.postEmailBehavior
+  }
+
+  // Brand guardrails are bot-scoped (not block-scoped), so include them
+  // whenever the operator has any configured. An empty list is the default —
+  // omit it so compileBlock's empty-list path kicks in.
+  if (brandGuardrails && brandGuardrails.length > 0) {
+    overrides.brandGuardrails = brandGuardrails
   }
 
   return overrides

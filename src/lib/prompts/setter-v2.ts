@@ -7,6 +7,7 @@ import { buildEmailCapture } from './sections/email-capture'
 import { buildDecisionRouting } from './sections/decision-routing'
 import { buildSummaryGeneration } from './sections/summary-generation'
 import { buildMessageConstraints } from './sections/message-constraints'
+import { buildBrandGuardrails, type BrandGuardrail } from './brand-guardrails'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
 const PROMPT_VERSION = 'setter-v2'
@@ -30,6 +31,12 @@ interface BuildSystemPromptOptions {
   priorSummaries?: string[]
   contactContext?: ContactContext
   leadSourceContext?: LeadSourceContext
+  /**
+   * Operator-owned brand guardrails (forbidden phrases). Stack on top of the
+   * data-locked Forbidden Phrases section in `persona.ts`. Default `[]` keeps
+   * the assembled prompt byte-identical to today.
+   */
+  brandGuardrails?: BrandGuardrail[]
 }
 
 export function buildSystemPrompt({
@@ -39,9 +46,17 @@ export function buildSystemPrompt({
   priorSummaries,
   contactContext,
   leadSourceContext,
+  brandGuardrails,
 }: BuildSystemPromptOptions): string {
+  // Brand guardrails sit between persona and company-context. Persona ships
+  // the data-locked Forbidden Phrases; brand guardrails are conceptually a
+  // brand-level forbidden-phrase set, so they live adjacent. An empty list
+  // emits no bytes — see buildBrandGuardrails.
+  const brandGuardrailsBlock = buildBrandGuardrails(brandGuardrails ?? [])
+
   const sections = [
     buildPersona(brandName),
+    ...(brandGuardrailsBlock ? [brandGuardrailsBlock] : []),
     buildCompanyContext(brandName),
     buildLocationGate(brandName),
     buildQualificationCriteria(),

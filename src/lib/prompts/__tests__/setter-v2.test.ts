@@ -372,4 +372,49 @@ describe('setter-v2 buildSystemPrompt', () => {
     expect(leadSourceSection).not.toContain('Trigger:')
     expect(leadSourceSection).toMatch(/short affirmative/i)
   })
+
+  // -------------------------------------------------------------------------
+  // Brand Guardrails (operator-owned forbidden phrases)
+  // -------------------------------------------------------------------------
+
+  it('omits the brand guardrails section when no list is provided (default empty)', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).not.toContain('Brand Guardrails — Never Say')
+  })
+
+  it('omits the brand guardrails section when an empty list is provided', () => {
+    const prompt = buildSystemPrompt({ ...DEFAULT_OPTS, brandGuardrails: [] })
+    expect(prompt).not.toContain('Brand Guardrails — Never Say')
+  })
+
+  it('emits an empty-list prompt that is byte-identical to the default prompt', () => {
+    expect(buildSystemPrompt({ ...DEFAULT_OPTS, brandGuardrails: [] })).toBe(
+      buildSystemPrompt(DEFAULT_OPTS)
+    )
+  })
+
+  it('inserts the brand guardrails section between persona and company context', () => {
+    const prompt = buildSystemPrompt({
+      ...DEFAULT_OPTS,
+      brandGuardrails: [
+        {
+          id: '11111111-2222-4333-8444-555555555555',
+          phrase: 'passive income',
+          note: 'Anthony hates it.',
+          createdAt: '2026-04-29T00:00:00.000Z',
+        },
+      ],
+    })
+
+    const personaIdx = prompt.indexOf('## Persona')
+    const guardrailsIdx = prompt.indexOf('## Brand Guardrails — Never Say')
+    const companyIdx = prompt.indexOf('## Company Context')
+
+    expect(personaIdx).toBeGreaterThan(-1)
+    expect(guardrailsIdx).toBeGreaterThan(personaIdx)
+    expect(companyIdx).toBeGreaterThan(guardrailsIdx)
+    expect(prompt).toContain(
+      'Never say "passive income" — note: Anthony hates it.'
+    )
+  })
 })

@@ -240,6 +240,7 @@ function buildInitialBot(brand: string, bookingUrl?: string): BotSettings {
     persona: buildPersona(brand),
     messageConstraints: buildMessageConstraints(bookingUrl),
     forbiddenPhrases: [],
+    brandGuardrails: [],
   }
 }
 

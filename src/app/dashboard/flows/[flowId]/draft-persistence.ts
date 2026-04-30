@@ -3,6 +3,11 @@ import {
   DEFAULT_POST_EMAIL_BEHAVIOR,
   PostEmailBehaviorSchema,
 } from '@/lib/prompts/post-email-behavior'
+import {
+  BrandGuardrailSchema,
+  DEFAULT_BRAND_GUARDRAILS,
+  type BrandGuardrail,
+} from '@/lib/prompts/brand-guardrails'
 import type { AmbientTrigger, Flow, FlowNode, Variable } from './types'
 
 export interface BotSettings {
@@ -10,6 +15,11 @@ export interface BotSettings {
   persona: string
   messageConstraints: string
   forbiddenPhrases: string[]
+  /**
+   * Operator-curated forbidden phrases (P1.04). Stack on top of the
+   * data-locked persona-level Forbidden Phrases section. Default `[]`.
+   */
+  brandGuardrails: BrandGuardrail[]
 }
 
 export interface VersionSnapshot {
@@ -38,6 +48,9 @@ export interface PersistedFlowDraft {
   dirtySincePublish: boolean
 }
 
+// Bumping this would discard every existing operator draft. The brandGuardrails
+// addition is a purely additive shape change — the normalizer backfills `[]`
+// for older drafts — so the schema version stays at 4.
 export const FLOW_DRAFT_SCHEMA = 4
 
 export function extractPersistedFlowDraft(
@@ -111,6 +124,23 @@ function normalizeFlowDraft(flow: Flow): Flow {
     : { ...withoutBotGuardrails, nodes }
 }
 
+function normalizeBotBrandGuardrails(bot: BotSettings): BotSettings {
+  const raw = (bot.brandGuardrails ?? DEFAULT_BRAND_GUARDRAILS) as unknown
+  const list = Array.isArray(raw) ? raw : DEFAULT_BRAND_GUARDRAILS
+  // Validate each entry individually — drop invalid rows so a single corrupt
+  // guardrail doesn't tank the whole panel. Cap defensively at 50 (schema
+  // upper bound).
+  const valid: BrandGuardrail[] = []
+  for (const entry of list) {
+    const parsed = BrandGuardrailSchema.safeParse(entry)
+    if (parsed.success) valid.push(parsed.data)
+    if (valid.length >= 50) break
+  }
+
+  if (valid === bot.brandGuardrails) return bot
+  return { ...bot, brandGuardrails: valid }
+}
+
 export function normalizePersistedFlowDraft(
   state: Partial<PersistedFlowDraft>
 ): Partial<PersistedFlowDraft> {
@@ -120,12 +150,17 @@ export function normalizePersistedFlowDraft(
     next.flow = normalizeFlowDraft(state.flow)
   }
 
+  if (state.bot) {
+    next.bot = normalizeBotBrandGuardrails(state.bot)
+  }
+
   if (state.versions) {
     next.versions = state.versions.map((version) => ({
       ...version,
       snapshot: {
         ...version.snapshot,
         flow: normalizeFlowDraft(version.snapshot.flow),
+        bot: normalizeBotBrandGuardrails(version.snapshot.bot),
       },
     }))
   }

@@ -5,6 +5,9 @@ vi.mock('@/lib/services/conversation')
 vi.mock('@/lib/services/message')
 vi.mock('@/lib/services/claude')
 vi.mock('@/lib/prompts/setter-v2')
+vi.mock('@/lib/services/brand-guardrails-resolver', () => ({
+  resolveLiveBrandGuardrails: vi.fn().mockResolvedValue([]),
+}))
 vi.mock('@/lib/services/sendpulse', () => ({
   setContactTags: vi.fn().mockResolvedValue({ success: true }),
   removeContactTag: vi.fn().mockResolvedValue({ success: true }),
@@ -36,6 +39,7 @@ import {
 import { storeMessage, buildClaudeMessages } from '@/lib/services/message'
 import { buildClaudeRequest, parseClaudeResponse } from '@/lib/services/claude'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
+import { resolveLiveBrandGuardrails } from '@/lib/services/brand-guardrails-resolver'
 import { createMockClient, asSupabaseClient } from '@/test/helpers'
 
 type ConversationRow = Database['public']['Tables']['conversations']['Row']
@@ -443,5 +447,111 @@ describe('processMessage', () => {
       })
     )
     expect(mockClient.from).not.toHaveBeenCalledWith('ins_flow_drafts')
+  })
+
+  it('threads resolved brand guardrails into buildSystemPrompt (default empty)', async () => {
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: 'prompt',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockResolvedValue({
+      content: [{ type: 'text', text: 'Hey!' }],
+    })
+    vi.mocked(parseClaudeResponse).mockReturnValue({
+      replyText: 'Hey!',
+      toolCalls: [],
+      truncated: false,
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      '2026-04-09T10:00:00Z',
+      mockClaude
+    )
+
+    expect(resolveLiveBrandGuardrails).toHaveBeenCalledWith('TestBrand')
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ brandGuardrails: [] })
+    )
+  })
+
+  it('threads non-empty brand guardrails through to buildSystemPrompt', async () => {
+    const guardrail = {
+      id: '11111111-2222-4333-8444-555555555555',
+      phrase: 'passive income',
+      note: null,
+      createdAt: '2026-04-29T00:00:00.000Z',
+    }
+    vi.mocked(resolveLiveBrandGuardrails).mockResolvedValueOnce([guardrail])
+    vi.mocked(findOrCreateActiveConversation).mockResolvedValue({
+      success: true,
+      data: stubConversation,
+    })
+    vi.mocked(loadPriorSummaries).mockResolvedValue({
+      success: true,
+      data: [],
+    })
+    vi.mocked(buildSystemPrompt).mockReturnValue('prompt')
+    vi.mocked(storeMessage).mockResolvedValue({
+      success: true,
+      isDuplicate: false,
+      data: stubMessage,
+    })
+    vi.mocked(buildClaudeMessages).mockResolvedValue({
+      success: true,
+      data: [{ role: 'user', content: 'Hi' }],
+    })
+    vi.mocked(buildClaudeRequest).mockReturnValue({
+      model: 'claude-sonnet-4-20250514',
+      system: 'prompt',
+      messages: [],
+      max_tokens: 1024,
+      tools: [],
+    })
+    mockClaude.mockResolvedValue({
+      content: [{ type: 'text', text: 'Hey!' }],
+    })
+    vi.mocked(parseClaudeResponse).mockReturnValue({
+      replyText: 'Hey!',
+      toolCalls: [],
+      truncated: false,
+    })
+
+    await processMessage(
+      asSupabaseClient(mockClient),
+      mockContact,
+      'msg-id',
+      'Hi',
+      '2026-04-09T10:00:00Z',
+      mockClaude
+    )
+
+    expect(buildSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ brandGuardrails: [guardrail] })
+    )
   })
 })

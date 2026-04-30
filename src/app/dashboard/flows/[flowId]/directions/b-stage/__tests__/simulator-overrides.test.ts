@@ -148,6 +148,36 @@ describe('buildSimulatorOverrides', () => {
 
     expect(overrides).not.toHaveProperty('postEmailBehavior')
   })
+
+  it('omits brandGuardrails when the list is empty', () => {
+    const overrides = buildSimulatorOverrides({
+      selectedBlock: getNode('opening'),
+      brand: BRAND,
+      bookingUrl: BOOKING_URL,
+      triggers: [],
+      brandGuardrails: [],
+    })
+
+    expect(overrides).not.toHaveProperty('brandGuardrails')
+  })
+
+  it('passes brandGuardrails through when configured', () => {
+    const guardrail = {
+      id: '11111111-2222-4333-8444-555555555555',
+      phrase: 'passive income',
+      note: 'Anthony hates it.',
+      createdAt: '2026-04-29T00:00:00.000Z',
+    }
+    const overrides = buildSimulatorOverrides({
+      selectedBlock: getNode('opening'),
+      brand: BRAND,
+      bookingUrl: BOOKING_URL,
+      triggers: [],
+      brandGuardrails: [guardrail],
+    })
+
+    expect(overrides?.brandGuardrails).toEqual([guardrail])
+  })
 })
 
 describe('isFlowCompileEnabled', () => {

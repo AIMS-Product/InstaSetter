@@ -17,6 +17,7 @@ import {
 } from '@/lib/services/claude'
 import { leadSummarySchema } from '@/types/lead'
 import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
+import { resolveLiveBrandGuardrails } from '@/lib/services/brand-guardrails-resolver'
 import { getServerConfig } from '@/lib/config'
 import { setContactTags } from '@/lib/services/sendpulse'
 import type { Json } from '@/types/database'
@@ -125,6 +126,7 @@ export async function processMessage(
 
   // Step 4: Build system prompt with contact context
   const isReturningContact = priorSummaries.length > 0
+  const brandGuardrails = await resolveLiveBrandGuardrails(BRAND_NAME)
   const systemPrompt = buildSystemPrompt({
     brandName: BRAND_NAME,
     bookingUrl: BOOKING_URL,
@@ -132,6 +134,7 @@ export async function processMessage(
     priorSummaries,
     contactContext,
     leadSourceContext,
+    brandGuardrails,
   })
 
   // Step 5: Assemble message history

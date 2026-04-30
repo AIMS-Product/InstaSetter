@@ -68,6 +68,7 @@ function persistedDraft(overrides: Partial<PersistedFlowDraft> = {}) {
       persona: 'Peer mentor',
       messageConstraints: 'Two sentences max',
       forbiddenPhrases: [],
+      brandGuardrails: [],
     },
     variables: [],
     versions: [],
@@ -334,5 +335,67 @@ describe('draft persistence helpers', () => {
     expect(
       isSuspectFlowDraft(persistedDraft(), { brand: 'VendingPreneurs' })
     ).toBe(false)
+  })
+
+  it('round-trips operator-added brand guardrails on the bot settings', () => {
+    const draft = persistedDraft({
+      bot: {
+        ...persistedDraft().bot,
+        brandGuardrails: [
+          {
+            id: '11111111-2222-4333-8444-555555555555',
+            phrase: 'passive income',
+            note: 'Anthony hates it.',
+            createdAt: '2026-04-29T00:00:00.000Z',
+          },
+        ],
+      },
+    })
+
+    const persisted = extractPersistedFlowDraft(draft)
+    expect(persisted.bot.brandGuardrails).toHaveLength(1)
+    expect(persisted.bot.brandGuardrails?.[0]?.phrase).toBe('passive income')
+  })
+
+  it('backfills an empty brandGuardrails list for older drafts', () => {
+    const legacyBot = {
+      name: 'Ava',
+      persona: 'Peer mentor',
+      messageConstraints: 'Two sentences max',
+      forbiddenPhrases: [],
+    } as Partial<PersistedFlowDraft['bot']>
+
+    const normalized = normalizePersistedFlowDraft({
+      bot: legacyBot as PersistedFlowDraft['bot'],
+    })
+
+    expect(normalized.bot?.brandGuardrails).toEqual([])
+  })
+
+  it('drops invalid brand guardrails while preserving valid ones', () => {
+    const normalized = normalizePersistedFlowDraft({
+      bot: {
+        ...persistedDraft().bot,
+        brandGuardrails: [
+          // Valid
+          {
+            id: '11111111-2222-4333-8444-555555555555',
+            phrase: 'passive income',
+            note: null,
+            createdAt: '2026-04-29T00:00:00.000Z',
+          },
+          // Invalid: empty phrase
+          {
+            id: '22222222-2222-4333-8444-555555555555',
+            phrase: '',
+            note: null,
+            createdAt: '2026-04-29T00:00:00.000Z',
+          },
+        ] as PersistedFlowDraft['bot']['brandGuardrails'],
+      },
+    })
+
+    expect(normalized.bot?.brandGuardrails).toHaveLength(1)
+    expect(normalized.bot?.brandGuardrails?.[0]?.phrase).toBe('passive income')
   })
 })
