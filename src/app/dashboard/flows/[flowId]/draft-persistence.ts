@@ -157,3 +157,170 @@ export function isSuspectFlowDraft(
 
   return false
 }
+
+/**
+ * Returns the list of changed field paths between two persisted drafts in
+ * dot-notation. Each path is a leaf path; container differences are not
+ * reported when their children are stable. Used by the P4.04 warning
+ * system to drive the high-impact gate via
+ * `resolveLockIdForFieldPath` on each path.
+ *
+ * Special handling for `flow.nodes`: the function indexes nodes by their
+ * `id` rather than array position so reordering doesn't show every node as
+ * dirty. Likewise for `triggers` (by `id`) and `variables`
+ * (by `${scope}.${key}`).
+ *
+ * Bag-only fields (`versions`, internal counters, status booleans) are
+ * intentionally excluded — they're persistence bookkeeping, not user
+ * intent.
+ */
+export function diffFlowDraft(
+  prev: PersistedFlowDraft,
+  next: PersistedFlowDraft
+): string[] {
+  const changes: string[] = []
+  if (prev === next) return changes
+
+  // Flow + nodes — node id keyed.
+  if (prev.flow !== next.flow) {
+    if (prev.flow.id !== next.flow.id) changes.push('flow.id')
+    if (prev.flow.brand !== next.flow.brand) changes.push('flow.brand')
+    if (prev.flow.name !== next.flow.name) changes.push('flow.name')
+    if (prev.flow.channel !== next.flow.channel) changes.push('flow.channel')
+
+    const prevNodes = new Map(prev.flow.nodes.map((node) => [node.id, node]))
+    const nextNodes = new Map(next.flow.nodes.map((node) => [node.id, node]))
+    const allIds = new Set([...prevNodes.keys(), ...nextNodes.keys()])
+    for (const id of allIds) {
+      const prevNode = prevNodes.get(id)
+      const nextNode = nextNodes.get(id)
+      const path = `flow.nodes.${id}`
+      if (!prevNode) {
+        changes.push(`${path}.__added__`)
+        continue
+      }
+      if (!nextNode) {
+        changes.push(`${path}.__removed__`)
+        continue
+      }
+      if (prevNode === nextNode) continue
+      diffObjectInto(prevNode, nextNode, path, changes)
+    }
+  }
+
+  // Triggers — id keyed.
+  if (prev.triggers !== next.triggers) {
+    const prevById = new Map(prev.triggers.map((t) => [t.id, t]))
+    const nextById = new Map(next.triggers.map((t) => [t.id, t]))
+    const allIds = new Set([...prevById.keys(), ...nextById.keys()])
+    for (const id of allIds) {
+      const a = prevById.get(id)
+      const b = nextById.get(id)
+      const path = `triggers.${id}`
+      if (!a) {
+        changes.push(`${path}.__added__`)
+        continue
+      }
+      if (!b) {
+        changes.push(`${path}.__removed__`)
+        continue
+      }
+      diffObjectInto(a, b, path, changes)
+    }
+  }
+
+  // Bot — top-level fields, plus forbidden phrases as a list.
+  if (prev.bot !== next.bot) {
+    diffObjectInto(prev.bot, next.bot, 'bot', changes)
+  }
+
+  // Variables — keyed by scope.key.
+  if (prev.variables !== next.variables) {
+    const prevByKey = new Map(
+      prev.variables.map((v) => [`${v.scope}.${v.key}`, v])
+    )
+    const nextByKey = new Map(
+      next.variables.map((v) => [`${v.scope}.${v.key}`, v])
+    )
+    const allKeys = new Set([...prevByKey.keys(), ...nextByKey.keys()])
+    for (const key of allKeys) {
+      const a = prevByKey.get(key)
+      const b = nextByKey.get(key)
+      const path = `variables.${key}`
+      if (!a) {
+        changes.push(`${path}.__added__`)
+        continue
+      }
+      if (!b) {
+        changes.push(`${path}.__removed__`)
+        continue
+      }
+      diffObjectInto(a, b, path, changes)
+    }
+  }
+
+  return changes
+}
+
+function diffObjectInto(
+  a: unknown,
+  b: unknown,
+  prefix: string,
+  changes: string[]
+): void {
+  if (a === b) return
+  if (a === null || b === null) {
+    changes.push(prefix)
+    return
+  }
+  if (typeof a !== typeof b) {
+    changes.push(prefix)
+    return
+  }
+  if (typeof a !== 'object' || typeof b !== 'object') {
+    changes.push(prefix)
+    return
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!arraysEqual(a, b)) changes.push(prefix)
+    return
+  }
+
+  const keys = new Set([
+    ...Object.keys(a as Record<string, unknown>),
+    ...Object.keys(b as Record<string, unknown>),
+  ])
+  for (const key of keys) {
+    const av = (a as Record<string, unknown>)[key]
+    const bv = (b as Record<string, unknown>)[key]
+    diffObjectInto(av, bv, `${prefix}.${key}`, changes)
+  }
+}
+
+function arraysEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (!Array.isArray(a) || !Array.isArray(b)) return false
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    if (!deepEqual(a[i], b[i])) return false
+  }
+  return true
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (a === null || b === null) return false
+  if (typeof a !== typeof b) return false
+  if (typeof a !== 'object') return false
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false
+    return arraysEqual(a, b)
+  }
+  const ao = a as Record<string, unknown>
+  const bo = b as Record<string, unknown>
+  const keys = new Set([...Object.keys(ao), ...Object.keys(bo)])
+  for (const key of keys) {
+    if (!deepEqual(ao[key], bo[key])) return false
+  }
+  return true
+}

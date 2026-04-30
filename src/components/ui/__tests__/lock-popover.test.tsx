@@ -13,6 +13,7 @@ const SAFETY_ENTRY: LockEntry = {
   tooltip:
     'Only US and Canada are supported today. Out-of-region prospects are warmly declined.',
   escalation: null,
+  highImpact: true,
 }
 
 const ADMIN_ENTRY: LockEntry = {
@@ -21,6 +22,7 @@ const ADMIN_ENTRY: LockEntry = {
   surface: 'Qualifier list',
   tooltip: 'The set of things to learn before booking.',
   escalation: 'Ask James in #dm-setter Slack to change this.',
+  highImpact: false,
 }
 
 function PopoverHarness({
