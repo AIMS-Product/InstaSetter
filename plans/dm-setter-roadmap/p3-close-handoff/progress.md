@@ -130,3 +130,95 @@ These are not blockers for merging. They block flipping
    without touching engine.ts.
 7. **All Close calls are mocked** (`vi.fn` on `fetch` / on
    `pushLeadToClose`). No live Close calls in any test path.
+
+---
+
+# P3.02 — Sent-to-Close status badge: progress
+
+| Wave | Title                                                  | Status | RED | GREEN | REFACTOR | Commit  |
+| ---- | ------------------------------------------------------ | ------ | --- | ----- | -------- | ------- |
+| 1    | conversation-viewer projects closeSync (list + detail) | DONE   | yes | yes   | yes      | 2cbd5eb |
+| 2    | CloseSyncBadge component + 10 state tests              | DONE   | yes | yes   | yes      | 3b7c7a8 |
+| 3    | Wire badge into PageRuns row + detail header           | DONE   | n/a | yes   | n/a      | 4233924 |
+
+## Test totals (post-P3.02)
+
+- 478 vitest tests pass across the full suite (was 463 after P3.01;
+  15 new tests on this PR — 5 in `conversation-viewer.test.ts`, 10 in
+  `close-sync-badge.test.tsx`).
+- `compile-block.contract.test.ts` (33 tests) remains green — sacred
+  guard.
+- `npm run type-check` clean.
+- `npm run build` produces a Vercel-ready `.next/` (with the existing
+  P3.01 cron route) — no new routes added.
+- `npm run lint` clean (15 pre-existing warnings, none new).
+
+## Decisions made during implementation
+
+1. **Row badge is link-disabled.** The conversations row is a
+   `<button>`. Nesting an anchor inside that button is invalid markup
+   and breaks keyboard activation. The `CloseSyncBadge` therefore
+   accepts a `disableLink` prop that the row passes (`disableLink`).
+   The detail header (a div) gets the live link. Operators wanting
+   to jump to Close click the row, then click the badge in the
+   detail panel.
+2. **`server-only` is aliased to a stub** in `vitest.config.ts` so
+   `conversation-viewer.ts` can be imported under jsdom. The real
+   `server-only` package only exists as a runtime marker; tests don't
+   need its enforcement and the alias is the smallest invasive
+   change.
+3. **`afterEach(cleanup)` added to vitest setup.** RTL v16 with
+   vitest doesn't auto-unmount between tests. Without explicit
+   cleanup, multiple `render()` calls in one file leak DOM state into
+   subsequent assertions. This is the standard pattern.
+4. **`pending` with 0 attempts renders as null,** not as a "queued"
+   chip. The flag-off / cold-skip / not-yet-tried states all share
+   the same operator experience: no badge. The badge only appears
+   once meaningful work has happened.
+5. **`sent` without `closeLeadId`** still renders the green pill but
+   without the click-through. This handles the Wave-5 race in P3.01
+   where status flips to `sent` before `close_crm_id` is committed.
+6. **Failed and failed_permanent share the same visual.** The spec
+   asks for parity in v1; the distinction is operator-driven and
+   surfaces only in P3.04's filter UI.
+7. **The badge sits to the LEFT of the existing status pill in the
+   row.** Right-aligned via the existing `flex: 1` spacer; mobile
+   stacks via `flexWrap: 'wrap'`.
+8. **Truncation for the failed-state title is 140 chars** with a
+   single trailing ellipsis (one char of the budget reserved for
+   `…`). Matches the spec FR-7.
+
+## Files modified (P3.02)
+
+- `src/lib/services/conversation-viewer-types.ts` — add
+  `CloseSyncState` type + `closeSync` field on the list/detail items.
+- `src/lib/services/conversation-viewer.ts` — fetch leads in the
+  existing batch (list + detail), project sync columns into the
+  result.
+- `src/lib/services/__tests__/conversation-viewer.test.ts` — new file,
+  5 cases covering list, detail, multi-lead, and null projection.
+- `src/components/close-sync-badge.tsx` — new component, < 110 LOC.
+- `src/components/__tests__/close-sync-badge.test.tsx` — new file,
+  10 cases.
+- `src/app/dashboard/flows/[flowId]/related-pages/page-runs.tsx` —
+  render `<CloseSyncBadge>` next to the row status pill (with
+  `disableLink`) and beside the contact name in the detail header.
+- `vitest.config.ts` — alias `server-only` to a stub so the viewer
+  module can be imported in tests.
+- `src/test/server-only-stub.ts` — empty stub for the alias.
+- `src/test/setup.ts` — add `afterEach(cleanup)`.
+- `plans/dm-setter-roadmap/p3-close-handoff/progress.md` (this file).
+- `plans/dm-setter-roadmap/p3-close-handoff/qa-review.md` — new
+  P3.02 sections appended.
+
+## Coordination notes for the user
+
+The badge is a pure read-side surface — no migration, no flag, no
+runtime behaviour change. Until P3.01's `close_sync.enabled` flag is
+flipped to `true` for at least one brand, every conversation will
+return `closeSync: null` (because no `leads` rows have non-default
+sync metadata yet) and the badge will render `null` everywhere. This
+means the PR is safe to merge BEFORE the cutover SQL runs in prod.
+
+After cutover, badges will start appearing on conversations that
+trigger `generate_summary`. There is no separate enablement step.
