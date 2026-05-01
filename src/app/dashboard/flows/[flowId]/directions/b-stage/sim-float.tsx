@@ -17,18 +17,9 @@ import { FloatingPanel } from './floating-panel'
 
 const ACTION_REJECTION_ERROR = 'Simulator request failed. Please try again.'
 const STARTER_PROMPTS = [
-  {
-    label: 'Side income',
-    text: "Hey, I'm in Dallas and looking for side income. How does this work?",
-  },
-  {
-    label: 'Price concern',
-    text: "What's the usual investment to get started with a machine?",
-  },
-  {
-    label: 'Ready to book',
-    text: 'This sounds interesting. Can you send me the booking link?',
-  },
+  { label: 'vend', text: 'vend' },
+  { label: 'interested', text: 'interested' },
+  { label: 'how do i learn more', text: 'how do i learn more' },
 ] as const
 
 export default function BSimFloat({
@@ -289,10 +280,7 @@ export default function BSimFloat({
                   <button
                     key={prompt.label}
                     type="button"
-                    onClick={() => {
-                      setInput(prompt.text)
-                      inputRef.current?.focus()
-                    }}
+                    onClick={() => void sendMessage(prompt.text)}
                     disabled={pending}
                     style={{
                       padding: '7px 10px',

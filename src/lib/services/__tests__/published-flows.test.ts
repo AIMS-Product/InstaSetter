@@ -306,6 +306,7 @@ function makeDraft(
       persona: '',
       messageConstraints: '',
       forbiddenPhrases: [],
+      brandGuardrails: [],
     },
     variables: [],
     versions: [],

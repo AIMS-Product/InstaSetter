@@ -49,6 +49,7 @@ const stubConversation: ConversationRow = {
   id: 'conv-1',
   contact_id: 'contact-1',
   flow_id: 'ig-organic-dm',
+  flow_version_id: null,
   status: 'active',
   prompt_version: 'setter-v1',
   summary: null,

@@ -283,6 +283,7 @@ function makeDraft(label = 'baseline'): PersistedFlowDraft {
       persona: 'baseline',
       messageConstraints: '',
       forbiddenPhrases: [],
+      brandGuardrails: [],
     },
     variables: [],
     versions: [],
