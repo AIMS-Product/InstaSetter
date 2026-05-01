@@ -332,6 +332,7 @@ function makeDraft(confirmation: string): PersistedFlowDraft {
       persona: '',
       messageConstraints: '',
       forbiddenPhrases: [],
+      brandGuardrails: [],
     },
     variables: [],
     versions: [],
