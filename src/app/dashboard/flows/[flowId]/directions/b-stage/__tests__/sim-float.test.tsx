@@ -152,6 +152,26 @@ describe('BSimFloat — overrides pass-through', () => {
     expect(actionSpy).toHaveBeenCalledTimes(2)
   })
 
+  it('auto-sends a starter pill on click without filling the input', async () => {
+    render(
+      <Wrap>
+        <BSimFloat open onClose={() => {}} overrides={null} />
+      </Wrap>
+    )
+
+    const pill = screen.getByRole('button', { name: 'vend' })
+    await userEvent.click(pill)
+
+    await waitFor(() => expect(actionSpy).toHaveBeenCalledTimes(1))
+    expect(actionSpy.mock.calls[0]?.[0]?.messages).toEqual([
+      { role: 'user', content: 'vend' },
+    ])
+    const input = screen.getByPlaceholderText(
+      /write a prospect dm/i
+    ) as HTMLInputElement
+    expect(input.value).toBe('')
+  })
+
   it('does not replay prior system errors in retry history', async () => {
     actionSpy
       .mockResolvedValueOnce({
