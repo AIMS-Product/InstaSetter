@@ -6,6 +6,7 @@ import { buildObjectionHandling } from './sections/objections'
 import { buildSkepticalPlaybook } from './sections/skeptical-playbook'
 import { buildEmailCapture } from './sections/email-capture'
 import { buildDecisionRouting } from './sections/decision-routing'
+import { buildOpener } from './sections/opener'
 import { buildSummaryGeneration } from './sections/summary-generation'
 import { buildMessageConstraints } from './sections/message-constraints'
 import type { PostEmailBehavior } from '@/lib/prompts/post-email-behavior'
@@ -13,6 +14,7 @@ import {
   DEFAULT_PRE_BOOKING_STEP,
   type PreBookingStep,
 } from './pre-booking-step'
+import { DEFAULT_OPENER_STEP, type OpenerStep } from './opener-step'
 import { buildBrandGuardrails, type BrandGuardrail } from './brand-guardrails'
 import type { LeadSourceContext } from '@/lib/services/marketing-attribution'
 
@@ -53,6 +55,16 @@ interface BuildSystemPromptOptions {
    */
   preBookingStep?: PreBookingStep
   /**
+   * Opener step. Pairs with `preBookingStep` so the bot has a distinct
+   * first-reply question that is NOT the rapport bridge string. When
+   * omitted, defaults to `DEFAULT_OPENER_STEP` (enabled with the code-shipped
+   * question). Callers that need to disable the opener section — including
+   * the engine when `LIVE_OPENER_STEP_ENABLED=false` — should pass an
+   * explicit step with `enabled: false`. See
+   * `@/lib/services/opener-resolver`.
+   */
+  openerStep?: OpenerStep
+  /**
    * Operator-owned brand guardrails (forbidden phrases). Stack on top of the
    * data-locked Forbidden Phrases section in `persona.ts`. Default `[]` keeps
    * the assembled prompt byte-identical to today.
@@ -69,6 +81,7 @@ export function buildSystemPrompt({
   leadSourceContext,
   postEmailBehavior,
   preBookingStep = DEFAULT_PRE_BOOKING_STEP,
+  openerStep = DEFAULT_OPENER_STEP,
   brandGuardrails,
 }: BuildSystemPromptOptions): string {
   // Brand guardrails sit between persona and company-context. Persona ships
@@ -76,6 +89,13 @@ export function buildSystemPrompt({
   // brand-level forbidden-phrase set, so they live adjacent. An empty list
   // emits no bytes — see buildBrandGuardrails.
   const brandGuardrailsBlock = buildBrandGuardrails(brandGuardrails ?? [])
+
+  // Opener Behavior is a distinct slot from the pre-booking rapport bridge.
+  // It sits AFTER company/location/qualification context (so the bot has
+  // domain framing before reading the opener instruction) and BEFORE
+  // decision-routing (so the opener guidance is read before the bot reads
+  // the bridge instruction it cross-references). Empty when disabled.
+  const openerBlock = buildOpener(openerStep)
 
   const sections = [
     buildPersona(brandName),
@@ -88,6 +108,7 @@ export function buildSystemPrompt({
     postEmailBehavior
       ? buildEmailCapture(bookingUrl, postEmailBehavior)
       : buildEmailCapture(bookingUrl),
+    ...(openerBlock ? [openerBlock] : []),
     buildDecisionRouting(bookingUrl, preBookingStep),
     buildSummaryGeneration(),
     buildMessageConstraints(bookingUrl),

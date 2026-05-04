@@ -49,6 +49,8 @@ Once both location AND motivation are known, ask ONE rapport question in the mes
 Rapport question to ask: "${preBookingStep?.question}"
 Skip when: ${preBookingStep?.skipWhen}
 
+This is NOT your opener — see Opener Behavior. The bridge belongs in the message after both qualifiers are known and immediately before the booking link. Do not pull this question forward into your first reply.
+
 In your NEXT message after asking the rapport question — regardless of whether the prospect answered — mirror back what you know and send the booking link. Do not loop on rapport. One bridge message, then link.`
     : ''
 

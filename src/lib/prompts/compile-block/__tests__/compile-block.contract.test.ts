@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { compileBlock } from '../compile-block'
 import { buildSystemPrompt } from '@/lib/prompts/setter-v2'
 import { DEFAULT_PRE_BOOKING_STEP } from '@/lib/prompts/pre-booking-step'
+import { DEFAULT_OPENER_STEP } from '@/lib/prompts/opener-step'
 
 const BRAND = 'VendingPreneurs'
 const BOOKING_URL = 'https://calendly.com/x'
@@ -35,12 +36,33 @@ describe('compileBlock — contract (no overrides)', () => {
     ).toBe(buildSystemPrompt({ brandName: BRAND, bookingUrl: BOOKING_URL }))
   })
 
-  it('includes the default rapport bridge in the baseline (P1.02)', () => {
-    const compiled = compileBlock({ brand: BRAND, bookingUrl: BOOKING_URL })
+  it('includes the default rapport bridge in the baseline (P1.02)', async () => {
+    const compiled = await compileBlock({
+      brand: BRAND,
+      bookingUrl: BOOKING_URL,
+    })
     expect(compiled).toContain(
       '### Rapport Bridge (one message before the link)'
     )
     expect(compiled).toContain(`"${DEFAULT_PRE_BOOKING_STEP.question}"`)
+  })
+
+  it('includes the default Opener Behavior section in the baseline', async () => {
+    // Sibling to the rapport-bridge fixture: the opener step ships ON by
+    // default, so compileBlock(default) and buildSystemPrompt(default) BOTH
+    // contain the opener section. Anchoring this on the contract test
+    // protects byte-identity if a future PR rearranges the assembled
+    // prompt order.
+    const compiled = await compileBlock({
+      brand: BRAND,
+      bookingUrl: BOOKING_URL,
+    })
+    expect(compiled).toContain('## Opener Behavior')
+    expect(compiled).toContain(`"${DEFAULT_OPENER_STEP.question}"`)
+    // Distinct slot — the opener literal must NOT be the bridge literal.
+    expect(DEFAULT_OPENER_STEP.question).not.toBe(
+      DEFAULT_PRE_BOOKING_STEP.question
+    )
   })
 })
 

@@ -19,6 +19,7 @@ import { join } from 'node:path'
 
 async function loadPrompt(): Promise<string> {
   const sectionsDir = join(process.cwd(), 'src/lib/prompts/sections')
+  const promptsDir = join(process.cwd(), 'src/lib/prompts')
 
   const [
     persona,
@@ -28,8 +29,11 @@ async function loadPrompt(): Promise<string> {
     skeptical,
     emailCapture,
     routing,
+    opener,
     summary,
     constraints,
+    preBookingStep,
+    openerStep,
   ] = await Promise.all([
     import(join(sectionsDir, 'persona')),
     import(join(sectionsDir, 'company-context')),
@@ -38,9 +42,14 @@ async function loadPrompt(): Promise<string> {
     import(join(sectionsDir, 'skeptical-playbook')),
     import(join(sectionsDir, 'email-capture')),
     import(join(sectionsDir, 'decision-routing')),
+    import(join(sectionsDir, 'opener')),
     import(join(sectionsDir, 'summary-generation')),
     import(join(sectionsDir, 'message-constraints')),
+    import(join(promptsDir, 'pre-booking-step')),
+    import(join(promptsDir, 'opener-step')),
   ])
+
+  const openerBlock = opener.buildOpener(openerStep.DEFAULT_OPENER_STEP)
 
   const sections = [
     persona.buildPersona('VendingPreneurs'),
@@ -49,7 +58,11 @@ async function loadPrompt(): Promise<string> {
     objections.buildObjectionHandling('VendingPreneurs'),
     skeptical.buildSkepticalPlaybook(),
     emailCapture.buildEmailCapture(),
-    routing.buildDecisionRouting(),
+    ...(openerBlock ? [openerBlock] : []),
+    routing.buildDecisionRouting(
+      undefined,
+      preBookingStep.DEFAULT_PRE_BOOKING_STEP
+    ),
     summary.buildSummaryGeneration(),
     constraints.buildMessageConstraints(),
   ]
@@ -678,6 +691,114 @@ const SCENARIOS: Scenario[] = [
       {
         label: 'Acknowledges location (Phoenix) — does not dodge the prospect',
         test: (r) => /phoenix|az|arizona/i.test(r),
+      },
+    ],
+  },
+  {
+    name: 'opener-uses-distinct-question',
+    description:
+      'Prospect first message — bot must use the OPENER question, NOT the rapport-bridge string. Guards against the P1.02 collapse.',
+    messages: [{ role: 'user', content: 'vend' }],
+    checks: [
+      {
+        label:
+          'Does NOT use the bridge string "What got you interested in vending?" as the opener',
+        test: (r) => !/what got you interested in vending/i.test(r),
+      },
+      {
+        label: 'Asks ONE warm curiosity question (drawing/looking/caught/made)',
+        test: (r) =>
+          /drawing|looking|caught|made|reached out|brought you|stood out/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Does NOT immediately ask for location on turn 1',
+        test: (r) =>
+          !/what area|where (are|do) you|what city|whereabouts|what state/i.test(
+            r
+          ),
+      },
+      {
+        label: 'Single message, under 2000 chars',
+        test: (r) => r.length > 0 && r.length <= 2000,
+      },
+    ],
+  },
+  {
+    name: 'opener-skipped-when-prospect-volunteers-context',
+    description:
+      'Prospect first message already volunteers location + budget — bot should skip the opener question and route directly to the bridge/booking flow.',
+    messages: [
+      {
+        role: 'user',
+        content:
+          "I've got 7K saved up and I'm in Dallas, Texas. Looking to start a vending route this summer. How does this work?",
+      },
+    ],
+    checks: [
+      {
+        label:
+          'Skips the opener question (does not ask "what drew you / what made you")',
+        test: (r) =>
+          !/what.*drawing|what.*made you|what got you|what.*caught/i.test(r),
+      },
+      {
+        label: 'References Dallas (locally aware)',
+        test: (r) => /dallas|texas|tx/i.test(r),
+      },
+      {
+        label:
+          'Either sends booking link OR asks one motivation/timeline question — moves the convo forward',
+        test: (r) =>
+          /booking\.|calendly\.|grab a time|book a (time|call)|how long|timeline|when.*looking|side.*income|full.?time|scal/i.test(
+            r
+          ),
+      },
+    ],
+  },
+  {
+    name: 'opener-then-bridge-then-link',
+    description:
+      'Full path — opener used as turn 1, two qualifiers gathered, bridge fires before link. Sofia\'s "softer pre-booking" intent end-to-end.',
+    messages: [
+      { role: 'user', content: 'Hey just curious about vending' },
+      {
+        role: 'assistant',
+        content:
+          "Hey, glad you reached out — what's drawing you to vending right now?",
+      },
+      {
+        role: 'user',
+        content: 'Saw a reel and looked like a good side hustle',
+      },
+      {
+        role: 'assistant',
+        content:
+          'Side hustle is the whole reason most people start. What area are you in?',
+      },
+      { role: 'user', content: 'Austin, TX' },
+      {
+        role: 'assistant',
+        content:
+          "Austin's a strong market. Are you looking to start small or go bigger eventually?",
+      },
+      { role: 'user', content: 'Side income to start, see how it goes' },
+    ],
+    checks: [
+      {
+        label:
+          'Asks the rapport bridge ("What got you interested...") before the link',
+        test: (r) => /what got you interested in vending/i.test(r),
+      },
+      {
+        label: 'Does NOT send the booking link in this turn (bridge first)',
+        test: (r) =>
+          !/booking\.|calendly\.|grab a time|book a (time|call)/i.test(r),
+      },
+      {
+        label: 'Acknowledges Austin or the side-income framing (continuity)',
+        test: (r) => /austin|side.?income|small/i.test(r),
       },
     ],
   },

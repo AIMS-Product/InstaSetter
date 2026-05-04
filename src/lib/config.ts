@@ -225,6 +225,17 @@ export function isLivePreBookingStepEnabled(): boolean {
   return process.env.LIVE_PRE_BOOKING_STEP_ENABLED !== 'false'
 }
 
+// Opener step kill switch. Pairs with LIVE_PRE_BOOKING_STEP_ENABLED so the
+// two slots can be flipped independently. Set LIVE_OPENER_STEP_ENABLED=false
+// on Vercel to suppress the new opener-behavior section from the assembled
+// system prompt — output reverts byte-for-byte to pre-opener behaviour while
+// the rapport bridge stays on.
+// Default: enabled. Any value other than the literal string "false" is
+// treated as enabled.
+export function isLiveOpenerStepEnabled(): boolean {
+  return process.env.LIVE_OPENER_STEP_ENABLED !== 'false'
+}
+
 // Brand-guardrails read-path flag (P1.04).
 // Default: enabled. Empty list is a no-op so this is safe-by-default.
 // Flip to "false" to suppress the operator-curated Brand Guardrails section

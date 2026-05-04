@@ -19,6 +19,7 @@ import {
 import { leadSummarySchema } from '@/types/lead'
 import { buildSystemPrompt, type ContactContext } from '@/lib/prompts/setter-v2'
 import { resolveLivePreBookingStep } from '@/lib/services/pre-booking-resolver'
+import { resolveLiveOpenerStep } from '@/lib/services/opener-resolver'
 import { resolveLiveBrandGuardrails } from '@/lib/services/brand-guardrails-resolver'
 import { getServerConfig } from '@/lib/config'
 import { setContactTags } from '@/lib/services/sendpulse'
@@ -181,6 +182,7 @@ export async function processMessage(
 
   const isReturningContact = priorSummaries.length > 0
   const preBookingStep = resolveLivePreBookingStep(BRAND_NAME)
+  const openerStep = resolveLiveOpenerStep(BRAND_NAME)
   const brandGuardrails = await resolveLiveBrandGuardrails(BRAND_NAME)
   const systemPrompt = buildSystemPrompt({
     brandName: BRAND_NAME,
@@ -191,6 +193,7 @@ export async function processMessage(
     leadSourceContext,
     postEmailBehavior: activeVersion?.compiled.postEmailBehavior,
     preBookingStep,
+    openerStep,
     brandGuardrails,
   })
 

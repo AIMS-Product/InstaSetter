@@ -77,4 +77,29 @@ describe('buildDecisionRouting', () => {
     const out = buildDecisionRouting(BOOKING_URL, DEFAULT_PRE_BOOKING_STEP)
     expect(out).toMatch(/regardless of whether the prospect/i)
   })
+
+  it('cross-references the Opener Behavior section to keep the bridge from being used as an opener', () => {
+    // Belt-and-suspenders against P1.02's failure mode: even if the opener
+    // section drops out of the assembled prompt, the bridge instruction
+    // itself must say "this is not your opener" so Claude does not pull
+    // the bridge string forward as the first reply.
+    const out = buildDecisionRouting(BOOKING_URL, DEFAULT_PRE_BOOKING_STEP)
+    expect(out).toMatch(/not.*your.*(opener|first reply|first message)/i)
+    expect(out).toMatch(/opener behavior/i)
+  })
+
+  it('does NOT add the opener cross-ref when the bridge is disabled (legacy stays byte-identical)', () => {
+    // The cross-ref is only meaningful when the bridge section is rendered.
+    // When the bridge is disabled (LIVE_PRE_BOOKING_STEP_ENABLED=false),
+    // the entire rapport-bridge subsection is omitted, including any
+    // cross-reference. This protects the legacy rollback path.
+    const baseline = buildDecisionRouting(BOOKING_URL)
+    const disabled = buildDecisionRouting(BOOKING_URL, {
+      enabled: false,
+      question: 'unused',
+      skipWhen: 'unused',
+    })
+    expect(disabled).toBe(baseline)
+    expect(disabled).not.toMatch(/opener behavior/i)
+  })
 })

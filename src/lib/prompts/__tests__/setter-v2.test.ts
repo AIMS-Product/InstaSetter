@@ -265,6 +265,98 @@ describe('setter-v2 buildSystemPrompt', () => {
     expect(prompt).not.toContain('### Rapport Bridge')
   })
 
+  // -------------------------------------------------------------------------
+  // Opener Behavior section (P1.02 follow-up)
+  // -------------------------------------------------------------------------
+
+  it('includes the Opener Behavior section by default with a question distinct from the rapport bridge', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    expect(prompt).toContain('## Opener Behavior')
+    // Distinct from bridge — guard against the two slots collapsing.
+    expect(prompt).toMatch(
+      /Hey, glad you reached out — what's drawing you to vending right now\?/
+    )
+    expect(prompt).toMatch(/first reply/i)
+  })
+
+  it('places the Opener Behavior section before Decision Routing so the bot reads opener guidance before routing rules', () => {
+    const prompt = buildSystemPrompt(DEFAULT_OPTS)
+    const openerIdx = prompt.indexOf('## Opener Behavior')
+    const routingIdx = prompt.indexOf('## Decision Routing')
+    expect(openerIdx).toBeGreaterThan(-1)
+    expect(routingIdx).toBeGreaterThan(-1)
+    expect(openerIdx).toBeLessThan(routingIdx)
+  })
+
+  it('omits the Opener Behavior section when openerStep is disabled', () => {
+    const prompt = buildSystemPrompt({
+      ...DEFAULT_OPTS,
+      openerStep: {
+        enabled: false,
+        question: 'unused',
+        skipWhen: 'unused',
+      },
+    })
+    expect(prompt).not.toContain('## Opener Behavior')
+  })
+
+  it('disabling only the opener slot leaves the rapport bridge intact (independent rollback)', () => {
+    // Disabling only the opener should not touch the rapport-bridge wiring.
+    // This is the smallest rollback unit: LIVE_OPENER_STEP_ENABLED=false
+    // suppresses just the opener section while LIVE_PRE_BOOKING_STEP_ENABLED
+    // continues to gate the bridge.
+    const out = buildSystemPrompt({
+      ...DEFAULT_OPTS,
+      openerStep: {
+        enabled: false,
+        question: 'unused',
+        skipWhen: 'unused',
+      },
+    })
+    expect(out).toContain('### Rapport Bridge')
+    expect(out).not.toContain('## Opener Behavior')
+  })
+
+  it('disabling both slots produces a prompt with neither section (full rollback)', () => {
+    // Full rollback: LIVE_PRE_BOOKING_STEP_ENABLED=false AND
+    // LIVE_OPENER_STEP_ENABLED=false. Output must contain NEITHER the bridge
+    // NOR the opener section, and must contain the legacy "VERY NEXT message"
+    // GATE 1 wording — i.e. byte-for-byte pre-P1.02 + pre-opener prompt.
+    const out = buildSystemPrompt({
+      ...DEFAULT_OPTS,
+      preBookingStep: {
+        enabled: false,
+        question: 'unused',
+        skipWhen: 'unused',
+      },
+      openerStep: {
+        enabled: false,
+        question: 'unused',
+        skipWhen: 'unused',
+      },
+    })
+    expect(out).not.toContain('### Rapport Bridge')
+    expect(out).not.toContain('## Opener Behavior')
+    expect(out).toContain(
+      'Once both location AND motivation are known, you MUST send the booking link in your VERY NEXT message.'
+    )
+  })
+
+  it('embeds operator-edited opener question and skipWhen verbatim', () => {
+    const prompt = buildSystemPrompt({
+      ...DEFAULT_OPTS,
+      openerStep: {
+        enabled: true,
+        question: 'Hey, what part of vending caught your eye?',
+        skipWhen: 'Skip when the prospect mentions a city or budget number.',
+      },
+    })
+    expect(prompt).toContain('Hey, what part of vending caught your eye?')
+    expect(prompt).toContain(
+      'Skip when the prospect mentions a city or budget number.'
+    )
+  })
+
   it('includes post-call escalation rules', () => {
     const prompt = buildSystemPrompt(DEFAULT_OPTS)
     expect(prompt).toMatch(/post-call price objections/i)
