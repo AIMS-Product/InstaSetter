@@ -43,6 +43,7 @@ import {
   type FlowVersionListItem,
   type PublishFlowResult,
 } from '@/lib/services/published-flows'
+import { assertDashboardActionAuthorized } from '@/lib/dashboard-action-auth'
 import type { PersistedFlowDraft } from './draft-persistence'
 
 const nonEmptyString = z.string().trim().min(1).max(200)
@@ -163,6 +164,8 @@ export async function setFlowRuntimeAction(args: {
   paused: boolean
   durationMinutes?: number
 }): Promise<FlowRuntimeControl | null> {
+  await assertDashboardActionAuthorized()
+
   const parsed = setFlowRuntimeSchema.safeParse(args)
   if (!parsed.success) return null
   return setFlowRuntimePause(parsed.data)
@@ -179,6 +182,8 @@ export async function loadFlowDraftAction(
 export async function saveFlowDraftAction(
   args: SaveFlowDraftArgs
 ): Promise<boolean> {
+  await assertDashboardActionAuthorized()
+
   const parsed = saveFlowDraftArgsSchema.safeParse(args)
   if (!parsed.success) return false
   return saveFlowDraft(parsed.data as unknown as SaveFlowDraftArgs)
@@ -277,6 +282,8 @@ export async function createFlowDraftVersionAction(args: {
   actorEmail: string | null
   action?: 'autosave' | 'manual_save'
 }): Promise<ActionResult<{ versionNumber: number }>> {
+  await assertDashboardActionAuthorized()
+
   const parsed = createVersionSchema.safeParse(args)
   if (!parsed.success) {
     return { success: false, error: 'Invalid request' }
@@ -311,6 +318,8 @@ export async function restoreFlowDraftVersionAction(args: {
 }): Promise<
   ActionResult<{ restored: PersistedFlowDraft; newVersionNumber: number }>
 > {
+  await assertDashboardActionAuthorized()
+
   const parsed = restoreVersionSchema.safeParse(args)
   if (!parsed.success) {
     return { success: false, error: 'Invalid request' }
@@ -349,6 +358,8 @@ export async function recordFlowDraftDiscardAction(args: {
   actorEmail: string | null
   versionNumber?: number | null
 }): Promise<ActionResult<true>> {
+  await assertDashboardActionAuthorized()
+
   const parsed = recordAuditSchema.safeParse({
     ...args,
     action: 'discard_modal',
@@ -386,6 +397,8 @@ export async function publishFlowAction(args: {
   note?: string
   actor?: string
 }): Promise<PublishFlowResult> {
+  await assertDashboardActionAuthorized()
+
   const parsed = publishFlowArgsSchema.safeParse(args)
   if (!parsed.success) {
     return { success: false, error: 'Invalid input' }
@@ -416,6 +429,8 @@ export async function rollbackFlowAction(args: {
   note?: string
   actor?: string
 }): Promise<PublishFlowResult> {
+  await assertDashboardActionAuthorized()
+
   const parsed = rollbackFlowArgsSchema.safeParse(args)
   if (!parsed.success) {
     return { success: false, error: 'Invalid input' }
@@ -454,7 +469,13 @@ const allowedContentTypeSchema = z.enum([
   ...ALLOWED_CONTENT_TYPES.slice(1),
 ] as [string, ...string[]])
 
-const archiveAssetArgsSchema = z.object({ assetId: z.string().uuid() }).strict()
+const archiveAssetArgsSchema = z
+  .object({
+    assetId: z.string().uuid(),
+    brand: nonEmptyString,
+    flowId: nonEmptyString,
+  })
+  .strict()
 
 const listAssetsArgsSchema = z
   .object({ brand: nonEmptyString, flowId: nonEmptyString })
@@ -481,6 +502,8 @@ export type UploadEmailAssetActionResult =
 export async function uploadEmailAssetAction(
   formData: FormData
 ): Promise<UploadEmailAssetActionResult> {
+  await assertDashboardActionAuthorized()
+
   const file = formData.get('file')
   if (!(file instanceof File)) {
     return { success: false, error: 'File is required' }
@@ -548,12 +571,20 @@ export async function uploadEmailAssetAction(
 
 export async function archiveEmailAssetAction(args: {
   assetId: string
+  brand: string
+  flowId: string
 }): Promise<{ success: true } | { success: false; error: string }> {
+  await assertDashboardActionAuthorized()
+
   const parsed = archiveAssetArgsSchema.safeParse(args)
   if (!parsed.success) {
-    return { success: false, error: 'Invalid asset id' }
+    return { success: false, error: 'Invalid asset archive request' }
   }
-  return archiveAsset({ assetId: parsed.data.assetId })
+  return archiveAsset({
+    assetId: parsed.data.assetId,
+    brand: parsed.data.brand,
+    flowId: parsed.data.flowId,
+  })
 }
 
 export async function listEmailAssetsAction(args: {

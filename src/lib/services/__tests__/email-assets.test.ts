@@ -101,8 +101,18 @@ function buildSupabaseStub({
     maybeSingle: selectMaybeSingle,
   }))
 
-  const updateEq = vi.fn(async () => updateResult)
-  const update = vi.fn(() => ({ eq: updateEq }))
+  const updateEq = vi.fn(() => updateChain)
+  const updateChain = {
+    eq: updateEq,
+    then(
+      resolve: (value: { error: Error | null }) => void,
+      _reject?: (reason?: unknown) => void
+    ) {
+      resolve(updateResult)
+      return undefined
+    },
+  }
+  const update = vi.fn(() => updateChain)
 
   const fromTable = vi.fn(() => ({
     insert,
@@ -362,13 +372,20 @@ describe('email-assets — archiveAsset', () => {
       stub.client as any
     )
 
-    const result = await archiveAsset({ assetId: 'asset-1' })
+    const result = await archiveAsset({
+      assetId: 'asset-1',
+      brand: 'VendingPreneurs',
+      flowId: 'ig-organic-dm',
+    })
 
     expect(result.success).toBe(true)
     expect(stub.fromTable).toHaveBeenCalledWith('ins_email_assets')
     expect(stub.update).toHaveBeenCalledWith(
       expect.objectContaining({ archived_at: expect.any(String) })
     )
+    expect(stub.updateEq).toHaveBeenCalledWith('id', 'asset-1')
+    expect(stub.updateEq).toHaveBeenCalledWith('brand', 'VendingPreneurs')
+    expect(stub.updateEq).toHaveBeenCalledWith('flow_id', 'ig-organic-dm')
   })
 
   it('returns error on update failure', async () => {
@@ -380,7 +397,11 @@ describe('email-assets — archiveAsset', () => {
       stub.client as any
     )
 
-    const result = await archiveAsset({ assetId: 'missing' })
+    const result = await archiveAsset({
+      assetId: 'missing',
+      brand: 'VendingPreneurs',
+      flowId: 'ig-organic-dm',
+    })
 
     expect(result.success).toBe(false)
   })

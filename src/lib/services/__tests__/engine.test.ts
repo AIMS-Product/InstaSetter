@@ -8,6 +8,13 @@ vi.mock('@/lib/prompts/setter-v2')
 vi.mock('@/lib/services/brand-guardrails-resolver', () => ({
   resolveLiveBrandGuardrails: vi.fn().mockResolvedValue([]),
 }))
+vi.mock('@/lib/services/conversation-pauses', () => ({
+  getActiveConversationPause: vi.fn().mockResolvedValue(null),
+  pauseConversationForHumanReview: vi.fn().mockResolvedValue({ success: true }),
+}))
+vi.mock('@/lib/services/flags', () => ({
+  flagOn: vi.fn().mockResolvedValue(false),
+}))
 vi.mock('@/lib/services/sendpulse', () => ({
   setContactTags: vi.fn().mockResolvedValue({ success: true }),
   removeContactTag: vi.fn().mockResolvedValue({ success: true }),
@@ -23,7 +30,18 @@ vi.mock('@/lib/config', () => ({
     SUPABASE_SERVICE_ROLE_KEY: 'test',
     ANTHROPIC_API_KEY: 'sk-test',
     BRAND_NAME: 'TestBrand',
+    BOOKING_URL: 'https://test/book',
   }),
+  getSupabaseServerConfig: () => ({
+    SUPABASE_SERVICE_ROLE_KEY: 'test',
+  }),
+  getBrandConfig: () => ({
+    BRAND_NAME: 'TestBrand',
+    BOOKING_URL: 'https://test/book',
+  }),
+  isLiveBrandGuardrailsEnabled: () => true,
+  isLiveOpenerStepEnabled: () => true,
+  isLivePreBookingStepEnabled: () => true,
   getSendPulseConfig: () => ({
     SENDPULSE_API_KEY: 'test',
     SENDPULSE_BOT_ID: 'test',

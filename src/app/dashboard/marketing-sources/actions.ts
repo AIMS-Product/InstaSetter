@@ -5,12 +5,15 @@ import {
   archiveMarketingSource,
   createMarketingSource,
 } from '@/lib/services/marketing-sources'
+import { assertDashboardActionAuthorized } from '@/lib/dashboard-action-auth'
 
 function value(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim()
 }
 
 export async function createMarketingSourceAction(formData: FormData) {
+  await assertDashboardActionAuthorized()
+
   const required = [
     'channel',
     'campaign',
@@ -48,6 +51,8 @@ export async function createMarketingSourceAction(formData: FormData) {
 }
 
 export async function archiveMarketingSourceAction(formData: FormData) {
+  await assertDashboardActionAuthorized()
+
   const id = value(formData, 'id')
   if (!id) throw new Error('Missing source id')
 

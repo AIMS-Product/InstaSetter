@@ -6,6 +6,7 @@ import {
   pauseConversationForHumanReview,
   resumeConversationFromHumanReview,
 } from '@/lib/services/conversation-pauses'
+import { assertDashboardActionAuthorized } from '@/lib/dashboard-action-auth'
 
 const conversationIdSchema = z.string().uuid()
 
@@ -33,6 +34,8 @@ export async function resumeConversationAction(args: {
   conversationId: string
   clearedBy?: string
 }): Promise<{ success: boolean; error?: string }> {
+  await assertDashboardActionAuthorized()
+
   const parsed = resumeArgsSchema.safeParse(args)
   if (!parsed.success) {
     return { success: false, error: 'Invalid input.' }
@@ -60,6 +63,8 @@ export async function pauseConversationAction(args: {
   severity?: 'concern' | 'hostile' | 'compliance'
   requestedBy?: string
 }): Promise<{ success: boolean; error?: string }> {
+  await assertDashboardActionAuthorized()
+
   const parsed = pauseArgsSchema.safeParse(args)
   if (!parsed.success) {
     return { success: false, error: 'Invalid input.' }

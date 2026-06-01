@@ -198,7 +198,11 @@ describe('uploadEmailAssetAction', () => {
 
 describe('archiveEmailAssetAction', () => {
   it('rejects non-UUID asset ids', async () => {
-    const result = await archiveEmailAssetAction({ assetId: 'not-a-uuid' })
+    const result = await archiveEmailAssetAction({
+      assetId: 'not-a-uuid',
+      brand: 'VendingPreneurs',
+      flowId: 'ig-organic-dm',
+    })
 
     expect(result.success).toBe(false)
   })
@@ -208,11 +212,15 @@ describe('archiveEmailAssetAction', () => {
 
     const result = await archiveEmailAssetAction({
       assetId: '11111111-2222-4333-8444-555555555555',
+      brand: 'VendingPreneurs',
+      flowId: 'ig-organic-dm',
     })
 
     expect(result.success).toBe(true)
     expect(archiveAsset).toHaveBeenCalledWith({
       assetId: '11111111-2222-4333-8444-555555555555',
+      brand: 'VendingPreneurs',
+      flowId: 'ig-organic-dm',
     })
   })
 })

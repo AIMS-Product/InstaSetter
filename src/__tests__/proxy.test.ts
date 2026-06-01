@@ -67,12 +67,49 @@ describe('middleware webhook exclusion', () => {
 describe('proxy', () => {
   afterEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllEnvs()
   })
 
   it('refreshes the session for dashboard routes', async () => {
     const updateResponse = new NextResponse('session refreshed')
     mockedUpdateSession.mockResolvedValueOnce(updateResponse)
     const proxiedRequest = request('/dashboard')
+
+    const response = await proxy(proxiedRequest)
+
+    expect(response).toBe(updateResponse)
+    expect(mockedUpdateSession).toHaveBeenCalledWith(proxiedRequest)
+  })
+
+  it('fails closed for production dashboard routes when basic auth is not configured', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production')
+    const response = await proxy(request('/dashboard'))
+
+    expect(response.status).toBe(503)
+    expect(mockedUpdateSession).not.toHaveBeenCalled()
+  })
+
+  it('rejects dashboard routes when configured basic auth is missing', async () => {
+    vi.stubEnv('DASHBOARD_BASIC_AUTH_USERNAME', 'operator')
+    vi.stubEnv('DASHBOARD_BASIC_AUTH_PASSWORD', 'secret')
+
+    const response = await proxy(request('/dashboard'))
+
+    expect(response.status).toBe(401)
+    expect(response.headers.get('www-authenticate')).toContain('Basic')
+    expect(mockedUpdateSession).not.toHaveBeenCalled()
+  })
+
+  it('allows dashboard routes when configured basic auth is valid', async () => {
+    vi.stubEnv('DASHBOARD_BASIC_AUTH_USERNAME', 'operator')
+    vi.stubEnv('DASHBOARD_BASIC_AUTH_PASSWORD', 'secret')
+    const updateResponse = new NextResponse('session refreshed')
+    mockedUpdateSession.mockResolvedValueOnce(updateResponse)
+    const proxiedRequest = request('/dashboard')
+    proxiedRequest.headers.set(
+      'authorization',
+      `Basic ${btoa('operator:secret')}`
+    )
 
     const response = await proxy(proxiedRequest)
 

@@ -194,7 +194,11 @@ describe('EmailAssetUploader — remove flow', () => {
     await user.click(screen.getByRole('button', { name: /remove attachment/i }))
 
     await waitFor(() => {
-      expect(archive).toHaveBeenCalledWith({ assetId: ASSET_ID })
+      expect(archive).toHaveBeenCalledWith({
+        assetId: ASSET_ID,
+        brand: 'VendingPreneurs',
+        flowId: 'ig-organic-dm',
+      })
     })
     expect(onChange).toHaveBeenLastCalledWith(null)
   })

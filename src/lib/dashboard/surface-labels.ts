@@ -72,6 +72,14 @@ const CATALOG = {
       'Creating, archiving, and copying SendPulse setup values all run against production data.',
     routes: ['/dashboard/marketing-sources'],
   },
+  'dashboard.reports.creatives': {
+    key: 'dashboard.reports.creatives',
+    display: 'Read-only',
+    state: 'READ_ONLY',
+    detail:
+      'Creative funnel rows are calculated from production conversation data. Editing source attribution from this report lands later.',
+    routes: ['/dashboard/reports/creatives'],
+  },
   'dashboard.flows.index': {
     key: 'dashboard.flows.index',
     display: 'Read-only',

@@ -102,6 +102,7 @@ function makeLeadsChain(leads: SeedLead[], log: MockCallLog) {
       )
       return chain
     }),
+    order: vi.fn(() => chain),
     or: vi.fn((expr: string) => {
       log.leadOr.push(expr)
       // Implement the specific anti-filter expression used by the service.
@@ -140,7 +141,14 @@ function makeLeadsChain(leads: SeedLead[], log: MockCallLog) {
     value(onFulfilled: (value: { data: unknown; error: null }) => unknown) {
       const filtered = leads.filter((row) => filters.every((f) => f(row)))
       return Promise.resolve({
-        data: filtered.map((l) => ({ conversation_id: l.conversation_id })),
+        data: filtered.map((l) => ({
+          conversation_id: l.conversation_id,
+          close_sync_status: l.close_sync_status,
+          close_sync_attempts: l.close_sync_attempts,
+          close_crm_id: null,
+          close_sync_error_message: null,
+          close_sync_attempted_at: null,
+        })),
         error: null,
       }).then(onFulfilled)
     },
@@ -220,6 +228,7 @@ function makeEmptyChain() {
     lt: vi.fn(() => chain),
     lte: vi.fn(() => chain),
     gt: vi.fn(() => chain),
+    is: vi.fn(() => chain),
     not: vi.fn(() => chain),
     order: vi.fn(() => chain),
     limit: vi.fn(() => chain),
@@ -396,20 +405,24 @@ describe('listConversations — closeSyncStatus filter', () => {
     expect(mock.log.tables).not.toContain('conversations')
   })
 
-  it("'sent' filter uses ONE candidate-set query against leads, not a JS post-filter", async () => {
+  it("'sent' filter uses one candidate-set query plus the row sync-state query", async () => {
     const { log } = setup()
     await listConversations({ closeSyncStatus: 'sent' })
 
     const leadsCalls = log.tables.filter((t) => t === 'leads').length
-    expect(leadsCalls).toBe(1)
+    expect(leadsCalls).toBe(2)
+    expect(log.conversationIn.some((c) => c.col === 'id')).toBe(true)
   })
 
-  it("'not_synced' filter uses ONE candidate-set query against leads", async () => {
+  it("'not_synced' filter uses one candidate-set query plus the row sync-state query", async () => {
     const { log } = setup()
     await listConversations({ closeSyncStatus: 'not_synced' })
 
     const leadsCalls = log.tables.filter((t) => t === 'leads').length
-    expect(leadsCalls).toBe(1)
+    expect(leadsCalls).toBe(2)
+    expect(
+      log.conversationNot.some((c) => c.col === 'id' && c.op === 'in')
+    ).toBe(true)
   })
 
   // Pagination correctness gate — the spec's hardest acceptance criterion.

@@ -169,12 +169,17 @@ export function getSendPulseConfig() {
 // stricter `getResendLiveConfig()` getter that requires the full set when
 // the per-brand `EMAIL_DELIVERY_LIVE` flag flips on.
 export function getEmailProviderConfig() {
+  const blankToNull = (value: string | undefined): string | null => {
+    const trimmed = value?.trim()
+    return trimmed ? trimmed : null
+  }
+
   return emailProviderEnvSchema.parse({
-    RESEND_API_KEY: process.env.RESEND_API_KEY ?? null,
-    RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET ?? null,
-    RESEND_FROM_ADDRESS: process.env.RESEND_FROM_ADDRESS ?? null,
-    RESEND_FROM_DISPLAY_NAME: process.env.RESEND_FROM_DISPLAY_NAME ?? null,
-    RESEND_REPLY_TO: process.env.RESEND_REPLY_TO ?? null,
+    RESEND_API_KEY: blankToNull(process.env.RESEND_API_KEY),
+    RESEND_WEBHOOK_SECRET: blankToNull(process.env.RESEND_WEBHOOK_SECRET),
+    RESEND_FROM_ADDRESS: blankToNull(process.env.RESEND_FROM_ADDRESS),
+    RESEND_FROM_DISPLAY_NAME: blankToNull(process.env.RESEND_FROM_DISPLAY_NAME),
+    RESEND_REPLY_TO: blankToNull(process.env.RESEND_REPLY_TO),
   })
 }
 

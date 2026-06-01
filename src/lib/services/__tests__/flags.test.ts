@@ -32,6 +32,7 @@ vi.mock('@/lib/supabase/service-role', () => ({
 function buildFakeSupabase() {
   return {
     from: (table: string) => buildFromHandler(table),
+    rpc: (name: string, args: Record<string, unknown>) => callRpc(name, args),
   }
 }
 
@@ -142,6 +143,63 @@ function insertAudit(row: Record<string, unknown>) {
     created_at: new Date().toISOString(),
   })
   return Promise.resolve({ error: null })
+}
+
+function auditAction(input: {
+  enabled: boolean
+  actor: string
+  previous?: boolean
+}): string {
+  if (input.enabled) return input.previous ? 'resumed' : 'enabled'
+  if (input.actor === 'system:auto-pause') return 'paused-auto'
+  return input.previous ? 'paused-manual' : 'disabled'
+}
+
+async function callRpc(name: string, args: Record<string, unknown>) {
+  if (name !== 'ins_set_feature_flag') {
+    return { data: null, error: { message: `Unknown RPC ${name}` } }
+  }
+
+  const key = args.p_key as string
+  const scope = args.p_scope as 'global' | 'brand'
+  const scopeId = (args.p_scope_id as string | null) ?? null
+  const enabled = args.p_enabled as boolean
+  const actor = args.p_actor as string
+  const reason = (args.p_reason as string | null) ?? null
+  const previous = flagsRows.find(
+    (row) => row.key === key && row.scope === scope && row.scope_id === scopeId
+  )
+  const previousEnabled = previous?.enabled ?? false
+  const now = new Date().toISOString()
+  const flagId = previous?.id ?? genId('flag')
+
+  if (previous) {
+    previous.enabled = enabled
+    previous.updated_by = actor
+    previous.updated_at = now
+  } else {
+    flagsRows.push({
+      id: flagId,
+      key,
+      scope,
+      scope_id: scopeId,
+      enabled,
+      updated_by: actor,
+      updated_at: now,
+    })
+  }
+
+  auditRows.push({
+    id: genId('audit'),
+    flag_id: flagId,
+    brand: scope === 'brand' ? (scopeId ?? '') : 'global',
+    action: auditAction({ enabled, actor, previous: previousEnabled }),
+    actor,
+    reason,
+    created_at: now,
+  })
+
+  return { data: flagId, error: null }
 }
 
 import { __setFlagCacheForTests, flagOn, setFlag } from '@/lib/services/flags'

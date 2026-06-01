@@ -65,6 +65,8 @@ export type UploadAssetResult =
 
 export interface ArchiveAssetInput {
   assetId: string
+  brand: string
+  flowId: string
 }
 
 export type ArchiveAssetResult =
@@ -318,10 +320,14 @@ export async function archiveAsset(
     .from('ins_email_assets')
     .update({ archived_at: archivedAt })
     .eq('id', input.assetId)
+    .eq('brand', input.brand)
+    .eq('flow_id', input.flowId)
 
   if (error) {
     console.error('email_asset.archive.failed', {
       assetId: input.assetId,
+      brand: input.brand,
+      flowId: input.flowId,
       error: error.message,
     })
     return { success: false, error: 'Failed to archive asset' }
@@ -329,6 +335,8 @@ export async function archiveAsset(
 
   console.log('email_asset.archive', {
     assetId: input.assetId,
+    brand: input.brand,
+    flowId: input.flowId,
     archivedAt,
   })
 

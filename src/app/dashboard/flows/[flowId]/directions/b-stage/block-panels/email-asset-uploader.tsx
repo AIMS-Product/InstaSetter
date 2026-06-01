@@ -47,6 +47,8 @@ export type EmailAttachmentValue = StoredAttachmentValue | LegacyAttachmentValue
 type UploadFn = (formData: FormData) => Promise<UploadEmailAssetActionResult>
 type ArchiveFn = (args: {
   assetId: string
+  brand: string
+  flowId: string
 }) => Promise<{ success: true } | { success: false; error: string }>
 
 export interface EmailAssetUploaderProps {
@@ -156,7 +158,7 @@ export function EmailAssetUploader({
     }
     const assetId = attachment.assetId
     try {
-      await archiveAction({ assetId })
+      await archiveAction({ assetId, brand, flowId })
     } catch {
       // Even on archive failure, drop the local reference; the row
       // can be archived manually if needed. Past published-flow
